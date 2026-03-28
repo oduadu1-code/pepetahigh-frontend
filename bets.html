@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Bets — PepetaHigh</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bottom:80px}
+.sticky{position:sticky;top:0;z-index:10;background:var(--bg)}
+
+/* ── CTA BANNER — FIRST element after nav ── */
+.cta-banner{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 16px;
+  cursor:pointer;border:none;width:100%;text-align:left;
+  position:relative;overflow:hidden;
+  transition:filter .18s;
+  border-bottom:1px solid rgba(0,0,0,.3);
+}
+.cta-banner:active{filter:brightness(.85);}
+.cta-banner.hidden{display:none}
+.cta-banner::after{
+  content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.07),transparent);
+  animation:ctaShimmer 3.4s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes ctaShimmer{0%{left:-100%}60%,100%{left:160%}}
+.cta-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+.cta-text{flex:1;min-width:0}
+.cta-label{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;opacity:.75;margin-bottom:3px}
+.cta-value{font-family:var(--font-d);font-size:1.18rem;font-weight:900;line-height:1;letter-spacing:.02em}
+.cta-sub{font-size:.63rem;opacity:.6;margin-top:3px;font-weight:500}
+.cta-pill{
+  flex-shrink:0;padding:9px 18px;border-radius:25px;
+  font-family:var(--font-b);font-size:.82rem;font-weight:700;
+  border:none;cursor:pointer;
+  display:flex;align-items:center;gap:5px;
+  white-space:nowrap;box-shadow:0 3px 12px rgba(0,0,0,.25);
+  transition:transform .12s;
+}
+.cta-pill:active{transform:scale(.92);}
+
+/* Game CTA themes */
+#cta-aviator{background:linear-gradient(135deg,#0d1460 0%,#1a2288 45%,#0d1460 100%)}
+#cta-aviator .cta-icon{background:rgba(255,200,30,.12);border:1px solid rgba(255,200,30,.2)}
+#cta-aviator .cta-label{color:#a0b0ff}
+#cta-aviator .cta-value{color:#f5c542}
+#cta-aviator .cta-sub{color:#a0b0ff}
+#cta-aviator .cta-pill{background:linear-gradient(135deg,#f5c542,#e8a800);color:#1a0800}
+
+#cta-rocket{background:linear-gradient(135deg,#2a0800 0%,#6b1800 45%,#2a0800 100%)}
+#cta-rocket .cta-icon{background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3)}
+#cta-rocket .cta-label{color:#fca888}
+#cta-rocket .cta-value{color:#ff6b35}
+#cta-rocket .cta-sub{color:#fca888}
+#cta-rocket .cta-pill{background:linear-gradient(135deg,#f97316,#ef4444);color:#fff}
+
+#cta-dice{background:linear-gradient(135deg,#1a0840 0%,#3d1080 45%,#1a0840 100%)}
+#cta-dice .cta-icon{background:rgba(162,89,255,.15);border:1px solid rgba(162,89,255,.3)}
+#cta-dice .cta-label{color:#c4a0ff}
+#cta-dice .cta-value{color:#c084fc}
+#cta-dice .cta-sub{color:#c4a0ff}
+#cta-dice .cta-pill{background:linear-gradient(135deg,#a855f7,#7c3aed);color:#fff}
+
+#cta-fortunespin{background:linear-gradient(135deg,#001830 0%,#003060 45%,#001830 100%)}
+#cta-fortunespin .cta-icon{background:rgba(245,197,66,.12);border:1px solid rgba(245,197,66,.25)}
+#cta-fortunespin .cta-label{color:#7dd3fc}
+#cta-fortunespin .cta-value{color:#38bdf8}
+#cta-fortunespin .cta-sub{color:#7dd3fc}
+#cta-fortunespin .cta-pill{background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff}
+
+#cta-mines{background:linear-gradient(135deg,#001a0a 0%,#003d18 45%,#001a0a 100%)}
+#cta-mines .cta-icon{background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25)}
+#cta-mines .cta-label{color:#6ee7b7}
+#cta-mines .cta-value{color:#10b981}
+#cta-mines .cta-sub{color:#6ee7b7}
+#cta-mines .cta-pill{background:linear-gradient(135deg,#10b981,#059669);color:#fff}
+
+/* ── Stats bar — BELOW CTA ── */
+.bets-hdr{display:flex;padding:8px 12px;gap:0;border-bottom:1px solid var(--border);background:var(--bg2)}
+.bh{flex:1;display:flex;flex-direction:column}
+.bh-lbl{font-size:.58rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+.bh-val{font-family:var(--font-d);font-size:.82rem;font-weight:700;color:var(--text)}
+
+/* Rocket live mult */
+.rocket-live-wrap{background:var(--bg2);border-bottom:1px solid var(--border);padding:4px 0 2px}
+.rocket-live-mult{font-family:var(--font-d);font-size:1.1rem;font-weight:900;text-align:center;padding:6px 0 3px;letter-spacing:.05em}
+.rocket-status-bar{display:flex;align-items:center;justify-content:center;gap:6px;padding:2px 0 6px;font-size:.7rem;color:var(--text3)}
+
+/* ── Tabs & pills ── */
+.tab-row{display:flex;border-bottom:1px solid var(--border);background:var(--bg2)}
+.tab-btn{flex:1;padding:9px;border:none;background:transparent;font-family:var(--font-b);font-size:.8rem;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--text3);transition:all .2s}
+.tab-btn.active{color:var(--primary);border-bottom-color:var(--primary)}
+.gpills{display:flex;gap:7px;padding:9px 12px;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto}
+.gpills::-webkit-scrollbar{display:none}
+.gpill{padding:5px 13px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--text3);font-family:var(--font-b);font-size:.76rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.gpill.on{border-color:var(--primary);background:rgba(79,110,247,.1);color:var(--primary)}
+
+/* History bar */
+.game-hist-bar{display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(10,5,20,.9);border-bottom:1px solid rgba(162,89,255,.15);overflow-x:auto;min-height:34px}
+.game-hist-bar::-webkit-scrollbar{display:none}
+.game-hist-bar.hidden{display:none}
+
+/* Demo note */
+.demo-note{background:rgba(245,197,66,.06);border-bottom:1px solid rgba(245,197,66,.18);padding:9px 14px;display:none;align-items:center;gap:9px;font-size:.78rem;color:var(--gold)}
+.demo-note.show{display:flex}
+.demo-note button{margin-left:auto;background:none;border:1.5px solid var(--gold);color:var(--gold);border-radius:6px;padding:3px 10px;font-size:.72rem;font-weight:700;cursor:pointer}
+
+/* Column heads */
+.col-head{display:grid;grid-template-columns:1fr .8fr .65fr .9fr;padding:5px 12px;background:var(--bg3);border-bottom:1px solid var(--border)}
+.ch{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3)}
+.mines-col-head{display:grid;grid-template-columns:1fr .7fr .6fr .6fr .85fr;padding:5px 12px;background:var(--bg3);border-bottom:1px solid var(--border);align-items:center}
+
+/* Feed header */
+.feed-hdr{display:flex;align-items:center;justify-content:space-between;padding:7px 13px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:.65rem;color:var(--text3)}
+.feed-live{display:flex;align-items:center;gap:5px;font-weight:700;color:var(--green);font-size:.65rem}
+
+/* Bet rows */
+.bet-row{display:grid;grid-template-columns:1fr .8fr .65fr .9fr;padding:7px 12px;border-bottom:1px solid rgba(37,39,64,.25);transition:background .3s;align-items:center}
+.bet-row.cashed{background:rgba(41,217,128,.04)}
+.bet-row.crashed{background:rgba(242,78,78,.04)}
+.bet-row.placing{animation:betPlaceFlash .5s ease}
+@keyframes betPlaceFlash{0%{background:rgba(79,110,247,.18)}100%{background:transparent}}
+.bc{display:flex;align-items:center;font-size:.78rem;color:var(--text)}
+.u-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0;margin-right:6px}
+
+/* Mines rows */
+.mines-row{display:grid;grid-template-columns:1fr .7fr .6fr .6fr .85fr;padding:7px 12px;border-bottom:1px solid rgba(37,39,64,.2);align-items:center;transition:background .3s}
+.mines-row.won{background:rgba(41,217,128,.04)}
+.mines-row.lost{background:rgba(242,78,78,.04)}
+
+/* Cashout rows */
+.co-row{display:grid;grid-template-columns:36px 1fr auto;align-items:center;gap:10px;padding:8px 13px;border-bottom:1px solid rgba(37,39,64,.2)}
+
+/* Bet-placing activity ticker */
+.activity-ticker{display:flex;align-items:center;gap:7px;padding:5px 12px;background:rgba(79,110,247,.04);border-bottom:1px solid rgba(79,110,247,.1);font-size:.68rem;color:var(--text3);overflow:hidden;height:28px;flex-shrink:0}
+.activity-ticker.hidden{display:none}
+.at-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;animation:atPulse 1.2s ease infinite}
+@keyframes atPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.7)}}
+.at-msg{animation:atSlide .4s ease}
+@keyframes atSlide{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+
+.empty{text-align:center;padding:32px;color:var(--text3);font-size:.82rem;line-height:1.7}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes slideIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<div class="sticky" id="sticky-top">
+
+  <!-- ═══ CTA BANNERS — FIRST, immediately under the page header ═══ -->
+  <button class="cta-banner" id="cta-aviator">
+    <div class="cta-icon">🏆</div>
+    <div class="cta-text">
+      <div class="cta-label">Aviator Max Win</div>
+      <div class="cta-value" id="cta-av-val">5,000×</div>
+      <div class="cta-sub">Up for grabs · Resets daily</div>
+    </div>
+    <div class="cta-pill">Play →</div>
+  </button>
+
+  <button class="cta-banner hidden" id="cta-rocket">
+    <div class="cta-icon">🚀</div>
+    <div class="cta-text">
+      <div class="cta-label">Rocket Crash Max Win</div>
+      <div class="cta-value">500×</div>
+      <div class="cta-sub">Ride it high · Cash out in time</div>
+    </div>
+    <div class="cta-pill">Launch →</div>
+  </button>
+
+  <button class="cta-banner hidden" id="cta-dice">
+    <div class="cta-icon">🎲</div>
+    <div class="cta-text">
+      <div class="cta-label">Dice Roll Max Win</div>
+      <div class="cta-value">97×</div>
+      <div class="cta-sub">Set your odds · Roll for glory</div>
+    </div>
+    <div class="cta-pill">Roll →</div>
+  </button>
+
+  <button class="cta-banner hidden" id="cta-fortunespin">
+    <div class="cta-icon">🎡</div>
+    <div class="cta-text">
+      <div class="cta-label">Fortune Spin Max Win</div>
+      <div class="cta-value">100×</div>
+      <div class="cta-sub">Spin the wheel · Win big</div>
+    </div>
+    <div class="cta-pill">Spin →</div>
+  </button>
+
+  <button class="cta-banner hidden" id="cta-mines">
+    <div class="cta-icon">💣</div>
+    <div class="cta-text">
+      <div class="cta-label">Mines Max Win</div>
+      <div class="cta-value">500×</div>
+      <div class="cta-sub">Pick tiles · Dodge the mines</div>
+    </div>
+    <div class="cta-pill">Play →</div>
+  </button>
+
+  <!-- ═══ STATS — right below CTA ═══ -->
+  <div class="bets-hdr" id="stats-bar" style="display:none">
+    <div class="bh"><div class="bh-lbl">Total Bets</div><div class="bh-val" id="bh-total">-</div></div>
+    <div class="bh" style="text-align:center"><div class="bh-lbl">Active</div><div class="bh-val" id="bh-active" style="color:var(--green)">-</div></div>
+    <div class="bh" style="text-align:right"><div class="bh-lbl">Total Stakes</div><div class="bh-val" id="bh-stakes">-</div></div>
+  </div>
+
+  <!-- Activity ticker: shows live bet placements during wait phase -->
+  <div class="activity-ticker hidden" id="activity-ticker">
+    <span class="at-dot"></span>
+    <span id="at-msg" class="at-msg">Waiting for players…</span>
+  </div>
+
+  <!-- Rocket live multiplier -->
+  <div id="rocket-live" style="display:none" class="rocket-live-wrap">
+    <div class="rocket-live-mult" id="rocket-mult-disp" style="color:var(--green)">-</div>
+    <div class="rocket-status-bar">
+      <span class="online-dot" style="width:6px;height:6px"></span>
+      <span id="rocket-status-txt">Waiting for launch...</span>
+    </div>
+  </div>
+
+  <!-- History bar -->
+  <div class="game-hist-bar hidden" id="game-hist-bar">
+    <span class="online-dot" style="flex-shrink:0;margin-right:2px;width:6px;height:6px"></span>
+    <span id="hist-chips" style="display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0"></span>
+  </div>
+
+  <!-- Demo note -->
+  <div class="demo-note" id="demo-note">
+    🎮 Demo mode - feed shows real-money players only
+    <button id="btn-switchreal">Switch to Real Play</button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-row">
+    <button class="tab-btn active" id="tab-all">All Bets</button>
+    <button class="tab-btn" id="tab-mine">My Bets</button>
+  </div>
+
+  <!-- Pills -->
+  <div class="gpills">
+    <button class="gpill on"  id="gp-aviator">✈ Aviator</button>
+    <button class="gpill"     id="gp-rocket">🚀 Rocket</button>
+    <button class="gpill"     id="gp-dice">🎲 Dice</button>
+    <button class="gpill"     id="gp-fortunespin">🎡 Fortune</button>
+    <button class="gpill"     id="gp-mines">💣 Mines</button>
+  </div>
+
+  <!-- Column heads -->
+  <div class="col-head" id="col-head" style="display:none">
+    <div class="ch">Player</div><div class="ch">Bet (KSh)</div><div class="ch">Mult</div><div class="ch" style="text-align:right">Cashout</div>
+  </div>
+  <div class="mines-col-head" id="mines-col-head" style="display:none">
+    <div class="ch">Player</div><div class="ch">Bet</div><div class="ch">💣</div><div class="ch">💎</div><div class="ch" style="text-align:right">Result</div>
+  </div>
+
+  <!-- Feed header -->
+  <div class="feed-hdr" id="feed-hdr" style="display:none">
+    <div class="feed-live"><span class="online-dot" style="width:6px;height:6px"></span>Live Cashouts</div>
+    <div id="feed-game-name" style="color:var(--text2);font-weight:600;font-size:.72rem"></div>
+  </div>
+
+</div><!-- /sticky -->
+
+<div id="rows"></div>
+
+<script src="utils.js"></script>
+<script>
+(function(){
+'use strict';
+
+if(sessionStorage.getItem('ph_theme')==='light') document.body.classList.add('theme-light');
+
+/* ── inline name helpers ── */
+var _F=['Star','Ace','Nova','Blaze','Turbo','Hyper','Void','Solar','Lunar','Cosmic','Iron','Dark','Pulse','Zap','Neo','Apex','Flux','Echo','Neon','Riot'];
+var _L=['Pilot','Rider','Burst','Crew','Wing','Bet','Hit','Dash','Max','Surf','Run','Wave','Ace','Pro','King','One','Fire','Bold','Rush','Fly'];
+if(typeof window.fakeName==='undefined')   window.fakeName  =function(){return _F[_F.length*Math.random()|0]+_L[_L.length*Math.random()|0]+(Math.random()*900+100|0);};
+if(typeof window.maskName==='undefined')   window.maskName  =function(n){if(!n||n.length<=4)return (n||'')[0]+'***';return n.slice(0,2)+'***'+n.slice(-1);};
+if(typeof window.fakeInitial==='undefined')window.fakeInitial=function(n){return(n&&n[0]||'?').toUpperCase();};
+
+/* ── helpers ── */
+function isDemo(){ try{return(window.PH||parent.window.PH).getMode()==='demo';}catch(e){return false;} }
+function getUser(){ try{return(window.PH||parent.window.PH).getUser();}catch(e){return null;} }
+function getTxns(){ try{return(window.PH||parent.window.PH).getTxns();}catch(e){return[];} }
+function kes(v){ return parseFloat(v).toLocaleString('en-KE',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function chip(v){var c=+v<2?'hc-safe':+v<5?'hc-mid':+v<20?'hc-high':'hc-mega';return '<span class="hchip '+c+'">'+parseFloat(v).toFixed(2)+'x</span>';}
+function el(id){return document.getElementById(id);}
+function setText(id,v){var e=el(id);if(e)e.textContent=v;}
+function setCls(id,on,cls){var e=el(id);if(e)e.classList.toggle(cls,on);}
+
+/* ── state ── */
+var bets=[], state='idle', mult=1, tab='all', game='aviator';
+var _stableOrder=[];
+var _rkBets=[], _rkState='wait', _rkMult=1, _rkHist=[], _rkMultInt=null, _rkRunning=false;
+var _feedRunning=false, _feedInt=null;
+
+/* ── CTA wiring ── */
+var CTA_GAMES=['aviator','rocket','dice','fortunespin','mines'];
+var CTA_FN={
+  aviator:    function(){try{parent.openGameModal();}catch(e){}},
+  rocket:     function(){try{parent.openRocketCrashModal();}catch(e){}},
+  dice:       function(){try{parent.openDiceModal();}catch(e){}},
+  fortunespin:function(){try{parent.openFortuneSpinModal();}catch(e){}},
+  mines:      function(){try{parent.openDiceModal();}catch(e){}} // placeholder
+};
+CTA_GAMES.forEach(function(g){
+  var btn=el('cta-'+g);
+  if(btn)btn.addEventListener('click',function(){ CTA_FN[g]&&CTA_FN[g](); });
+});
+function showCTA(activeGame){
+  CTA_GAMES.forEach(function(g){
+    var b=el('cta-'+g);
+    if(b) b.classList.toggle('hidden',g!==activeGame);
+  });
+  try{
+    var jmax=(parent.window.JACKPOT_MAX||5000).toLocaleString()+'×';
+    setText('cta-av-val',jmax);
+  }catch(e){}
+}
+
+/* ── pill / tab clicks ── */
+el('sticky-top').addEventListener('click', function(e){
+  var btn=e.target.closest('button');
+  if(!btn)return;
+  var id=btn.id||'';
+  if(id==='tab-all')   setTab('all');
+  else if(id==='tab-mine')  setTab('mine');
+  else if(id==='btn-switchreal'){ try{parent.pickMode('play');}catch(ex){} }
+  else if(id==='gp-aviator')    setGame('aviator');
+  else if(id==='gp-rocket')     setGame('rocket');
+  else if(id==='gp-dice')       setGame('dice');
+  else if(id==='gp-fortunespin')setGame('fortunespin');
+  else if(id==='gp-mines')      setGame('mines');
+});
+
+function setTab(t){
+  tab=t;
+  setCls('tab-all',t==='all','active');
+  setCls('tab-mine',t==='mine','active');
+  render();
+}
+function setGame(g){
+  game=g;
+  ['aviator','rocket','dice','fortunespin','mines'].forEach(function(n){ setCls('gp-'+n,n===g,'on'); });
+  try{ parent.onBetsGameChange&&parent.onBetsGameChange(g); }catch(ex){}
+  stopFeed();
+  if(g==='rocket') { if(!_rkRunning) startRocket(); else render(); }
+  else if(g!=='aviator') startFeed(g);
+  render();
+}
+
+/* ── sync aviator from parent ── */
+function sync(){
+  try{var G=parent.window.G;if(!G)return;bets=G.roundBets||[];state=G.state||'idle';mult=G.mult||1;}catch(e){}
+}
+
+/* ── header ── */
+function upHeader(){
+  var demo=isDemo(), isAv=game==='aviator', isRk=game==='rocket';
+  var isFeed=(game==='dice'||game==='fortunespin'||game==='mines');
+  var showAviRk=isAv||isRk;
+
+  setCls('demo-note',demo,'show');
+
+  var showStats=!demo&&tab==='all'&&showAviRk;
+  el('stats-bar').style.display=showStats?'flex':'none';
+
+  var showHist=!demo&&showAviRk;
+  setCls('game-hist-bar',!showHist,'hidden');
+
+  el('col-head').style.display=showAviRk?'grid':'none';
+  el('mines-col-head').style.display=game==='mines'?'grid':'none';
+  el('rocket-live').style.display=(!demo&&isRk)?'block':'none';
+  el('feed-hdr').style.display=isFeed?'flex':'none';
+
+  var names={dice:'🎲 Dice Roll',fortunespin:'🎡 Fortune Spin',mines:'💣 Mines'};
+  setText('feed-game-name',names[game]||'');
+
+  if(showStats){
+    var src=isAv?bets:_rkBets;
+    var tot=src.length, act=src.filter(function(b){return b.cashedAt===null;}).length;
+    var stakes=src.reduce(function(s,b){return s+(b.bet||0);},0);
+    setText('bh-total',tot||'-');
+    setText('bh-active',act||'-');
+    setText('bh-stakes',tot?'KSh '+kes(stakes):'-');
+  }
+  renderHistBar();
+}
+
+function renderHistBar(){
+  var hc=el('hist-chips'); if(!hc)return;
+  var demo=isDemo(), isAv=game==='aviator', isRk=game==='rocket';
+  if(demo||(!isAv&&!isRk)){hc.innerHTML='';return;}
+  var hist=[];
+  if(isAv){ try{hist=parent.window.G_real?parent.window.G_real.roundHist:[];}catch(e){} }
+  else { hist=_rkHist; }
+  if(!hist||!hist.length){hc.innerHTML='<span style="font-size:.62rem;color:var(--text3)">No rounds yet...</span>';return;}
+  hc.innerHTML=hist.slice(0,26).map(function(m){
+    var v=+m, c=v<2?'hc-safe':v<5?'hc-mid':v<10?'hc-high':'hc-mega';
+    return '<span class="hchip '+c+'" style="flex-shrink:0">'+v.toFixed(2)+'x</span>';
+  }).join('');
+}
+
+/* ── main render ── */
+function render(){
+  sync(); upHeader();
+  if(tab==='mine'){renderMine();return;}
+  if(game==='aviator') renderAviator();
+  else if(game==='rocket') renderRocket();
+}
+
+/* ── AVIATOR ── */
+function renderAviator(){
+  var rows=el('rows'); if(!rows)return;
+  if(isDemo()){rows.innerHTML='<div class="empty">🎮 Live feed shows real-money players only.<br><span style="font-size:.74rem">Switch to Real Play.</span></div>';return;}
+  if(!bets.length){rows.innerHTML='<div class="empty">Waiting for the next round...</div>';return;}
+  var user=getUser();
+  if(state==='wait'||!_stableOrder.length) _stableOrder=[].concat(bets).sort(function(a,b){return b.bet-a.bet;});
+  var ordered=_stableOrder.map(function(so){return bets.find(function(b){return b.nm===so.nm&&b.bet===so.bet;})||so;});
+  rows.innerHTML=ordered.slice(0,60).map(function(b){
+    var has=b.cashedAt!==null&&b.cashedAt!==undefined;
+    var avBg=b.isUser?'linear-gradient(135deg,var(--primary),var(--secondary))':'var(--bg5)';
+    var nCol=b.isUser?'var(--primary)':has?'var(--green)':'var(--text)';
+    var letter=b.isUser?(user&&user.username?user.username[0]:'Y').toUpperCase():fakeInitial(b.nm);
+    var sub=has?'<div style="font-size:.62rem;color:var(--green);margin-top:1px">'+b.cashedAt.toFixed(2)+'x</div>':'';
+    var mCell=has?chip(b.cashedAt):'<span style="color:var(--text3)">-</span>';
+    var wCell=has?'<span style="color:var(--green);font-weight:700">+'+kes(b.won)+'</span>':'<span style="color:var(--text3)">-</span>';
+    var rowId='br-'+b.nm.replace(/[^a-z0-9]/gi,'')+'-'+Math.round(b.bet);
+    return '<div class="bet-row'+(has?' cashed':'')+'" id="'+rowId+'">'
+      +'<div class="bc"><div class="u-av" style="background:'+avBg+'">'+letter+'</div>'
+      +'<div><div style="font-size:.77rem;color:'+nCol+(b.isUser?';font-weight:700':'')+'">'+(b.masked||b.nm)+'</div>'+sub+'</div></div>'
+      +'<div class="bc" style="font-weight:600;color:'+(has?'var(--green)':'var(--text)')+'">'+kes(b.bet)+'</div>'
+      +'<div class="bc">'+mCell+'</div>'
+      +'<div class="bc" style="justify-content:flex-end">'+wCell+'</div>'
+      +'</div>';
+  }).join('');
+}
+function updateCashedRows(){
+  bets.forEach(function(b){
+    if(!b||b.cashedAt===null||b.cashedAt===undefined)return;
+    var id='br-'+b.nm.replace(/[^a-z0-9]/gi,'')+'-'+Math.round(b.bet);
+    var row=document.getElementById(id);
+    if(!row||row.classList.contains('cashed'))return;
+    row.classList.add('cashed');
+    var cells=row.querySelectorAll('.bc');
+    if(cells[1])cells[1].style.color='var(--green)';
+    if(cells[2])cells[2].innerHTML=chip(b.cashedAt);
+    if(cells[3])cells[3].innerHTML='<span style="color:var(--green);font-weight:700">+'+kes(b.won)+'</span>';
+  });
+}
+
+/* ── ROCKET ── */
+var RK_N=['StarPilot','AceFlyer','OrbitalX','NovaBurst','CometRide','BlazeCrew','XtremeJet','TurboAce','VoidDash','GalaxySurf','NebulaBet','SolarMax','QuasarRun','PulseWave','DarkMatter','IronWing','PhoenixUp','HyperLane','LunarBet','CosmicHit','ZeroGrav','BurnRate','IgniteX','ApexBurn','NitroUp'];
+var RK_BRANGE=[[50,199,.24],[200,499,.22],[500,999,.20],[1000,2999,.17],[3000,7999,.10],[8000,14999,.05],[15000,20000,.02]];
+var RK_C=['#f97316','#ef4444','#fb923c','#f59e0b','#10b981','#6366f1','#8b5cf6','#ec4899','#06b6d4','#84cc16'];
+var RK_T=[1.2,1.5,1.8,2,2.5,3,4,5,8,10,15,20,50,100];
+
+function rkFake(){return RK_N[RK_N.length*Math.random()|0]+(Math.random()*900+100|0);}
+function rkMask(n){return n.length<=4?n[0]+'***':n.slice(0,2)+'***'+n.slice(-1);}
+function rkRandBet(){
+  var r=Math.random(),cum=0;
+  for(var i=0;i<RK_BRANGE.length;i++){cum+=RK_BRANGE[i][2];if(r<=cum){var lo=RK_BRANGE[i][0],hi=RK_BRANGE[i][1];return parseFloat((lo+Math.random()*(hi-lo)).toFixed(2));}}
+  return 100;
+}
+function genRkBets(){
+  var n=15+(Math.random()*20|0);
+  return Array.from({length:n},function(_,i){
+    var nm=rkFake(), bet=rkRandBet(), target=RK_T[RK_T.length*Math.random()|0];
+    return{nm:nm,masked:rkMask(nm),bet:bet,cashedAt:null,won:0,target:target,color:RK_C[i%RK_C.length]};
+  });
+}
+
+function startRocket(){
+  if(_rkRunning)return;
+  _rkRunning=true;
+  rocketWait();
+}
+var _rkWaitInt=null;
+function rocketWait(){
+  _rkState='wait'; _rkMult=1; _rkBets=genRkBets();
+  setText('rocket-mult-disp','-');
+  var md=el('rocket-mult-disp'); if(md)md.style.color='var(--text3)';
+  var waitSecs=3+(Math.random()*4|0);
+  setText('rocket-status-txt','🕒 Next launch in '+waitSecs+'s...');
+  if(game==='rocket') renderRocket();
+  // Trickle new bets in during the wait window
+  if(_rkWaitInt){clearInterval(_rkWaitInt);_rkWaitInt=null;}
+  var trickleTick=0, trickleMax=Math.floor(waitSecs*1000/600);
+  _rkWaitInt=setInterval(function(){
+    trickleTick++;
+    if(_rkState!=='wait'||trickleTick>=trickleMax){clearInterval(_rkWaitInt);_rkWaitInt=null;return;}
+    // Add 1-3 new bets to the list
+    var add=1+(Math.random()*2|0);
+    for(var j=0;j<add;j++){
+      var nm=rkFake(), bet=rkRandBet(), target=RK_T[RK_T.length*Math.random()|0];
+      _rkBets.push({nm:nm,masked:rkMask(nm),bet:bet,cashedAt:null,won:0,target:target,color:RK_C[_rkBets.length%RK_C.length]});
+    }
+    if(game==='rocket'&&tab==='all') renderRocket();
+  },600);
+  setTimeout(rocketFly, waitSecs*1000);
+}
+function rocketFly(){
+  _rkState='fly';
+  var r=Math.random(), crash;
+  if(r<.45)      crash=1+Math.random()*.6;
+  else if(r<.70) crash=1.6+Math.random()*1.8;
+  else if(r<.85) crash=3.4+Math.random()*5;
+  else if(r<.93) crash=8+Math.random()*17;
+  else if(r<.97) crash=25+Math.random()*35;
+  else           crash=60+Math.random()*140;
+  crash=parseFloat(crash.toFixed(2));
+
+  _rkMult=1;
+  var md=el('rocket-mult-disp');
+  if(md){md.textContent='1.00x';md.style.color='var(--green)';}
+  setText('rocket-status-txt','🚀 Rocket in flight...');
+
+  var cashed=new Set(), t0=performance.now(), dur=Math.log(crash)*3800+800;
+  clearInterval(_rkMultInt);
+  _rkMultInt=setInterval(function(){
+    var prog=Math.min((performance.now()-t0)/dur,1);
+    _rkMult=parseFloat(Math.pow(crash,prog).toFixed(2));
+    if(md){
+      md.textContent=_rkMult.toFixed(2)+'x';
+      md.style.color=_rkMult<3?'var(--green)':_rkMult<10?'var(--gold)':'var(--red)';
+    }
+    _rkBets.forEach(function(b,i){
+      if(!cashed.has(i)&&b.cashedAt===null&&_rkMult>=b.target){
+        cashed.add(i); b.cashedAt=b.target; b.won=parseFloat((b.bet*b.target).toFixed(2));
+        if(game==='rocket'&&tab==='all') updateRkRow(b,i);
+      }
+    });
+    if(prog>=1){ clearInterval(_rkMultInt); rocketCrash(crash,cashed); }
+  },80);
+}
+function rocketCrash(at,cashed){
+  _rkState='crash';
+  if(_rkWaitInt){clearInterval(_rkWaitInt);_rkWaitInt=null;}
+  _rkHist.unshift(at); if(_rkHist.length>30)_rkHist.pop();
+  var md=el('rocket-mult-disp');
+  if(md){md.textContent=at.toFixed(2)+'x';md.style.color='var(--red)';}
+  setText('rocket-status-txt','💥 Crashed at '+at.toFixed(2)+'x');
+  _rkBets.forEach(function(b,i){if(!cashed.has(i)&&b.cashedAt===null){b.cashedAt=0;b.won=0;}});
+  if(game==='rocket'){renderRocket();renderHistBar();}
+  setTimeout(function(){ _rkRunning=false; rocketWait(); }, 4500);
+}
+function renderRocket(){
+  var rows=el('rows'); if(!rows||game!=='rocket')return;
+  if(isDemo()){rows.innerHTML='<div class="empty">🎮 Real-money rocket feed only.<br><span style="font-size:.74rem">Switch to Real Play.</span></div>';return;}
+  if(!_rkBets.length){rows.innerHTML='<div class="empty">🚀 Waiting for next launch...</div>';return;}
+  var sorted=[].concat(_rkBets).sort(function(a,b){return b.bet-a.bet;});
+  rows.innerHTML=sorted.map(function(b,i){
+    var cashed=b.cashedAt!==null&&b.cashedAt>0;
+    var crashed=b.cashedAt===0;
+    var nCol=cashed?'var(--green)':crashed?'var(--red)':'var(--text)';
+    var mCell=cashed?chip(b.cashedAt):crashed?'<span style="color:var(--red)">x</span>':'<span style="color:var(--text3)">-</span>';
+    var wCell=cashed?'<span style="color:var(--green);font-weight:700">+'+kes(b.won)+'</span>':crashed?'<span style="color:var(--red);font-size:.72rem">Crashed</span>':'<span style="color:var(--text3)">-</span>';
+    return '<div class="bet-row'+(cashed?' cashed':crashed?' crashed':'')+'" id="rk-'+i+'">'
+      +'<div class="bc"><div class="u-av" style="background:linear-gradient(135deg,'+b.color+','+b.color+'99)">'+b.masked[0].toUpperCase()+'</div>'
+      +'<div><div style="font-size:.77rem;color:'+nCol+'">'+b.masked+'</div>'
+      +'<div style="font-size:.6rem;color:var(--text3);margin-top:1px">Auto: '+b.target.toFixed(2)+'x</div></div></div>'
+      +'<div class="bc" style="font-weight:600;color:'+(cashed?'var(--green)':crashed?'var(--red)':'var(--text)')+'">'+kes(b.bet)+'</div>'
+      +'<div class="bc">'+mCell+'</div>'
+      +'<div class="bc" style="justify-content:flex-end">'+wCell+'</div>'
+      +'</div>';
+  }).join('');
+}
+function updateRkRow(b,i){
+  var row=document.getElementById('rk-'+i); if(!row)return;
+  row.classList.add('cashed');
+  var cells=row.querySelectorAll('.bc');
+  if(cells[0]){var nm=cells[0].querySelector('div>div:first-child');if(nm)nm.style.color='var(--green)';}
+  if(cells[1])cells[1].style.color='var(--green)';
+  if(cells[2])cells[2].innerHTML=chip(b.cashedAt);
+  if(cells[3])cells[3].innerHTML='<span style="color:var(--green);font-weight:700">+'+kes(b.won)+'</span>';
+}
+
+/* ── FEEDS (Dice / Fortune / Mines) ── */
+var FCFG={
+  dice:     {colors:['#e74c3c','#ec4899','#a855f7','#f97316','#06b6d4'],mults:[1.94,2.88,4.85,9.7,19.4,48.5,97],wts:[.32,.26,.20,.11,.06,.03,.02],label:'🎲 Dice Roll'},
+  fortunespin:{colors:['#f5c542','#a259ff','#4c9fff','#29d980','#f24e4e'],mults:[0,.5,1,1.5,2,3,5,10,25,100],wts:[.36,.10,.12,.10,.10,.08,.06,.04,.02,.02],label:'🎡 Fortune Spin'},
+  mines:    {colors:['#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4'],mults:[1.1,1.2,1.5,1.8,2.1,2.8,3.5,5.2,8.4,12.5,20],wts:[.18,.16,.14,.12,.10,.09,.07,.05,.04,.03,.02],label:'💣 Mines'}
+};
+var FB=[20,50,100,200,500,1000,2000];
+var MC=[1,2,3,5,10,15,20,24];
+function wRand(m,w){var r=Math.random(),s=0;for(var i=0;i<m.length;i++){s+=w[i];if(r<=s)return m[i];}return m[m.length-1];}
+function genItem(g){
+  var cfg=FCFG[g]; if(!cfg)return null;
+  var nm=fakeName(),masked=maskName(nm);
+  var color=cfg.colors[cfg.colors.length*Math.random()|0];
+  var m=wRand(cfg.mults,cfg.wts);
+  var bet=FB[FB.length*Math.random()|0];
+  var won=parseFloat((bet*(m||0)).toFixed(2));
+  return{masked:masked,m:m,bet:bet,won:won,color:color,letter:(masked[0]||'?').toUpperCase(),gemsHit:m>0?Math.floor(2+Math.random()*8):0,mineCount:MC[MC.length*Math.random()|0]};
+}
+function renderFeedRow(item,g){
+  var rows=el('rows'); if(!rows||!item)return;
+  var mCol=item.m===0?'var(--red)':item.m<2?'var(--text2)':item.m<5?'var(--gold)':'var(--green)';
+  var isProfit=item.won>item.bet;
+  var html='';
+  if(g==='mines'){
+    html='<div class="mines-row '+(item.m>0?'won':'lost')+'" style="animation:slideIn .3s ease">'
+      +'<div style="display:flex;align-items:center;gap:7px;font-size:.77rem">'
+      +'<div class="u-av" style="background:linear-gradient(135deg,'+item.color+','+item.color+'88);width:28px;height:28px">'+item.letter+'</div>'
+      +'<span style="color:'+(item.m>0?'var(--green)':'var(--red)')+';font-weight:600">'+item.masked+'</span></div>'
+      +'<div style="font-size:.77rem;font-weight:600">'+kes(item.bet)+'</div>'
+      +'<div style="font-size:.75rem;color:var(--red)">'+item.mineCount+'</div>'
+      +'<div style="font-size:.75rem;color:var(--gold)">'+item.gemsHit+'</div>'
+      +'<div style="text-align:right">'
+      +(item.m>0?'<div style="color:var(--green);font-weight:700;font-size:.78rem">+'+kes(item.won)+'</div><div style="font-size:.62rem;color:var(--text3)">'+item.m.toFixed(2)+'x</div>':'<div style="color:var(--red);font-size:.78rem;font-weight:600">💥 Lost</div>')
+      +'</div></div>';
+  } else {
+    html='<div class="co-row" style="animation:slideIn .3s ease">'
+      +'<div class="co-av" style="background:linear-gradient(135deg,'+item.color+','+item.color+'88)">'+item.letter+'</div>'
+      +'<div><div style="font-size:.78rem;font-weight:600;color:var(--text)">'+item.masked+'</div>'
+      +'<div style="font-size:.62rem;color:var(--text3);margin-top:2px">Bet: KSh '+kes(item.bet)+' · '+FCFG[g].label+'</div></div>'
+      +'<div style="text-align:right">'
+      +'<div style="font-family:var(--font-d);font-size:.8rem;font-weight:700;color:'+mCol+'">'+(item.m===0?'0x':item.m.toFixed(2)+'x')+'</div>'
+      +'<div style="font-size:.65rem;margin-top:2px;color:'+(item.m>1?'var(--green)':item.m>0?'var(--gold)':'var(--red)')+'">'+(item.m===0?'Lost':isProfit?'+'+kes(item.won):'↩ '+kes(item.won))+'</div>'
+      +'</div></div>';
+  }
+  var div=document.createElement('div');
+  div.innerHTML=html.trim();
+  var child=div.firstElementChild;
+  if(!child)return;
+  rows.insertBefore(child,rows.firstChild);
+  while(rows.children.length>50)rows.removeChild(rows.lastChild);
+}
+function startFeed(g){
+  stopFeed(); _feedRunning=true;
+  var rows=el('rows'); if(!rows)return;
+  rows.innerHTML='';
+  for(var i=0;i<10;i++) renderFeedRow(genItem(g),g);
+  function tick(){
+    if(!_feedRunning||game!==g)return;
+    renderFeedRow(genItem(g),g);
+    _feedInt=setTimeout(tick,700+Math.random()*1800);
+  }
+  _feedInt=setTimeout(tick,700+Math.random()*1800);
+}
+function stopFeed(){
+  _feedRunning=false;
+  if(_feedInt){clearTimeout(_feedInt);_feedInt=null;}
+}
+
+/* ── MY BETS ── */
+function renderMine(){
+  var rows=el('rows'); if(!rows)return;
+  stopFeed();
+  var user=getUser();
+  if(!user){rows.innerHTML='<div class="empty">Login to see your bet history.</div>';return;}
+  if(isDemo()){rows.innerHTML='<div class="empty">My Bets tracks real-money plays only.<br><span style="font-size:.74rem">Switch to Real Play.</span></div>';return;}
+  var txns=getTxns().filter(function(t){return t.type==='bet'&&t.mode!=='demo';}).slice(0,60);
+  var ur=game==='aviator'?bets.filter(function(b){return b.isUser;}):[];
+  if(!txns.length&&!ur.length){rows.innerHTML='<div class="empty">No real-money bets yet.</div>';return;}
+  var all=ur.map(function(b){return{player:b.masked,bet:b.bet,at:b.cashedAt,won:b.won,status:b.cashedAt!==null?'cashed':state==='fly'?'active':'placed'};})
+    .concat(txns.map(function(t){return{player:user.username,bet:t.amount,at:t.cashoutAt||null,won:t.wonAmount||0,status:t.cashoutAt?'cashed':'lost'};}));
+  rows.innerHTML=all.map(function(r){
+    var has=r.at!==null&&r.at!==undefined&&r.at>0;
+    var bg=has?'background:rgba(41,217,128,.07)':r.status==='active'?'background:rgba(79,110,247,.05)':'';
+    var md=has?chip(r.at):r.status==='active'?'<span style="color:var(--primary);animation:pulse 1s infinite;display:inline-block">'+mult.toFixed(2)+'x</span>':'<span style="color:var(--text3)">-</span>';
+    var wd=has?'<span style="color:var(--green);font-weight:700">+'+kes(r.won)+'</span>':r.status==='active'?'<span style="color:var(--text2);font-size:.75rem">in play</span>':'<span style="color:var(--text3)">-</span>';
+    return '<div class="bet-row'+(has?' cashed':'')+'" style="'+bg+'">'
+      +'<div class="bc"><div class="u-av" style="background:linear-gradient(135deg,var(--primary),var(--secondary))">'+r.player[0].toUpperCase()+'</div>'
+      +'<span style="font-size:.8rem;color:var(--primary);font-weight:700">'+r.player+'</span></div>'
+      +'<div class="bc" style="font-weight:600;color:'+(has?'var(--green)':'var(--text)')+'">'+kes(r.bet)+'</div>'
+      +'<div class="bc">'+md+'</div>'
+      +'<div class="bc" style="justify-content:flex-end">'+wd+'</div>'
+      +'</div>';
+  }).join('')||'<div class="empty">No bets yet.</div>';
+}
+
+/* ── callbacks from parent ── */
+window.onTabVisible =function(){ sync(); render(); };
+window.onAuthChange =function(){ render(); };
+window.onGameWait   =function(b){ if(b)bets=b; state='wait'; mult=1; _stableOrder=[]; if(game==='aviator')render(); };
+window.onGameFly    =function(b,m){ if(b)bets=b; if(m)mult=m; state='fly'; if(game==='aviator')render(); };
+window.onGameCrash  =function(recorded,b,m){ if(b)bets=b; if(m!==undefined)mult=m; state='crash'; if(game==='aviator'){renderHistBar();render();} };
+window.onBetsChange =function(reason,b,m){
+  if(b)bets=b; if(m!==undefined)mult=m;
+  if(game!=='aviator')return;
+  upHeader();
+  if(tab==='all'){ if(reason==='cashout'&&state==='fly')updateCashedRows(); else renderAviator(); }
+  else renderMine();
+};
+
+/* ── polling ── */
+setInterval(function(){ sync(); if(game==='aviator'){ upHeader(); if(tab==='all')renderAviator(); else renderMine(); } },700);
+
+/* ── boot ── */
+sync();
+render();
+// Auto-start rocket simulation immediately so history builds up before user clicks
+startRocket();
+
+})();
+</script>
+</body>
+</html>

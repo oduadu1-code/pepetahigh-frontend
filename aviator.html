@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Aviator — PepetaHigh</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#09090f;display:flex;flex-direction:column;height:100vh;overflow:hidden;font-family:'Exo 2',sans-serif;color:#eef0ff}
+
+/* ── Desktop 3-column layout (real mode only, ≥900px) ─────────────── */
+@media(min-width:900px){
+  body.desktop-real #av-body{
+    display:grid;
+    grid-template-columns:320px 1fr 280px;
+    grid-template-rows:1fr;
+    flex:1;min-height:0;overflow:hidden;
+  }
+  body.desktop-real #left-panel{display:flex;flex-direction:column;border-right:1px solid #252740;background:#0f1018;overflow:hidden;}
+  body.desktop-real #center-panel{display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+  body.desktop-real #right-panel{display:flex;flex-direction:column;border-left:1px solid #252740;background:#0f1018;}
+  /* Hide the toggle chat button on desktop real mode */
+  body.desktop-real #chat-btn{display:none!important;}
+  /* Hide left-panel bets tab on desktop (inline in left-panel) */
+}
+/* Mobile / demo: single column */
+#left-panel{display:none;}
+#right-panel{display:none;}
+#av-body{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;}
+#center-panel{display:flex;flex-direction:column;flex:1;min-height:0;}
+
+/* Left panel bets */
+/* left panel uses styles.css bet-row / bc / u-av / bets-hdr / tab-btn / col-head classes */
+.av-top{display:flex;align-items:center;justify-content:space-between;padding:0 14px;height:40px;background:#0f1018;border-bottom:1px solid #252740;flex-shrink:0}
+.av-back{background:none;border:none;color:#8e94c0;font-size:.82rem;cursor:pointer;padding:0}
+.mode-pill{padding:2px 10px;border-radius:20px;font-size:.63rem;font-weight:700}
+.mode-pill.play{background:rgba(79,110,247,.15);color:#6c88ff;border:1px solid rgba(79,110,247,.3)}
+.mode-pill.demo{background:rgba(245,197,66,.15);color:#f5c542;border:1px solid rgba(245,197,66,.3)}
+.info-bar{padding:5px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;font-size:.71rem}
+.info-bar.real{background:linear-gradient(90deg,#110b00,#221300,#110b00);border-bottom:1px solid rgba(245,197,66,.14);color:#f5c542}
+.info-bar.demo{background:linear-gradient(90deg,#0a0820,#12103a,#0a0820);border-bottom:1px solid rgba(162,89,255,.2);color:#a259ff}
+.info-bar button{background:none;border:1px solid currentColor;border-radius:10px;color:inherit;font-size:.63rem;padding:2px 9px;cursor:pointer}
+.hist-bar{height:32px;display:flex;align-items:center;padding:0 10px;gap:5px;overflow-x:auto;flex-shrink:0;background:#0f1018;border-bottom:1px solid #252740}
+.hist-bar::-webkit-scrollbar{display:none}
+.canvas-wrap{flex:1;position:relative;overflow:hidden;background:radial-gradient(ellipse 90% 70% at 50% 115%,#0d1035 0%,#09090f 65%);min-height:0}
+#sunburst{position:absolute;top:-60%;left:-60%;width:220%;height:220%;pointer-events:none;z-index:1;background:repeating-conic-gradient(rgba(79,110,247,.03) 0deg 6deg,transparent 6deg 12deg);opacity:0;transition:opacity .5s;transform-origin:50% 50%}
+#sunburst.spin{opacity:1;animation:rotateSun 16s linear infinite}
+@keyframes rotateSun{to{transform:rotate(360deg)}}
+#gc{position:absolute;inset:0;width:100%;height:100%;z-index:2}
+#mult-ov{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity .2s}
+#mult-ov.show{opacity:1}
+#md{font-family:'Orbitron',monospace;font-size:4.4rem;font-weight:900;color:#fff;line-height:1;text-shadow:0 0 60px rgba(255,255,255,.2);transition:color .2s}
+#md.cashed{color:#29d980;text-shadow:0 0 50px rgba(41,217,128,.55)}
+#md.crashed{color:#f24e4e;text-shadow:0 0 50px rgba(242,78,78,.55)}
+#rl{font-size:.64rem;color:rgba(255,255,255,.4);font-family:'Orbitron',monospace;letter-spacing:.12em;text-transform:uppercase;margin-top:7px}
+#rl.live{color:#29d980;animation:blink 1.2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+#ss{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;background:rgba(9,9,15,.55);transition:opacity .3s}
+#ss.fade{opacity:0}
+#ss.gone{display:none}
+#snl{font-size:.61rem;color:#4a4f7a;font-family:'Orbitron',monospace;letter-spacing:.1em;margin-bottom:7px;text-transform:uppercase}
+#st{font-family:'Orbitron',monospace;font-size:1.9rem;font-weight:900;color:#eef0ff}
+.start-bar{width:140px;height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-top:11px;overflow:hidden}
+.start-fill{height:100%;width:0;background:linear-gradient(90deg,#4f6ef7,#a259ff);border-radius:2px;transition:width .1s linear}
+#crash-ov{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;background:rgba(242,78,78,.04);opacity:0;transition:opacity .3s}
+#crash-ov.show{opacity:1}
+#cv{font-family:'Orbitron',monospace;font-size:2.5rem;font-weight:900;color:#f24e4e}
+#cs{font-size:.7rem;color:rgba(255,255,255,.35);margin-top:4px;font-family:'Orbitron',monospace;letter-spacing:.1em;text-transform:uppercase}
+#win-pop{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:7;background:rgba(41,217,128,.09);border:1.5px solid rgba(41,217,128,.3);border-radius:10px;padding:8px 18px;text-align:center;opacity:0;pointer-events:none;transition:opacity .22s;white-space:nowrap}
+#win-pop.show{opacity:1}
+.wpm{font-family:'Orbitron',monospace;font-size:1.1rem;color:#29d980;font-weight:900}
+.wpa{font-size:.72rem;color:#8e94c0;margin-top:2px}
+.bet-panel{background:#0f1018;border-top:1px solid #252740;padding:9px 10px;flex-shrink:0}
+.bet-slots{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.slot-btn.place{background:linear-gradient(135deg,#29d980,#1db865);color:#000;width:100%;padding:11px;border-radius:8px;border:none;font-family:'Orbitron',monospace;font-size:.75rem;font-weight:700;cursor:pointer;box-shadow:0 3px 14px rgba(41,217,128,.3)}
+.slot-btn.place:active{transform:scale(.97)}
+.slot-btn.cashout{background:linear-gradient(135deg,#f5c542,#ff8c42);color:#000;width:100%;padding:11px;border-radius:8px;border:none;font-family:'Orbitron',monospace;font-size:.73rem;font-weight:700;cursor:pointer;animation:coGlow 1.3s infinite}
+.slot-btn.cancel{background:rgba(242,78,78,.07);color:#f24e4e;border:1.5px solid rgba(242,78,78,.22);width:100%;padding:11px;border-radius:8px;font-family:'Exo 2',sans-serif;font-size:.82rem;font-weight:600;cursor:pointer}
+.slot-btn.waiting{background:#1b1d2e;color:#4a4f7a;width:100%;padding:11px;border-radius:8px;border:none;font-size:.78rem;cursor:default}
+@keyframes coGlow{0%,100%{box-shadow:0 0 10px rgba(245,197,66,.3)}50%{box-shadow:0 0 24px rgba(245,197,66,.7)}}
+.sw-wrap{position:relative;display:inline-flex;align-items:center;cursor:pointer}
+.sw-wrap input{position:absolute;opacity:0;width:0;height:0}
+.sw-track{display:inline-block;width:38px;height:21px;background:#252740;border-radius:11px;position:relative;transition:background .2s}
+.sw-thumb{position:absolute;top:2.5px;left:2.5px;width:16px;height:16px;background:#4a4f7a;border-radius:50%;transition:all .2s}
+.sw-wrap input:checked ~ .sw-track{background:#4f6ef7}
+.sw-wrap input:checked ~ .sw-track .sw-thumb{transform:translateX(17px);background:#fff}
+.auto-setting-row{display:flex;align-items:center;justify-content:space-between}
+.auto-setting-lbl{font-size:.78rem;color:#8e94c0;font-weight:600}
+.mrow{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;font-size:.82rem;color:#eef0ff;transition:background .15s}
+.mrow-lbl{display:flex;align-items:center;color:#eef0ff}
+.mrow-link{cursor:pointer;color:#8e94c0}
+.mrow-link:hover{background:rgba(255,255,255,.04);color:#eef0ff}
+.chat-msg{background:#1b1d2e;border-radius:8px;padding:7px 10px;font-size:.78rem;line-height:1.45}
+.chat-msg .cm-name{font-weight:700;font-size:.7rem;margin-bottom:2px}
+.chat-msg.mine{background:rgba(79,110,247,.15);border:1px solid rgba(79,110,247,.2)}
+.chat-msg.mine .cm-name{color:#6c88ff}
+@keyframes slideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<!-- ── TOP BARS (always visible, single column) ───────────────────── -->
+<div class="av-top">
+  <button class="av-back" onclick="parent.exitAviator()">&#8249; Home</button>
+  <span id="mode-pill" class="mode-pill play">PLAY</span>
+</div>
+
+<div id="av-title-bar" style="display:flex;align-items:center;justify-content:space-between;padding:0 12px;height:36px;background:#0f1018;border-bottom:1px solid #252740;flex-shrink:0">
+  <div style="font-family:'Orbitron',monospace;font-size:.82rem;font-weight:700;color:#eef0ff;letter-spacing:.05em">✈ Aviator</div>
+  <div id="av-icons" style="display:flex;align-items:center;gap:4px">
+    <button onclick="toggleMenu()" id="menu-btn" style="background:rgba(255,255,255,.06);border:1px solid #252740;border-radius:7px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#8e94c0">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <button onclick="toggleChat()" id="chat-btn" style="background:rgba(255,255,255,.06);border:1px solid #252740;border-radius:7px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#8e94c0">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="hist-bar" id="local-hist">
+  <span style="font-size:.64rem;color:#4a4f7a">No rounds yet</span>
+</div>
+
+<div id="demo-bar" class="info-bar demo" style="display:none">
+  <span>🎮 Demo — <strong id="demo-bal">KSh 5,000.00</strong></span>
+  <button onclick="parent.openModal('dep-modal')">Deposit &amp; Play Real →</button>
+</div>
+
+<!-- ── 3-COLUMN BODY (desktop real) / single column (mobile/demo) ──── -->
+<div id="av-body">
+
+  <!-- LEFT: Live bets panel (desktop real only) -->
+  <div id="left-panel">
+    <!-- Stats bar -->
+    <div class="bets-hdr" id="lp-stats">
+      <div class="bh"><div class="bh-lbl">Total Bets</div><div class="bh-val" id="lp-total">—</div></div>
+      <div class="bh" style="text-align:center"><div class="bh-lbl">Active</div><div class="bh-val" id="lp-active" style="color:var(--green)">—</div></div>
+      <div class="bh" style="text-align:right"><div class="bh-lbl">Stakes</div><div class="bh-val" id="lp-stakes">—</div></div>
+    </div>
+    <!-- Tabs -->
+    <div class="tab-row" style="background:#0f1018">
+      <button class="tab-btn active" id="lpt-all" onclick="lpSetTab('all')">All Bets</button>
+      <button class="tab-btn" id="lpt-my" onclick="lpSetTab('my')">My Bets</button>
+      <button class="tab-btn" id="lpt-top" onclick="lpSetTab('top')">Top</button>
+    </div>
+    <!-- Column headers -->
+    <div class="col-head" style="background:#0f1018">
+      <div class="ch">Player</div>
+      <div class="ch">Bet (KSh)</div>
+      <div class="ch">Mult</div>
+      <div class="ch r">Cashout</div>
+    </div>
+    <!-- Rows -->
+    <div id="lp-rows" style="flex:1;overflow-y:auto;"></div>
+  </div>
+
+  <!-- CENTER: Canvas + bet panel -->
+  <div id="center-panel"></div>
+
+  <!-- RIGHT: Chat panel (desktop real always open) -->
+  <div id="right-panel" style="display:flex;flex-direction:column;height:100%;overflow:hidden">
+    <div style="display:flex;align-items:center;padding:10px 13px;border-bottom:1px solid #252740;flex-shrink:0">
+      <div style="font-family:'Orbitron',monospace;font-size:.78rem;font-weight:700;color:#eef0ff">💬 Live Chat</div>
+    </div>
+    <div id="rp-chat-msgs" style="flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:7px;scroll-behavior:smooth;min-height:0"></div>
+    <div style="padding:8px 10px;border-top:1px solid #252740;display:flex;gap:7px;flex-shrink:0;background:#0f1018">
+      <input id="rp-chat-inp" type="text" placeholder="Your message…" maxlength="120"
+        style="flex:1;background:#1b1d2e;border:1px solid #252740;border-radius:8px;padding:9px 11px;color:#eef0ff;font-family:'Exo 2',sans-serif;font-size:.82rem;outline:none"
+        onkeydown="if(event.key==='Enter')sendChatDesktop()">
+      <button onclick="sendChatDesktop()" style="background:linear-gradient(135deg,#4f6ef7,#a259ff);border:none;border-radius:8px;width:36px;height:36px;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+
+</div><!-- end av-body -->
+
+<!-- ── MENU DROPDOWN ──────────────────────────────────────────────────── -->
+<div id="menu-panel" style="
+  display:none;position:absolute;top:76px;right:8px;z-index:200;
+  background:#141520;border:1px solid #252740;border-radius:12px;
+  width:240px;box-shadow:0 8px 32px rgba(0,0,0,.6);overflow:hidden;
+  animation:fadeIn .18s ease
+">
+  <!-- User row -->
+  <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #252740;background:#0f1018">
+    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#4f6ef7,#a259ff);display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:700;flex-shrink:0" id="menu-av">?</div>
+    <div>
+      <div style="font-size:.82rem;font-weight:700;color:#eef0ff" id="menu-uname">Guest</div>
+      <div style="font-size:.65rem;color:#4a4f7a" id="menu-phone"></div>
+    </div>
+  </div>
+  <!-- Toggles -->
+  <div style="padding:6px 0">
+    <div class="mrow"><span class="mrow-lbl"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;opacity:.6"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>Sound</span><label class="sw-wrap"><input type="checkbox" id="m-sound" onchange="toggleSetting('sound',this.checked)"><span class="sw-track"><span class="sw-thumb"></span></span></label></div>
+    <div class="mrow"><span class="mrow-lbl"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;opacity:.6"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Music</span><label class="sw-wrap"><input type="checkbox" id="m-music" onchange="toggleSetting('music',this.checked)"><span class="sw-track"><span class="sw-thumb"></span></span></label></div>
+    <div class="mrow"><span class="mrow-lbl"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;opacity:.6"><path d="M5 3l14 9-14 9V3z"/></svg>Animation</span><label class="sw-wrap"><input type="checkbox" id="m-anim" onchange="toggleSetting('anim',this.checked)"><span class="sw-track"><span class="sw-thumb"></span></span></label></div>
+  </div>
+  <!-- Links -->
+  <div style="border-top:1px solid #252740;padding:6px 0">
+    <div class="mrow mrow-link" onclick="showGameInfo('limits')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;opacity:.6"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Game Limits</div>
+    <div class="mrow mrow-link" onclick="showGameInfo('howto')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;opacity:.6"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>How To Play</div>
+    <div class="mrow mrow-link" onclick="showGameInfo('rules')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;opacity:.6"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Game Rules</div>
+  </div>
+</div>
+
+<!-- ── CHAT PANEL ─────────────────────────────────────────────────────
+     Mobile  (<600px): full screen overlay
+     Tablet/Desktop (≥600px): right panel, 340px wide, no outside-click close
+  ─────────────────────────────────────────────────────────────────── -->
+<div id="chat-panel" style="display:none;position:absolute;z-index:199;flex-direction:column;background:#0f1018;border:1px solid #252740;box-shadow:0 -4px 32px rgba(0,0,0,.6);animation:slideUp .22s ease">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid #252740;flex-shrink:0">
+    <div style="font-family:'Orbitron',monospace;font-size:.8rem;font-weight:700;color:#eef0ff">💬 Live Chat</div>
+    <button onclick="toggleChat()" style="background:#1b1d2e;border:1px solid #252740;color:#8e94c0;width:28px;height:28px;border-radius:7px;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center">&times;</button>
+  </div>
+  <div id="chat-msgs" style="flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:7px;scroll-behavior:smooth"></div>
+  <div style="padding:8px 10px;border-top:1px solid #252740;display:flex;gap:7px;flex-shrink:0">
+    <input id="chat-inp" type="text" placeholder="Say something…" maxlength="120"
+      style="flex:1;background:#1b1d2e;border:1px solid #252740;border-radius:8px;padding:9px 11px;color:#eef0ff;font-family:'Exo 2',sans-serif;font-size:.82rem;outline:none"
+      onkeydown="if(event.key==='Enter')sendChat()">
+    <button onclick="sendChat()" style="background:linear-gradient(135deg,#4f6ef7,#a259ff);border:none;border-radius:8px;width:38px;height:38px;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Game info modal (limits / how to play / rules) -->
+<!-- Clicking the backdrop OR the X closes this panel -->
+<div id="ginfo-overlay" style="display:none;position:absolute;inset:0;z-index:300;background:rgba(9,9,15,.88);backdrop-filter:blur(10px);overflow-y:auto;cursor:pointer" onclick="closeGameInfo(event)">
+  <div style="background:#141520;border:1px solid #252740;border-radius:14px;margin:24px 14px;padding:20px 18px;position:relative;cursor:default" onclick="event.stopPropagation()">
+    <button onclick="document.getElementById('ginfo-overlay').style.display='none'" style="position:absolute;top:11px;right:11px;background:#1b1d2e;border:1px solid #252740;color:#8e94c0;width:28px;height:28px;border-radius:7px;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center">&times;</button>
+    <div id="ginfo-title" style="font-family:'Orbitron',monospace;font-size:.9rem;font-weight:700;margin-bottom:14px;color:#eef0ff;padding-right:30px"></div>
+    <div id="ginfo-body" style="font-size:.8rem;color:#8e94c0;line-height:1.75"></div>
+  </div>
+</div>
+
+<div class="canvas-wrap" id="cw">
+  <div id="sunburst"></div>
+  <canvas id="gc"></canvas>
+  <div id="mult-ov"><div id="md">1.00×</div><div id="rl"></div></div>
+  <div id="ss">
+    <div id="snl">Next round in</div>
+    <div id="st">STARTING...</div>
+    <div class="start-bar"><div class="start-fill" id="sf"></div></div>
+  </div>
+  <div id="crash-ov"><div id="cv">—</div><div id="cs">FLEW AWAY</div></div>
+  <div id="win-pop"><div class="wpm" id="wpm">2.00×</div><div class="wpa" id="wpa">Won KSh 200</div></div>
+</div>
+
+<div id="bet-panel-wrap" style="flex-shrink:0"><div class="bet-panel">
+  <div class="seg-tabs" style="margin-bottom:7px">
+    <button class="seg-btn active" id="stab-s" onclick="setBetMode('single')">Single Bet</button>
+    <button class="seg-btn" id="stab-d" onclick="setBetMode('double')">Double Bet</button>
+  </div>
+  <div id="bet-area"></div>
+</div></div><!-- end bet-panel-wrap -->
+
+<script src="utils.js"></script>
+<script>
+'use strict';
+
+// ─────────────────────────────────────────────────────────────────────
+// CANVAS
+// ─────────────────────────────────────────────────────────────────────
+const cvs = document.getElementById('gc');
+const cw  = document.getElementById('cw');
+function rsz(){ cvs.width = cw.clientWidth; cvs.height = cw.clientHeight; }
+rsz(); window.addEventListener('resize', rsz);
+
+let _pts = [], _pSpawned = false;
+function spawnP(x,y){
+  _pts = [];
+  for(let i=0;i<40;i++){
+    const a=Math.random()*Math.PI*2, s=1.5+Math.random()*3.5;
+    _pts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1.5,life:1,decay:.02+Math.random()*.018,r:2+Math.random()*3});
+  }
+}
+function drawCanvas(G){
+  const W=cvs.width, H=cvs.height, ctx=cvs.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  // grid
+  // grid lines removed
+  if(G.state==='fly'){
+    const prog=Math.min(G.elapsed/13000,.9);
+    const sx=W*.06, sy=H*.86, ex=W*.94, ey=H*.08, pts=[];
+    for(let i=0;i<=Math.ceil(80*prog);i++){
+      const t=i/80;
+      pts.push({x:sx+(ex-sx)*t, y:sy-(sy-ey)*Math.pow(t,.62)});
+    }
+    if(pts.length>1){
+      // fill under curve
+      const grd=ctx.createLinearGradient(0,sy,0,ey);
+      grd.addColorStop(0,'rgba(79,110,247,.15)');
+      grd.addColorStop(1,'transparent');
+      ctx.beginPath();ctx.moveTo(sx,sy);
+      pts.forEach(p=>ctx.lineTo(p.x,p.y));
+      ctx.lineTo(pts[pts.length-1].x,sy);ctx.closePath();ctx.fillStyle=grd;ctx.fill();
+      // curve line
+      ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+      pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
+      ctx.strokeStyle='#6c88ff';ctx.lineWidth=3;
+      ctx.shadowBlur=16;ctx.shadowColor='rgba(108,136,255,.65)';
+      ctx.stroke();ctx.shadowBlur=0;
+      // plane at tip
+      const tip=pts[pts.length-1], prev=pts.length>=2?pts[pts.length-2]:pts[0];
+      const ang=Math.atan2(tip.y-prev.y,tip.x-prev.x);
+      ctx.save();ctx.translate(tip.x,tip.y);ctx.rotate(ang);
+      ctx.shadowBlur=20;ctx.shadowColor='rgba(108,136,255,.9)';
+      ctx.fillStyle='#eef0ff';ctx.beginPath();ctx.moveTo(20,0);ctx.lineTo(-10,5);ctx.lineTo(-10,-5);ctx.closePath();ctx.fill();
+      ctx.fillStyle='#9ab0ff';
+      ctx.beginPath();ctx.moveTo(5,0);ctx.lineTo(-5,16);ctx.lineTo(-9,3);ctx.closePath();ctx.fill();
+      ctx.beginPath();ctx.moveTo(5,0);ctx.lineTo(-5,-16);ctx.lineTo(-9,-3);ctx.closePath();ctx.fill();
+      ctx.fillStyle='#6c88ff';ctx.beginPath();ctx.moveTo(-8,0);ctx.lineTo(-14,7);ctx.lineTo(-11,0);ctx.closePath();ctx.fill();
+      ctx.shadowBlur=0;
+      for(let j=1;j<=5;j++){
+        ctx.beginPath();ctx.arc(-(12+j*7),0,Math.max(0,3-j*.4),0,Math.PI*2);
+        ctx.fillStyle=`rgba(108,136,255,${(6-j)/6*.55})`;ctx.fill();
+      }
+      ctx.restore();
+      // tip dot
+      ctx.beginPath();ctx.arc(tip.x,tip.y,4,0,Math.PI*2);
+      ctx.fillStyle='#6c88ff';ctx.shadowBlur=14;ctx.shadowColor='#6c88ff';ctx.fill();ctx.shadowBlur=0;
+    }
+    ctx.strokeStyle='rgba(79,110,247,.14)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(W*.06,H*.86+1);ctx.lineTo(W*.94,H*.86+1);ctx.stroke();
+    _pSpawned=false;
+  }
+  // On crash: line and area are GONE — only particles remain
+  // Spawn particles once at crash point (use stored crash position)
+  if(G.state==='crash'){
+    ctx.strokeStyle='rgba(79,110,247,.14)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(W*.06,H*.86+1);ctx.lineTo(W*.94,H*.86+1);ctx.stroke();
+    if(!_pSpawned){
+      // Find where crash tip would have been
+      const prog=Math.min(G.elapsed/13000,.9);
+      const sx=W*.06,sy=H*.86,ex=W*.94,ey=H*.08;
+      const t=prog;
+      const cx=sx+(ex-sx)*t, cy=sy-(sy-ey)*Math.pow(t,.62);
+      spawnP(cx,cy);_pSpawned=true;
+    }
+  }
+  // particles
+  _pts=_pts.filter(p=>p.life>0.02);
+  _pts.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;p.vy+=.09;p.life-=p.decay;
+    const pr=Math.max(0,p.r*p.life);
+    ctx.beginPath();ctx.arc(p.x,p.y,pr,0,Math.PI*2);
+    ctx.fillStyle=`rgba(242,78,78,${Math.max(0,p.life)*.85})`;ctx.fill();
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// AUDIO
+// ─────────────────────────────────────────────────────────────────────
+const soundOn = ()=>sessionStorage.getItem('ph_sound')!=='off';
+const musicOn = ()=>sessionStorage.getItem('ph_music')!=='off';
+// cashout=boom(8.1-10.5), crash=crrrrg(2-3.6) — as requested
+const SP = { bet:{s:0,e:.45}, cashout:{s:8.1,e:10.5}, crash:{s:2,e:3.6} };
+
+const _bgm = new Audio('bg_music.mp3');
+_bgm.loop = true; _bgm.volume = 0;
+let _unlocked = false;
+
+function _unlock(){
+  if(_unlocked) return; _unlocked = true;
+  if(musicOn()){ _bgm.play().catch(()=>{}); _fadeTo(_bgm,.42,800); }
+}
+['click','touchstart','pointerdown'].forEach(ev=>
+  document.addEventListener(ev,_unlock,{capture:true,once:true}));
+
+function _fadeTo(node,target,ms){
+  if(node._ft){clearInterval(node._ft);node._ft=null;}
+  const STEPS=20,dt=Math.max(8,ms/STEPS);let step=0;const from=node.volume;
+  node._ft=setInterval(()=>{
+    step++;
+    node.volume=Math.max(0,Math.min(1,from+(target-from)*step/STEPS));
+    if(step>=STEPS){node.volume=target;clearInterval(node._ft);node._ft=null;if(target===0)node.pause();}
+  },dt);
+}
+const _activeSprites=[];
+function _sprite(sp,vol){
+  if(!_unlocked||!soundOn())return;
+  const a=new Audio('sprite_audio.mp3');
+  a.volume=Math.min(1,vol);a.currentTime=sp.s;a.play().catch(()=>{});
+  _activeSprites.push(a);
+  const dur=(sp.e-sp.s)*1000+80;
+  setTimeout(()=>{try{a.pause();a.src='';}catch(e){} const idx=_activeSprites.indexOf(a);if(idx>-1)_activeSprites.splice(idx,1);}, dur);
+}
+function _stopAllSprites(){
+  _activeSprites.forEach(a=>{try{a.pause();a.src='';}catch(e){}});
+  _activeSprites.length=0;
+}
+let _inGame = false;  // true only while user is actively in the aviator game
+function sndBet()    { if(_inGame) _sprite(SP.bet,    .55); }
+function sndCashout(){ if(_inGame) _sprite(SP.cashout,.85); }
+function sndCrash()  { if(_inGame) _sprite(SP.crash,  1.0); }
+function onMusicToggle(){
+  if(musicOn()&&_unlocked){if(_bgm.paused)_bgm.play().catch(()=>{});_fadeTo(_bgm,.42,600);}
+  else _fadeTo(_bgm,0,400);
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// HISTORY BAR
+// ─────────────────────────────────────────────────────────────────────
+function renderHist(){
+  const bar = document.getElementById('local-hist'); if(!bar) return;
+  const isDemo = PH.getMode()==='demo';
+  let hist = [];
+  try{ hist = (isDemo ? parent.window.G_demo : parent.window.G_real)?.roundHist || []; }catch(e){}
+  const lbl = isDemo
+    ? '<span style="font-size:.6rem;color:#a259ff;font-weight:700;flex-shrink:0;margin-right:3px">🎮</span>'
+    : '<span class="online-dot" style="flex-shrink:0;margin-right:4px"></span>';
+  if(!hist.length){ bar.innerHTML = lbl + '<span style="font-size:.64rem;color:#4a4f7a">No rounds yet</span>'; return; }
+  bar.innerHTML = lbl + hist.slice(0,26).map(m=>{
+    const c=m<2?'hc-safe':m<5?'hc-mid':m<20?'hc-high':'hc-mega';
+    return `<span class="hchip ${c}">${m.toFixed(2)}×</span>`;
+  }).join('');
+  // Also refresh parent histbar (for bets tab)
+  try{ parent.renderHistBar && parent.renderHistBar(); }catch(e){}
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// BET PANEL
+// ─────────────────────────────────────────────────────────────────────
+let betMode='single';
+function setBetMode(m){
+  betMode=m;
+  document.getElementById('stab-s').classList.toggle('active',m==='single');
+  document.getElementById('stab-d').classList.toggle('active',m==='double');
+  renderBet();
+}
+
+// Per-slot tab: 'bet' or 'auto'
+const _slotTab = ['bet','bet'];
+function setSlotTab(i,t){ _slotTab[i]=t; renderBet(); }
+
+function renderBet(){
+  const el=document.getElementById('bet-area'); if(!el) return;
+  let G; try{ G=parent.window.G; }catch(e){}
+  if(!G){ el.innerHTML='<div style="text-align:center;padding:18px;color:#4a4f7a;font-size:.8rem">Loading game\u2026</div>'; return; }
+  el.innerHTML = betMode==='double'
+    ? `<div class="bet-slots">${buildSlot(G,0)}${buildSlot(G,1)}</div>`
+    : buildSlot(G,0);
+}
+
+function buildSlot(G,i){
+  const b=G.myBets[i], tab=_slotTab[i], locked=b.placed;
+  const dis=locked?'disabled style="opacity:.4;pointer-events:none"':'';
+  // Default auto value to 1.10 if empty
+  if(!b.auto && b.autoOn) b.auto='1.10';
+
+  // Action button — full width pill matching screenshot style
+  let btn='';
+  if(b.active && !b.cashedOut){
+    btn=`<button class="slot-btn cashout" id="cob${i}" onclick="doCO(${i})">CASH OUT @ ${G.mult.toFixed(2)}&times; &nbsp; <small style="font-size:.7rem;opacity:.9">${PH.fmt(b.amt*G.mult)}</small></button>`;
+  } else if(b.placed && G.state==='wait'){
+    btn=`<button class="slot-btn cancel" onclick="doCancel(${i})">&times; Cancel</button>`;
+  } else if(G.state==='fly' || (b.placed && b.cashedOut)){
+    btn='';
+  } else {
+    btn=`<button class="slot-btn place" onclick="doPlace(${i})">Bet ${PH.fmt(b.amt)}</button>`;
+  }
+
+  // Amount row — shared
+  const amtRow=`
+    <div class="amt-row" style="margin-bottom:6px">
+      <button class="amt-btn" onclick="adjAmt(${i},-50)" ${dis}>&#8722;</button>
+      <input class="amt-inp" id="ai${i}" type="number" value="${b.amt}" min="20" max="20000"
+        ${locked?'disabled style="opacity:.45"':''}
+        onchange="setAmtRaw(${i},this.value)">
+      <button class="amt-btn" onclick="adjAmt(${i},50)" ${dis}>+</button>
+    </div>
+    <div class="qk-row" style="margin-bottom:8px">
+      ${[20,50,100,500,1000,20000].map(v=>`<span class="qk" onclick="setAmt(${i},${v})" ${dis}>${v>=1000?v/1000+'K':v}</span>`).join('')}<span class="qk" onclick="(function(){const bal=Math.round((PH.getMode()==='demo'?PH.getDemoBal():PH.getWallet())*100)/100;setAmt(${i},Math.min(20000,bal));})()" ${dis}>ALL</span>
+    </div>`;
+
+  // BET tab
+  const betContent = amtRow;
+
+  // AUTO tab — two rows on one line each, input always visible when autoOn
+  const autoContent = amtRow + `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;gap:8px">
+      <!-- Auto bet row -->
+      <div style="display:flex;align-items:center;gap:6px;flex:1">
+        <span style="font-size:.76rem;color:#8e94c0;font-weight:600;white-space:nowrap">Auto bet</span>
+        <label class="sw-wrap">
+          <input type="checkbox" ${b.autoBet?'checked':''} onchange="setAutoBet(${i},this.checked)" ${locked?'disabled':''}>
+          <span class="sw-track"><span class="sw-thumb"></span></span>
+        </label>
+      </div>
+      <!-- Auto cashout row -->
+      <div style="display:flex;align-items:center;gap:6px;flex:1;justify-content:flex-end">
+        <span style="font-size:.76rem;color:#8e94c0;font-weight:600;white-space:nowrap">Auto C/O</span>
+        <label class="sw-wrap">
+          <input type="checkbox" ${b.autoOn?'checked':''} onchange="setAutoOn(${i},this.checked)" ${locked?'disabled':''}>
+          <span class="sw-track"><span class="sw-thumb"></span></span>
+        </label>
+        <!-- Value input — always shown when autoOn, pre-filled 1.10 -->
+        <input class="auto-inp" type="number" placeholder="1.10"
+          value="${b.auto||'1.10'}" step="0.01" min="1.01"
+          style="width:46px;text-align:center;${!b.autoOn||locked?'opacity:.3;pointer-events:none':''}"
+          onchange="setAuto(${i},this.value)">
+        <button onclick="clearAuto(${i})" style="background:none;border:none;color:#4a4f7a;cursor:pointer;font-size:.85rem;padding:0;line-height:1;${!b.autoOn?'opacity:.3;pointer-events:none':''}">&times;</button>
+      </div>
+    </div>`;
+
+  return `<div class="bet-slot">
+    <div style="display:flex;background:#0f1018;border-radius:8px;border:1px solid #252740;padding:3px;gap:2px;margin-bottom:8px">
+      <button onclick="setSlotTab(${i},'bet')" style="flex:1;padding:7px 0;border-radius:6px;border:none;font-family:'Exo 2',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;transition:all .18s;background:${tab==='bet'?'#252740':'transparent'};color:${tab==='bet'?'#eef0ff':'#4a4f7a'}">Bet</button>
+      <button onclick="setSlotTab(${i},'auto')" style="flex:1;padding:7px 0;border-radius:6px;border:none;font-family:'Exo 2',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;transition:all .18s;background:${tab==='auto'?'#252740':'transparent'};color:${tab==='auto'?'#eef0ff':'#4a4f7a'}">Auto</button>
+    </div>
+    ${tab==='bet'?betContent:autoContent}
+    ${btn}
+  </div>`;
+}
+function adjAmt(i,dir){
+  const G=parent.window.G; if(G.myBets[i].placed) return;
+  let amt=G.myBets[i].amt;
+  if(dir<0){
+    // MINUS: halve, keep 2dp precision, min 20
+    amt=Math.max(20, Math.round(amt/2*100)/100);
+  } else {
+    // PLUS: double up to 10000, then step up to 20000
+    if(amt<10000){
+      amt=Math.min(10000, Math.round(amt*2*100)/100);
+    } else {
+      const steps=[5000,2500,1000,500,250,100,50,20];
+      let done=false;
+      for(const s of steps){
+        const next=Math.round((amt+s)*100)/100;
+        if(next<=20000){amt=next;done=true;break;}
+      }
+      if(!done) amt=20000;
+    }
+  }
+  G.myBets[i].amt=amt;
+  renderBet();
+}
+function setAmt(i,v){
+  const G=parent.window.G; if(G.myBets[i].placed)return;
+  const val=Math.round(parseFloat(v)*100)/100;
+  G.myBets[i].amt=Math.max(20, Math.min(20000, isNaN(val)?100:val));
+  renderBet();
+}
+function setAmtRaw(i,v){
+  const G=parent.window.G; if(G.myBets[i].placed)return;
+  const val=Math.round(parseFloat(v)*100)/100;
+  G.myBets[i].amt=Math.max(20, Math.min(20000, isNaN(val)?100:val));
+}
+function setAuto(i,v){parent.window.G.myBets[i].auto=v;}
+function clearAuto(i){parent.window.G.myBets[i].auto='';renderBet();}
+function setAutoBet(i,c){parent.window.G.myBets[i].autoBet=c;}
+function setAutoOn(i,c){parent.window.G.myBets[i].autoOn=c;renderBet();}
+
+function refreshCO(){
+  const G=parent.window.G;
+  G.myBets.forEach((b,i)=>{
+    if(!b.active||b.cashedOut)return;
+    const btn=document.getElementById('cob'+i);
+    if(btn)btn.innerHTML=`CASH OUT @ ${G.mult.toFixed(2)}&times;<br><small style="font-size:.6rem;opacity:.85">${PH.fmt(b.amt*G.mult)}</small>`;
+  });
+}
+
+
+// ─────────────────────────────────────────────────────────────────────
+// BET ACTIONS
+// ─────────────────────────────────────────────────────────────────────
+function doPlace(i){
+  _unlock();
+  const G = parent.window.G;
+
+  // Only block during active flight
+  if(G.state==='fly'){
+    showToast('Wait for next round','info');
+    return;
+  }
+
+  // Call engine — it handles all validation
+  const res = parent.G_placeBet(i);
+
+  if(res==='already') { showToast('Bet already placed','info'); return; }
+  if(res==='min')     { showToast('Minimum bet is KSh 20','error'); return; }
+  if(res==='max')     { showToast('Maximum bet is KSh 20,000','error'); return; }
+  if(res==='auth')    { showToast('Login to play for real money','error'); parent.openModal('login-modal'); return; }
+  if(res==='funds')   {
+    if(PH.getMode()==='demo') showToast('Demo balance empty','error');
+    else { showToast('Insufficient balance','error'); parent.openModal('dep-modal'); }
+    return;
+  }
+  if(res!=='ok'){ showToast('Could not place bet ('+res+')','error'); return; }
+
+  sndBet();
+  try{ parent.updateNavBal(); }catch(e){}
+  renderBet();
+  upInfoBar();
+  showToast('Bet '+PH.fmt(G.myBets[i].amt)+' placed! ✓','success');
+}
+
+function doCancel(i){
+  const ok = parent.G_cancelBet(i);
+  if(!ok){ showToast('Cannot cancel now','error'); return; }
+  try{ parent.updateNavBal(); }catch(e){}
+  renderBet(); upInfoBar();
+  showToast('Bet cancelled','info');
+}
+
+function doCO(i){
+  const G   = parent.window.G;
+  const won = parent.G_doCashout(i);
+  if(!won) return;
+  sndCashout();
+  try{ parent.updateNavBal(); }catch(e){}
+  const wp=document.getElementById('win-pop');
+  if(wp){
+    wp.classList.add('show');
+    document.getElementById('wpm').textContent=G.mult.toFixed(2)+'×';
+    document.getElementById('wpa').textContent='Won '+PH.fmt(won);
+    // Auto-hide win popup after 2 seconds
+    setTimeout(()=>wp.classList.remove('show'), 2000);
+  }
+  showToast('Cashed out @ '+G.mult.toFixed(2)+'× · Won '+PH.fmt(won),'success');
+  renderBet(); upInfoBar();
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// INFO BAR
+// ─────────────────────────────────────────────────────────────────────
+function upInfoBar(){
+  const isDemo=PH.getMode()==='demo';
+  // real-bar removed — title bar always visible, just hide icons in demo
+  const ic=document.getElementById('av-icons'); if(ic) ic.style.display=isDemo?'none':'flex';
+  document.getElementById('demo-bar').style.display=isDemo?'flex':'none';
+  // Re-apply desktop layout when mode switches
+  if(typeof applyLayout==='function') setTimeout(applyLayout,50);
+  if(isDemo){
+    const el=document.getElementById('demo-bal');
+    if(el) el.textContent=PH.fmt(PH.getDemoBal());
+  } else {
+    const jk='ph_jp_real_'+new Date().toISOString().slice(0,10);
+    const je=document.getElementById('jp-status');
+    if(je) je.textContent='· '+(sessionStorage.getItem(jk)==='1'?'Claimed today':'Up for grabs');
+  }
+  const pill=document.getElementById('mode-pill');
+  if(pill){ pill.textContent=isDemo?'DEMO':'PLAY'; pill.className='mode-pill '+(isDemo?'demo':'play'); }
+  try{ parent.updateNavBal(); }catch(e){}
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// MAIN GAME LOOP — drives EVERYTHING autonomously
+// Does NOT depend on parent calling onGameFly/onGameWait/onGameCrash.
+// Instead it watches G.state every frame and reacts itself.
+// This means the bet panel is ALWAYS in sync no matter what.
+// ─────────────────────────────────────────────────────────────────────
+let _lastState = '';
+let _lastMult  = 0;
+
+function gameLoop(){
+  let G;
+  try{ G=parent.window.G; }catch(e){ requestAnimationFrame(gameLoop); return; }
+  if(!G){ requestAnimationFrame(gameLoop); return; }
+
+  const state = G.state;
+  const mult  = G.mult;
+
+  // ── State changed → update UI ──
+  if(state !== _lastState){
+    _lastState = state;
+
+    if(state==='fly'){
+      // Hide wait screen
+      const ss=document.getElementById('ss');
+      ss.classList.add('fade');
+      setTimeout(()=>ss.classList.add('gone'),320);
+      // Show multiplier overlay
+      document.getElementById('mult-ov').classList.add('show');
+      document.getElementById('md').className='';
+      document.getElementById('crash-ov').classList.remove('show');
+      // START sunburst spin
+      document.getElementById('sunburst').classList.add('spin');
+      document.getElementById('win-pop').classList.remove('show');
+      _pSpawned=false;
+      renderBet(); renderHist();
+      if(_isDesktop()&&_isReal()) lpRender(); // full re-render on fly start
+    }
+
+    if(state==='crash'){
+      sndCrash();
+      document.getElementById('sunburst').classList.remove('spin');
+      // Hide the multiplier overlay — crash overlay takes over fully
+      document.getElementById('mult-ov').classList.remove('show');
+      document.getElementById('crash-ov').classList.add('show');
+      const crashVal = G.crashAt ? G.crashAt.toFixed(2) : mult.toFixed(2);
+      const cv=document.getElementById('cv');
+      if(cv) cv.textContent=crashVal+'×';
+      const rl=document.getElementById('rl');
+      if(rl){ rl.textContent=''; rl.className=''; }
+      renderBet(); renderHist();
+      if(_isDesktop()&&_isReal()) lpRender(); // full re-render on crash
+    }
+
+    if(state==='wait'){
+      document.getElementById('crash-ov').classList.remove('show');
+      document.getElementById('win-pop').classList.remove('show');
+      document.getElementById('mult-ov').classList.remove('show');
+      document.getElementById('sunburst').classList.remove('spin');
+      const ss=document.getElementById('ss');
+      ss.classList.remove('gone');
+      requestAnimationFrame(()=>requestAnimationFrame(()=>ss.classList.remove('fade')));
+      _pts=[];_pSpawned=false;
+      _lpStableOrder=[]; // reset stable order for new round
+      renderBet(); renderHist();
+      if(_isDesktop()&&_isReal()) lpRender(); // full re-render on wait
+    }
+  }
+
+  // ── Live updates during flight ──
+  if(state==='fly'){
+    const m=document.getElementById('md');
+    if(m){
+      m.textContent=mult.toFixed(2)+'×';
+      m.className='';
+    }
+    const r=document.getElementById('rl');
+    if(r){ r.textContent=''; r.className=''; }
+    if(mult !== _lastMult){
+      refreshCO(); _lastMult=mult;
+      // Update left panel cashouts in-place during flight
+      if(_isDesktop()&&_isReal()) lpUpdateCashed(G.roundBets||[]);
+    }
+  }
+
+  // ── Wait countdown ──
+  if(state==='wait'){
+    const sf=document.getElementById('sf');
+    if(sf) sf.style.width=(G.fillPct*100)+'%';
+    const s=document.getElementById('st');
+    if(s) s.textContent=G.waitTimer>400?'STARTING IN '+Math.max(0,Math.ceil(G.waitTimer/1000))+'...':'STARTING...';
+  }
+
+  drawCanvas(G);
+  requestAnimationFrame(gameLoop);
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// CALLBACKS FROM PARENT (belt-and-suspenders — loop handles it anyway)
+// ─────────────────────────────────────────────────────────────────────
+function onGameFly()         { /* loop handles it */ }
+function onGameCrash(rec)    { /* loop handles it */ }
+function onGameWait()        { /* loop handles it */ }
+function onAutoCashout(i,won){
+  // Auto-cashout needs to trigger sound + UI since loop won't know
+  sndCashout();
+  const G=parent.window.G;
+  try{ parent.updateNavBal(); }catch(e){}
+  const wp=document.getElementById('win-pop');
+  if(wp){
+    wp.classList.add('show');
+    document.getElementById('wpm').textContent=G.mult.toFixed(2)+'×';
+    document.getElementById('wpa').textContent='Won '+PH.fmt(won);
+    setTimeout(()=>wp.classList.remove('show'), 2000);
+  }
+  showToast('Auto cashout @ '+G.mult.toFixed(2)+'× · Won '+PH.fmt(won),'success');
+  renderBet(); upInfoBar();
+}
+// Called when user actually exits the game (clicks Home)
+function onNavAway(){
+  _inGame = false;        // block all further sounds immediately
+  document.getElementById('sunburst').classList.remove('spin');
+  _fadeTo(_bgm,0,100);
+  _stopAllSprites();
+  _slotTab[0]='bet'; _slotTab[1]='bet';
+  // Reset all bet slots to clean defaults
+  try{
+    const G=parent.window.G;
+    G.myBets.forEach(b=>{
+      b.amt=100; b.auto=''; b.autoOn=false; b.autoBet=false;
+      b.placed=false; b.active=false; b.cashedOut=false; b.won=0;
+    });
+  }catch(e){}
+}
+// Called when browser tab is hidden — stop sounds only, keep bet state
+function onTabHidden(){
+  _fadeTo(_bgm,0,200);
+  _stopAllSprites();
+}
+function onLaunched(){
+  _inGame = true;         // user is in the game — sounds active
+  _lastState='';
+  upInfoBar(); renderBet(); renderHist();
+  _unlock();
+  if(musicOn()&&_unlocked){ if(_bgm.paused) _bgm.play().catch(()=>{}); _fadeTo(_bgm,.42,600); }
+}
+function onAuthChange(){ upInfoBar(); renderBet(); }
+function onTabVisible() { upInfoBar(); renderBet(); renderHist(); }
+
+// ─────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────
+if(sessionStorage.getItem('ph_theme')==='light') document.body.classList.add('theme-light');
+
+// ── Animation state ───────────────────────────────────────────────────
+let _animOn = sessionStorage.getItem('ph_anim') !== 'off';
+
+// ── Menu panel ────────────────────────────────────────────────────────
+let _menuOpen = false;
+function toggleMenu(){
+  _menuOpen = !_menuOpen;
+  const p = document.getElementById('menu-panel');
+  p.style.display = _menuOpen ? 'block' : 'none';
+  // Sync toggle states
+  const so = sessionStorage.getItem('ph_sound') !== 'off';
+  const mo = sessionStorage.getItem('ph_music') !== 'off';
+  document.getElementById('m-sound').checked = so;
+  document.getElementById('m-music').checked = mo;
+  document.getElementById('m-anim').checked  = _animOn;
+  // Populate user info
+  try{
+    const u = parent.PH.getUser();
+    document.getElementById('menu-uname').textContent = u ? u.username : 'Guest';
+    document.getElementById('menu-phone').textContent = u ? u.phone||'' : '';
+    document.getElementById('menu-av').textContent    = u ? (u.username[0]||'?').toUpperCase() : '?';
+  }catch(e){}
+  // Close chat if open
+  if(_menuOpen && _chatOpen) toggleChat();
+}
+
+function toggleSetting(key, val){
+  if(key==='sound'){
+    sessionStorage.setItem('ph_sound', val?'on':'off');
+  } else if(key==='music'){
+    sessionStorage.setItem('ph_music', val?'on':'off');
+    onMusicToggle();
+  } else if(key==='anim'){
+    _animOn = val;
+    sessionStorage.setItem('ph_anim', val?'on':'off');
+    // Toggle canvas and sunburst visibility
+    document.getElementById('gc').style.opacity       = val ? '1' : '0';
+    document.getElementById('sunburst').style.opacity = val ? '' : '0';
+  }
+}
+
+// Close menu when clicking outside
+document.addEventListener('click', e=>{
+  if(_menuOpen && !e.target.closest('#menu-panel') && !e.target.closest('#menu-btn')){
+    _menuOpen = false;
+    document.getElementById('menu-panel').style.display = 'none';
+  }
+});
+
+// ── Close game info — called by backdrop click ────────────────────────
+function closeGameInfo(e){
+  // Only close if clicked directly on the overlay backdrop, not the card
+  if(e.target===document.getElementById('ginfo-overlay')){
+    document.getElementById('ginfo-overlay').style.display='none';
+  }
+}
+
+// ── Game info modal ───────────────────────────────────────────────────
+const _gameInfoContent = {
+  limits: {
+    title: 'Game Limits',
+    body: `<table style="width:100%;border-collapse:collapse;font-size:.8rem">
+      <tr><td style="padding:6px 0;color:#8e94c0;border-bottom:1px solid #252740">Min Bet</td><td style="text-align:right;color:#eef0ff;border-bottom:1px solid #252740"><strong>KSh 20</strong></td></tr>
+      <tr><td style="padding:6px 0;color:#8e94c0;border-bottom:1px solid #252740">Max Bet</td><td style="text-align:right;color:#eef0ff;border-bottom:1px solid #252740"><strong>KSh 20,000</strong></td></tr>
+      <tr><td style="padding:6px 0;color:#8e94c0;border-bottom:1px solid #252740">Max Win</td><td style="text-align:right;color:#eef0ff;border-bottom:1px solid #252740"><strong>KSh 2,000,000</strong></td></tr>
+      <tr><td style="padding:6px 0;color:#8e94c0;border-bottom:1px solid #252740">Max Multiplier</td><td style="text-align:right;color:#eef0ff;border-bottom:1px solid #252740"><strong>5,000×</strong></td></tr>
+      <tr><td style="padding:6px 0;color:#8e94c0">RTP</td><td style="text-align:right;color:#eef0ff"><strong>97%</strong></td></tr>
+    </table>`
+  },
+  howto: {
+    title: 'How To Play',
+    body: `<p style="margin-bottom:10px">Aviator is a crash game where a plane takes off and a multiplier climbs from 1×.</p>
+      <p style="margin-bottom:10px"><strong style="color:#eef0ff">1. Place your bet</strong> before the round starts. You can use Single or Double bet.</p>
+      <p style="margin-bottom:10px"><strong style="color:#eef0ff">2. Watch the multiplier</strong> climb. The higher it goes, the more you win.</p>
+      <p style="margin-bottom:10px"><strong style="color:#eef0ff">3. Cash out</strong> at any time before the plane flies away.</p>
+      <p style="margin-bottom:10px"><strong style="color:#eef0ff">4. Auto Cash Out</strong> — set a target multiplier and the system cashes out automatically.</p>
+      <p><strong style="color:#f24e4e">⚠ If you don't cash out before the crash, you lose your bet.</strong></p>`
+  },
+  rules: {
+    title: 'Game Rules',
+    body: `<p style="margin-bottom:8px">• Each round is independent with a randomly generated crash point.</p>
+      <p style="margin-bottom:8px">• Bets must be placed during the waiting period before the plane takes off.</p>
+      <p style="margin-bottom:8px">• Once the round starts, no new bets can be placed.</p>
+      <p style="margin-bottom:8px">• The daily jackpot (5,000×) is awarded once per day.</p>
+      <p style="margin-bottom:8px">• Maximum win per bet is KSh 1,000,000 regardless of multiplier.</p>
+      <p style="margin-bottom:8px">• Auto Cash Out triggers at your set multiplier or at the max win cap.</p>
+      <p style="color:#f5c542">• This game is for entertainment. Please play responsibly.</p>`
+  }
+};
+function showGameInfo(key){
+  const c = _gameInfoContent[key];
+  document.getElementById('ginfo-title').textContent = c.title;
+  document.getElementById('ginfo-body').innerHTML    = c.body;
+  document.getElementById('ginfo-overlay').style.display = 'block';
+  document.getElementById('menu-panel').style.display = 'none';
+  _menuOpen = false;
+}
+
+// ── Chat panel ────────────────────────────────────────────────────────
+let _chatOpen = false;
+const _chatLog = [];   // {name, msg, mine, ts}
+// Chat uses same phone format as bets — generated fresh each message
+function _fakePhone(){
+  const prefixes=['254','254','254','254','254','254','255','256','234','44'];
+  const p=prefixes[Math.floor(Math.random()*prefixes.length)];
+  const mid=String(Math.floor(Math.random()*9000)+1000);
+  const last=String(Math.floor(Math.random()*10));
+  return p+mid+last;
+}
+function _maskPhone(n){ return n?n[0]+'***'+n[n.length-1]:'?***?'; }
+let _chatInterval = null;
+
+function toggleChat(){
+  _chatOpen = !_chatOpen;
+  const p = document.getElementById('chat-panel');
+
+  if(_chatOpen){
+    // Responsive sizing:
+    // Mobile (<600px wide): full screen
+    // Tablet/Desktop (≥600px): right panel, 340px wide, full height
+    const isMobile = window.innerWidth < 600;
+    if(isMobile){
+      // Full screen
+      p.style.cssText += ';inset:0;width:100%;height:100%;border-radius:0;border:none;';
+      p.style.top='0';p.style.left='0';p.style.right='0';p.style.bottom='0';
+      p.style.width='100%';p.style.height='100%';
+      p.style.borderRadius='0';
+    } else {
+      // Right panel — 340px wide, full height
+      p.style.top='0';p.style.right='0';p.style.bottom='0';p.style.left='auto';
+      p.style.width='340px';p.style.height='100%';
+      p.style.borderRadius='12px 0 0 12px';
+      p.style.borderRight='none';
+    }
+    p.style.display='flex';
+
+    if(!_chatLog.length) _seedChat();
+    renderChat();
+    startFakeChat();
+    setTimeout(()=>{ const inp=document.getElementById('chat-inp'); if(inp)inp.focus(); },100);
+    if(_menuOpen) toggleMenu();
+  } else {
+    p.style.display='none';
+    stopFakeChat();
+  }
+}
+
+// Recalculate chat size on window resize
+window.addEventListener('resize', ()=>{
+  if(!_chatOpen) return;
+  const p=document.getElementById('chat-panel');
+  const isMobile=window.innerWidth<600;
+  if(isMobile){
+    p.style.top='0';p.style.left='0';p.style.right='0';p.style.bottom='0';
+    p.style.width='100%';p.style.height='100%';p.style.borderRadius='0';
+  } else {
+    p.style.top='0';p.style.right='0';p.style.bottom='0';p.style.left='auto';
+    p.style.width='340px';p.style.height='100%';p.style.borderRadius='12px 0 0 12px';
+  }
+});
+
+function _seedChat(){
+  const seeds=[
+    {msg:'Haha 1.05x crash 😂'},
+    {msg:'Just won 5,200 on auto cash!!! 🔥'},
+    {msg:'Waiting for big round...'},
+    {msg:'20x lets gooo'},
+    {msg:'Demo mode first then real play 😅'},
+  ];
+  seeds.forEach((s,i)=>{
+    const raw=_fakePhone();
+    _chatLog.push({name:_maskPhone(raw),msg:s.msg,mine:false,ts:Date.now()-((seeds.length-i)*18000)});
+  });
+}
+
+function renderChat(){
+  const box = document.getElementById('chat-msgs'); if(!box) return;
+  box.innerHTML = _chatLog.slice(-40).map(m=>{
+    const time = new Date(m.ts).toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'});
+    return `<div class="chat-msg${m.mine?' mine':''}">
+      <div class="cm-name" style="color:${m.mine?'#6c88ff':'#a259ff'}">${m.name} <span style="font-size:.62rem;color:#4a4f7a;font-weight:400">${time}</span></div>
+      <div>${m.msg}</div>
+    </div>`;
+  }).join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+function sendChat(){
+  const inp = document.getElementById('chat-inp');
+  const msg = inp.value.trim(); if(!msg) return;
+  let name = 'You';
+  try{ const u=parent.PH.getUser(); if(u) name=u.username; }catch(e){}
+  _chatLog.push({name, msg, mine:true, ts:Date.now()});
+  inp.value = '';
+  renderChat();
+}
+
+const _fakeMsgs = [
+  'Lets go! 🚀','cashout at 3x','crashed again 😭','big round coming','KSh 800 profit!',
+  'who is still in','2x cashout done','waiting...','demo mode 😂','hold hold hold!!!',
+  'auto cashout saved me','10x come on!!!','just deposited','niko ndani 💪','got 7.4x 🔥',
+  'pole pole ndio mwendo','patience is key','crashed at 1.2x 😤','nice one!','go go go ✈'
+];
+function startFakeChat(){
+  if(_chatInterval) return;
+  _chatInterval = setInterval(()=>{
+    if(!_chatOpen) return;
+    const raw = _fakePhone();
+    const name = _maskPhone(raw);
+    const msg  = _fakeMsgs[Math.floor(Math.random()*_fakeMsgs.length)];
+    _chatLog.push({name, msg, mine:false, ts:Date.now()});
+    renderChat();
+  }, 4000 + Math.random()*6000);
+}
+function stopFakeChat(){
+  if(_chatInterval){ clearInterval(_chatInterval); _chatInterval=null; }
+}
+
+
+
+// ── Desktop layout init ───────────────────────────────────────────────
+function _isDesktop(){ return window.innerWidth >= 900; }
+function _isReal(){ return PH.getMode() !== 'demo'; }
+
+function applyLayout(){
+  const desktop = _isDesktop(), real = _isReal();
+  // body class drives CSS grid
+  document.body.classList.toggle('desktop-real', desktop && real);
+
+  // Move canvas + bet panel into center-panel
+  const cp = document.getElementById('center-panel');
+  const cw = document.getElementById('cw');
+  const bp = document.getElementById('bet-panel-wrap');
+  if(cp && cw && cw.parentElement !== cp) cp.appendChild(cw);
+  if(cp && bp && bp.parentElement !== cp) cp.appendChild(bp);
+
+  if(desktop && real){
+    // Show left and right panels
+    document.getElementById('left-panel').style.display='flex';
+    document.getElementById('right-panel').style.display='flex';
+    // Seed desktop chat if empty
+    if(!document.getElementById('rp-chat-msgs').children.length){
+      if(!_chatLog.length) _seedChat();
+      renderChatDesktop();
+      startFakeChat();
+    }
+    // Start live bets rendering
+    lpRender();
+  } else {
+    document.getElementById('left-panel').style.display='none';
+    document.getElementById('right-panel').style.display='none';
+  }
+}
+
+window.addEventListener('resize', applyLayout);
+// Run after a brief delay to let DOM settle
+setTimeout(applyLayout, 80);
+
+// ── Left panel — live bets ────────────────────────────────────────────
+var _lpTab = 'all';
+function lpSetTab(t){
+  _lpTab=t;
+  ['all','my','top'].forEach(k=>document.getElementById('lpt-'+k).classList.toggle('active',k===t));
+  if(t==='wait'||t!==_lpTab) _lpStableOrder=[];
+  lpRender();
+}
+
+const _lpFmt = v => parseFloat(v).toLocaleString('en-KE',{minimumFractionDigits:2,maximumFractionDigits:2});
+const _lpChip = v => { const c=v<2?'hc-safe':v<5?'hc-mid':v<20?'hc-high':'hc-mega'; return `<span class="hchip ${c}">${parseFloat(v).toFixed(2)}×</span>`; };
+
+var _lpStableOrder = [];
+var _lpState = 'idle';
+var _lpMult  = 1;
+
+function lpUpdateHeader(bets){
+  const tot=bets.length, act=bets.filter(b=>b.cashedAt===null).length, stakes=bets.reduce((s,b)=>s+b.bet,0);
+  const el=document.getElementById('lp-stats'); if(el) el.style.display='flex';
+  const t=document.getElementById('lp-total'); if(t) t.textContent=tot||'—';
+  const a=document.getElementById('lp-active'); if(a) a.textContent=act||'—';
+  const s=document.getElementById('lp-stakes'); if(s) s.textContent=tot?'KSh '+_lpFmt(stakes):'—';
+}
+
+function lpRender(){
+  const el=document.getElementById('lp-rows'); if(!el) return;
+  let G; try{G=parent.window.G;}catch(e){return;}
+  const bets = G.roundBets || [];
+  _lpState = G.state; _lpMult = G.mult;
+  lpUpdateHeader(bets);
+  const user = PH.getUser();
+
+  if(_lpTab==='my'){
+    lpRenderMine(bets, user, el); return;
+  }
+  if(_lpTab==='top'){
+    lpRenderTop(bets, el); return;
+  }
+
+  // All Bets — stable order, in-place cashout updates
+  if(_lpState==='wait'||_lpStableOrder.length===0){
+    _lpStableOrder=[...bets].sort((a,b)=>b.bet-a.bet);
+  }
+  if(!bets.length){ el.innerHTML='<div class="empty">Waiting for next round…</div>'; return; }
+
+  const rows = _lpStableOrder.map(so=>bets.find(b=>b.nm===so.nm&&b.bet===so.bet)||so);
+  el.innerHTML = rows.slice(0,60).map(b=>{
+    const has = b.cashedAt!==null && b.cashedAt!==undefined;
+    const avBg = b.isUser ? 'linear-gradient(135deg,var(--primary),var(--secondary))' : 'var(--bg5)';
+    const nameColor = b.isUser?'var(--primary)':has?'var(--green)':'var(--text)';
+    const letter = b.isUser?(user?.username?.[0]||'Y').toUpperCase():fakeInitial(b.nm);
+    return `<div class="bet-row${has?' cashed':''}" id="lbr-${b.nm.replace(/[^a-zA-Z0-9]/g,'')}-${b.bet}">
+      <div class="bc" style="display:flex;align-items:center;gap:7px">
+        <div class="u-av" style="background:${avBg}">${letter}</div>
+        <div>
+          <div style="font-size:.8rem;color:${nameColor}${b.isUser?';font-weight:700':''}">${b.masked}</div>
+          ${has?`<div style="font-size:.65rem;color:var(--green);margin-top:1px">${b.cashedAt.toFixed(2)}×</div>`:''}
+        </div>
+      </div>
+      <div class="bc" style="font-weight:600;color:${has?'var(--green)':'var(--text)'}">${_lpFmt(b.bet)}</div>
+      <div class="bc">${has?_lpChip(b.cashedAt):'<span style="color:var(--text3)">—</span>'}</div>
+      <div class="bc r">${has?`<span style="color:var(--green);font-weight:700">+${_lpFmt(b.won)}</span>`:'<span style="color:var(--text3)">—</span>'}</div>
+    </div>`;
+  }).join('');
+}
+
+function lpUpdateCashed(bets){
+  bets.forEach(b=>{
+    if(b.cashedAt===null) return;
+    const id='lbr-'+b.nm.replace(/[^a-zA-Z0-9]/g,'')+'-'+b.bet;
+    const row=document.getElementById(id);
+    if(!row||row.classList.contains('cashed')) return;
+    row.classList.add('cashed');
+    const cells=row.querySelectorAll('.bc');
+    if(cells[0]){ const nm=cells[0].querySelector('div>div:first-child'); if(nm) nm.style.color='var(--green)';
+      const sub=document.createElement('div'); sub.style.cssText='font-size:.65rem;color:var(--green);margin-top:1px'; sub.textContent=b.cashedAt.toFixed(2)+'×';
+      const inner=cells[0].querySelector('div:last-child'); if(inner&&!inner.querySelector('div')) inner.appendChild(sub); }
+    if(cells[1]) cells[1].style.color='var(--green)';
+    if(cells[2]) cells[2].innerHTML=_lpChip(b.cashedAt);
+    if(cells[3]) cells[3].innerHTML=`<span style="color:var(--green);font-weight:700">+${_lpFmt(b.won)}</span>`;
+  });
+}
+
+function lpRenderMine(bets, user, el){
+  if(!user){ el.innerHTML='<div class="empty">Login to see your bets.</div>'; return; }
+  const ur=bets.filter(b=>b.isUser);
+  const txns=(PH.getTxns()||[]).filter(t=>t.type==='bet'&&t.mode!=='demo').slice(0,40);
+  if(!ur.length&&!txns.length){ el.innerHTML='<div class="empty">No real-money bets yet.</div>'; return; }
+  const rows=[
+    ...ur.map(b=>({player:b.masked,bet:b.bet,at:b.cashedAt,won:b.won,status:b.cashedAt!==null?'cashed':_lpState==='fly'?'active':'placed'})),
+    ...txns.map(t=>({player:user.username,bet:t.amount,at:t.cashoutAt??null,won:t.wonAmount??0,status:t.cashoutAt?'cashed':'lost'}))
+  ];
+  el.innerHTML=rows.map(r=>{
+    const has=r.at!==null&&r.at!==undefined;
+    const bg=has?'background:rgba(41,217,128,.07)':r.status==='active'?'background:rgba(79,110,247,.05)':'';
+    const md=has?_lpChip(r.at):r.status==='active'?`<span style="color:var(--primary);animation:pulse 1s infinite;display:inline-block">${_lpMult.toFixed(2)}×</span>`:`<span style="color:var(--text3)">—</span>`;
+    const wd=has?`<span style="color:var(--green);font-weight:700">+${_lpFmt(r.won)}</span>`:r.status==='active'?`<span style="color:var(--text2);font-size:.75rem">in play</span>`:`<span style="color:var(--text3)">—</span>`;
+    return`<div class="bet-row${has?' cashed':''}" style="${bg}">
+      <div class="bc" style="display:flex;align-items:center;gap:7px"><div class="u-av" style="background:linear-gradient(135deg,var(--primary),var(--secondary))">${(r.player[0]||'Y').toUpperCase()}</div><span style="font-size:.8rem;color:var(--primary);font-weight:700">${r.player}</span></div>
+      <div class="bc" style="font-weight:600;color:${has?'var(--green)':'var(--text)'}">${_lpFmt(r.bet)}</div>
+      <div class="bc">${md}</div><div class="bc r">${wd}</div>
+    </div>`;
+  }).join('');
+}
+
+function lpRenderTop(bets, el){
+  const top=[...bets].filter(b=>b.cashedAt).sort((a,b2)=>b2.won-a.won).slice(0,20);
+  if(!top.length){ el.innerHTML='<div class="empty">No cashouts yet this round.</div>'; return; }
+  const user=PH.getUser();
+  el.innerHTML=top.map(b=>{
+    const letter=b.isUser?(user?.username?.[0]||'Y').toUpperCase():fakeInitial(b.nm);
+    const avBg=b.isUser?'linear-gradient(135deg,var(--primary),var(--secondary))':'var(--bg5)';
+    return`<div class="bet-row cashed">
+      <div class="bc" style="display:flex;align-items:center;gap:7px">
+        <div class="u-av" style="background:${avBg}">${letter}</div>
+        <div><div style="font-size:.8rem;color:${b.isUser?'var(--primary)':'var(--green)'}">${b.masked}</div>
+        <div style="font-size:.65rem;color:var(--green)">${b.cashedAt.toFixed(2)}×</div></div>
+      </div>
+      <div class="bc" style="font-weight:600;color:var(--green)">${_lpFmt(b.bet)}</div>
+      <div class="bc">${_lpChip(b.cashedAt)}</div>
+      <div class="bc r"><span style="color:var(--green);font-weight:700">+${_lpFmt(b.won)}</span></div>
+    </div>`;
+  }).join('');
+}
+
+// Left panel updates on game state changes — called from gameLoop
+
+// ── Desktop chat (right panel) ────────────────────────────────────────
+function renderChatDesktop(){
+  const box=document.getElementById('rp-chat-msgs'); if(!box) return;
+  box.innerHTML=_chatLog.slice(-40).map(m=>{
+    const time=new Date(m.ts).toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'});
+    return `<div class="chat-msg${m.mine?' mine':''}">
+      <div class="cm-name" style="color:${m.mine?'#6c88ff':'#a259ff'}">${m.name} <span style="font-size:.62rem;color:#4a4f7a;font-weight:400">${time}</span></div>
+      <div>${m.msg}</div>
+    </div>`;
+  }).join('');
+  box.scrollTop=box.scrollHeight;
+}
+
+function sendChatDesktop(){
+  const inp=document.getElementById('rp-chat-inp');
+  const msg=inp.value.trim(); if(!msg) return;
+  let name='You';
+  try{const u=parent.PH.getUser();if(u)name=u.username;}catch(e){}
+  _chatLog.push({name,msg,mine:true,ts:Date.now()});
+  inp.value='';
+  renderChatDesktop();
+  // Also update mobile chat if open
+  if(_chatOpen) renderChat();
+}
+
+// Override startFakeChat to also update desktop chat
+const _origStartFakeChat = startFakeChat;
+function startFakeChat(){
+  if(_chatInterval) return;
+  _chatInterval=setInterval(()=>{
+    const raw=_fakePhone(), name=_maskPhone(raw);
+    const msg=_fakeMsgs[Math.floor(Math.random()*_fakeMsgs.length)];
+    _chatLog.push({name,msg,mine:false,ts:Date.now()});
+    if(_chatOpen) renderChat();
+    if(_isDesktop()&&_isReal()) renderChatDesktop();
+  }, 4000+Math.random()*6000);
+}
+upInfoBar();
+renderBet();
+renderHist();
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Home — PepetaHigh</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bottom:84px}
+.hero{position:relative;overflow:hidden;padding:0;min-height:200px;display:flex;flex-direction:column;justify-content:flex-end}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 140% 100% at 50% 120%,#0d1460 0%,#080816 55%,#09090f 100%)}
+.hero-rays{position:absolute;inset:-50%;width:200%;height:200%;background:repeating-conic-gradient(rgba(79,110,247,.04) 0deg 5deg,transparent 5deg 10deg);animation:rotateSun 24s linear infinite;transform-origin:50% 60%;pointer-events:none}
+.hero-glow{position:absolute;top:20%;left:50%;transform:translateX(-50%);width:260px;height:120px;background:radial-gradient(ellipse,rgba(79,110,247,.22) 0%,transparent 70%);pointer-events:none}
+.hero-content{position:relative;z-index:2;padding:28px 16px 20px;text-align:center}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(79,110,247,.12);border:1px solid rgba(79,110,247,.25);border-radius:20px;padding:4px 12px;font-size:.65rem;font-weight:700;color:var(--primary);letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px}
+.hero-plane{font-size:3.2rem;display:inline-block;animation:planeFly 3.2s ease-in-out infinite;filter:drop-shadow(0 0 22px rgba(108,136,255,.8));margin-bottom:10px;line-height:1}
+.hero-title{font-family:'Orbitron',monospace;font-size:1.55rem;font-weight:900;color:#fff;letter-spacing:.04em;margin-bottom:5px;text-shadow:0 0 40px rgba(79,110,247,.4)}
+.hero-sub{font-size:.78rem;color:#8e94c0;margin-bottom:18px;line-height:1.5}
+.hero-cta{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--primary),var(--secondary));border:none;border-radius:25px;padding:11px 24px;font-family:var(--font-b);font-size:.88rem;font-weight:700;color:#fff;cursor:pointer;box-shadow:0 4px 20px rgba(79,110,247,.35);transition:all .2s}
+.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.stat-cell{background:var(--bg2);padding:11px 8px;text-align:center}
+.stat-val{font-family:'Orbitron',monospace;font-size:.92rem;font-weight:700;color:var(--text)}
+.stat-lbl{font-size:.56rem;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 14px 8px}
+.sec-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text3)}
+.sec-pill{background:rgba(41,217,128,.1);border:1px solid rgba(41,217,128,.2);color:var(--green);font-size:.6rem;font-weight:700;padding:3px 9px;border-radius:10px;letter-spacing:.06em}
+.feat-card{margin:0 14px 14px;border-radius:18px;overflow:hidden;cursor:pointer;position:relative;border:1px solid rgba(108,136,255,.2);box-shadow:0 8px 32px rgba(0,0,0,.4);transition:all .22s}
+.feat-bg{height:148px;position:relative;overflow:hidden;background:radial-gradient(ellipse 100% 100% at 50% 110%,#0d1460 0%,#070817 70%)}
+.feat-rays{position:absolute;inset:-50%;width:200%;height:200%;background:repeating-conic-gradient(rgba(108,136,255,.055) 0deg 6deg,transparent 6deg 12deg);animation:rotateSun 16s linear infinite;transform-origin:50% 60%}
+.feat-plane{position:absolute;font-size:3.4rem;bottom:14px;right:18px;z-index:2;animation:planeFly 2.8s ease-in-out infinite;filter:drop-shadow(0 0 20px rgba(108,136,255,.9))}
+.feat-info{position:absolute;top:12px;left:14px;z-index:3}
+.feat-tag{background:rgba(242,78,78,.85);color:#fff;font-size:.56rem;font-weight:700;padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.08em;display:inline-block;margin-bottom:7px}
+.feat-name{font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:900;color:#fff;text-shadow:0 0 20px rgba(79,110,247,.6)}
+.feat-body{background:var(--bg3);padding:12px 14px;border-top:1px solid rgba(108,136,255,.1)}
+.feat-desc{font-size:.72rem;color:var(--text2);line-height:1.45;margin-bottom:10px}
+.feat-meta{display:flex;align-items:center;justify-content:space-between}
+.feat-stat{text-align:center}
+.feat-stat-val{font-family:'Orbitron',monospace;font-size:.82rem;font-weight:700;color:var(--gold)}
+.feat-stat-lbl{font-size:.58rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-top:1px}
+.feat-play{background:linear-gradient(135deg,var(--green),var(--green2));border:none;border-radius:10px;padding:10px 22px;font-family:var(--font-b);font-size:.82rem;font-weight:700;color:#000;cursor:pointer;display:flex;align-items:center;gap:7px;box-shadow:0 3px 12px rgba(41,217,128,.3)}
+.jp-banner{margin:0 14px 14px;border-radius:14px;background:linear-gradient(135deg,#1a0d00,#2d1500,#1a0d00);border:1px solid rgba(245,197,66,.2);padding:14px 16px;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden}
+.jp-icon{font-size:2rem;flex-shrink:0;filter:drop-shadow(0 0 8px rgba(245,197,66,.5))}
+.jp-val{font-family:'Orbitron',monospace;font-size:1.2rem;font-weight:900;color:var(--gold);line-height:1.1}
+.jp-label{font-size:.6rem;color:rgba(245,197,66,.6);text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+.jp-sub{font-size:.65rem;color:rgba(245,197,66,.5);margin-top:1px}
+.jp-play{margin-left:auto;background:linear-gradient(135deg,var(--gold),#e8a800);border:none;border-radius:10px;padding:9px 16px;font-family:var(--font-b);font-size:.78rem;font-weight:700;color:#000;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.wins-scroll{display:flex;gap:8px;padding:0 14px 4px;overflow-x:auto}
+.wins-scroll::-webkit-scrollbar{display:none}
+.win-card{flex-shrink:0;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:10px 13px;min-width:128px}
+.win-card-game{font-size:.58rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.win-card-player{font-size:.76rem;font-weight:700;color:var(--text);margin-bottom:2px}
+.win-card-amt{font-family:'Orbitron',monospace;font-size:.88rem;font-weight:900;color:var(--green)}
+.win-card-mult{font-size:.62rem;color:var(--gold);margin-top:1px}
+.game-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 6px}
+.gc{border-radius:16px;overflow:hidden;cursor:pointer;border:1px solid var(--border);background:var(--bg3);transition:all .22s;position:relative}
+.gc:hover{transform:translateY(-2px);border-color:var(--primary);box-shadow:0 8px 24px rgba(79,110,247,.12)}
+.gc.locked{cursor:default;opacity:.6}
+.gc-thumb{height:88px;display:flex;align-items:center;justify-content:center;font-size:2.4rem;position:relative;overflow:hidden}
+.gc-body{padding:9px 11px 11px}
+.gc-name{font-weight:700;font-size:.84rem;margin-bottom:2px;color:var(--text)}
+.gc-desc{font-size:.65rem;color:var(--text2);line-height:1.4;margin-bottom:7px}
+.gc-footer{display:flex;align-items:center;justify-content:space-between}
+.gc-max{font-size:.63rem;color:var(--text3)}
+.gc-max strong{color:var(--green)}
+.gc-badge{font-size:.58rem;font-weight:700;padding:2px 7px;border-radius:10px;text-transform:uppercase}
+.badge-live{background:rgba(41,217,128,.1);color:var(--green);border:1px solid rgba(41,217,128,.2)}
+.badge-hot{background:rgba(242,78,78,.1);color:var(--red);border:1px solid rgba(242,78,78,.2)}
+.badge-new{background:rgba(162,89,255,.1);color:var(--secondary);border:1px solid rgba(162,89,255,.2)}
+.badge-soon{background:var(--bg4);color:var(--text3);border:1px solid var(--border)}
+@keyframes planeFly{0%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-12px) rotate(4deg)}100%{transform:translateY(0) rotate(-4deg)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes diceBounce{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-8px) rotate(20deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+
+<div class="stats-row">
+  <div class="stat-cell">
+    <div class="stat-val" style="color:var(--gold)" id="jp-max">5,000×</div>
+    <div class="stat-lbl">Jackpot</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-val" style="color:var(--green)" id="stat-online">—</div>
+    <div class="stat-lbl">Online</div>
+  </div>
+  <div class="stat-cell">
+    <div class="stat-val">97%</div>
+    <div class="stat-lbl">RTP</div>
+  </div>
+</div>
+
+<div class="sec-hdr" style="padding-top:14px">
+  <span class="sec-title">Daily Jackpot</span>
+  <span class="sec-pill">Live</span>
+</div>
+<div class="jp-banner">
+  <div class="jp-icon">🏆</div>
+  <div>
+    <div class="jp-label">Aviator Max Win</div>
+    <div class="jp-val" id="jp-banner-val">5,000×</div>
+    <div class="jp-sub">Up for grabs · Resets daily</div>
+  </div>
+  <button class="jp-play" onclick="parent.openGameModal()">Play →</button>
+</div>
+
+<div class="sec-hdr" style="padding-top:4px">
+  <span class="sec-title">Featured</span>
+</div>
+<div class="feat-card" onclick="parent.openGameModal()">
+  <div class="feat-bg">
+    <div class="feat-rays"></div>
+    <div class="feat-plane">✈</div>
+    <div class="feat-info">
+      <div class="feat-tag">🔥 HOT</div>
+      <div class="feat-name">Aviator</div>
+    </div>
+  </div>
+  <div class="feat-body">
+    <div class="feat-desc">Watch the multiplier climb. Cash out anytime before the plane flies away. Miss it and you lose your bet.</div>
+    <div class="feat-meta">
+      <div class="feat-stat"><div class="feat-stat-val" id="feat-max">5,000×</div><div class="feat-stat-lbl">Max Win</div></div>
+      <div class="feat-stat"><div class="feat-stat-val">97%</div><div class="feat-stat-lbl">RTP</div></div>
+      <div class="feat-stat"><div class="feat-stat-val">KSh 20</div><div class="feat-stat-lbl">Min Bet</div></div>
+      <button class="feat-play">▶ Play</button>
+    </div>
+  </div>
+</div>
+
+<div class="sec-hdr">
+  <span class="sec-title">Recent Big Wins</span>
+  <span class="sec-pill">Live</span>
+</div>
+<div class="wins-scroll" id="winsScroll"></div>
+
+<div class="sec-hdr" style="padding-top:14px">
+  <span class="sec-title">All Games</span>
+</div>
+<div class="game-grid">
+
+  <div class="gc" onclick="parent.openFortuneSpinModal()">
+    <div class="gc-thumb" style="background:linear-gradient(145deg,#1a0e00,#2d1a00)">
+      <span style="animation:spin 4s linear infinite;display:inline-block">🎡</span>
+      <span style="position:absolute;top:6px;right:6px;background:var(--secondary);color:#fff;font-size:.52rem;font-weight:700;padding:2px 6px;border-radius:3px">NEW</span>
+    </div>
+    <div class="gc-body">
+      <div class="gc-name">Fortune Spin</div>
+      <div class="gc-desc">Spin the wheel, multiply your stake up to 100×.</div>
+      <div class="gc-footer"><div class="gc-max">Max <strong>100×</strong></div><span class="gc-badge badge-new">New</span></div>
+    </div>
+  </div>
+
+  <div class="gc" onclick="parent.openRocketCrashModal()">
+    <div class="gc-thumb" style="background:linear-gradient(145deg,#051020,#0a2010)">
+      <span style="font-size:2.4rem;animation:planeFly 2.5s ease-in-out infinite;display:inline-block">🚀</span>
+    </div>
+    <div class="gc-body">
+      <div class="gc-name">Rocket Crash</div>
+      <div class="gc-desc">Ride the rocket, bail before burnout.</div>
+      <div class="gc-footer"><div class="gc-max">Max <strong>500×</strong></div><span class="gc-badge badge-hot">Hot</span></div>
+    </div>
+  </div>
+
+  <div class="gc" onclick="parent.openDiceModal()">
+    <div class="gc-thumb" style="background:linear-gradient(145deg,#120824,#1e0a36)">
+      <span style="font-size:2.4rem;animation:diceBounce 2s ease-in-out infinite;display:inline-block">🎲</span>
+    </div>
+    <div class="gc-body">
+      <div class="gc-name">Dice Roll</div>
+      <div class="gc-desc">Set your odds and roll for big multipliers.</div>
+      <div class="gc-footer"><div class="gc-max">Up to <strong>97×</strong></div><span class="gc-badge badge-live">Live</span></div>
+    </div>
+  </div>
+
+  <div class="gc locked">
+    <div class="gc-thumb" style="background:linear-gradient(145deg,#0a1a0a,#0d200d)">
+      <span style="font-size:2.4rem;opacity:.5">💣</span>
+      <span style="position:absolute;top:6px;right:6px;background:var(--bg4);color:var(--text3);font-size:.52rem;font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid var(--border)">SOON</span>
+    </div>
+    <div class="gc-body">
+      <div class="gc-name">Mines</div>
+      <div class="gc-desc">Pick tiles, avoid the mines. Risk it all.</div>
+      <div class="gc-footer"><div class="gc-max">Max <strong>500×</strong></div><span class="gc-badge badge-soon">Soon</span></div>
+    </div>
+  </div>
+
+</div>
+<div style="height:12px"></div>
+
+<script src="utils.js"></script>
+<script>
+'use strict';
+if(sessionStorage.getItem('ph_theme')==='light') document.body.classList.add('theme-light');
+
+const WIN_GAMES=['✈ Aviator','🚀 Rocket','🎡 Fortune','🎲 Dice'];
+const WIN_MULTS=[1.5,2.1,3.4,5.8,10.2,15.6,24.8,50.3,100,200];
+const WIN_BETS=[50,100,200,500,1000,2000,5000];
+
+function genWins(){
+  const wins=[];
+  for(let i=0;i<12;i++){
+    const bet=WIN_BETS[Math.floor(Math.random()*WIN_BETS.length)];
+    const mult=WIN_MULTS[Math.floor(Math.random()*WIN_MULTS.length)];
+    const nm=fakeName();
+    wins.push({game:WIN_GAMES[Math.floor(Math.random()*WIN_GAMES.length)],player:maskName(nm),bet,mult,won:Math.round(bet*mult)});
+  }
+  return wins;
+}
+
+function renderWins(){
+  const el=document.getElementById('winsScroll');
+  if(!el)return;
+  el.innerHTML=genWins().map(w=>`
+    <div class="win-card">
+      <div class="win-card-game">${w.game}</div>
+      <div class="win-card-player">${w.player}</div>
+      <div class="win-card-amt">+KSh ${w.won.toLocaleString()}</div>
+      <div class="win-card-mult">${w.mult.toFixed(2)}× hit</div>
+    </div>
+  `).join('');
+}
+
+function upLive(){
+  try{
+    const jmax=(parent.window.JACKPOT_MAX||5000).toLocaleString()+'×';
+    ['jp-max','jp-banner-val','feat-max'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=jmax;});
+  }catch(e){}
+}
+function upOnline(){
+  try{
+    const ct=parent.PlayerCount.get().toLocaleString();
+    ['online-ct','stat-online'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=ct;});
+  }catch(e){}
+}
+function onTabVisible(){upLive();upOnline();renderWins();}
+function onAuthChange(){upLive();}
+setInterval(renderWins,12000);
+setInterval(()=>{upLive();upOnline();},4000);
+upLive();upOnline();renderWins();
+</script>
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Wallet — PepetaHigh</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bottom:80px}
+.wrap{padding:14px;display:flex;flex-direction:column;gap:12px}
+.login-gate{display:flex;flex-direction:column;align-items:center;padding:38px 20px;text-align:center}
+.gate-ic{width:60px;height:60px;border-radius:50%;background:var(--bg4);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin-bottom:12px}
+.sec-lbl{font-size:.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:7px}
+.bonus-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:10px}
+.bonus-hd{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border);background:var(--bg2)}
+.bonus-hd-ic{font-size:1.1rem}
+.bonus-hd-title{font-size:.86rem;font-weight:700;color:var(--text)}
+.bonus-badge{margin-left:auto;border-radius:10px;font-size:.61rem;font-weight:700;padding:2px 8px}
+.bonus-badge.green{background:rgba(41,217,128,.12);color:var(--green);border:1px solid rgba(41,217,128,.25)}
+.bonus-badge.gold{background:rgba(245,197,66,.12);color:var(--gold);border:1px solid rgba(245,197,66,.25)}
+.bonus-badge.grey{background:rgba(255,255,255,.06);color:var(--text3);border:1px solid var(--border)}
+.bonus-body{padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.bonus-row{display:flex;align-items:center;justify-content:space-between}
+.bonus-label{font-size:.8rem;color:var(--text2)}
+.bonus-val{font-family:var(--font-d);font-size:.84rem;font-weight:700}
+.bonus-val.green{color:var(--green)}
+.bonus-val.gold{color:var(--gold)}
+.bonus-val.grey{color:var(--text3)}
+.bonus-progress-bg{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-top:2px}
+.bonus-progress-fill{height:100%;border-radius:3px;transition:width .4s ease}
+.bonus-note{font-size:.71rem;color:var(--text3);line-height:1.5;padding-top:6px;border-top:1px solid var(--border)}
+.bonus-note strong{color:var(--text)}
+.ref-box{display:flex;align-items:center;gap:8px;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:9px 12px}
+.ref-code{font-family:var(--font-d);font-size:.8rem;color:var(--primary);flex:1;font-weight:700;letter-spacing:.04em}
+.ref-copy-btn{background:var(--primary);border:none;border-radius:6px;color:#fff;font-size:.72rem;font-weight:700;padding:6px 12px;cursor:pointer;white-space:nowrap}
+.wd-notice{display:flex;align-items:center;gap:10px;background:rgba(41,217,128,.05);border:1px solid rgba(41,217,128,.15);border-radius:10px;padding:10px 13px;font-size:.76rem;color:var(--text2)}
+.no-wd-tag{display:inline-flex;align-items:center;gap:4px;background:rgba(242,78,78,.08);border:1px solid rgba(242,78,78,.18);border-radius:6px;font-size:.62rem;color:var(--red);padding:2px 7px;margin-left:6px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="config.js"></script>
+<script src="utils.js"></script>
+<script>
+'use strict';
+if(sessionStorage.getItem('ph_theme')==='light') document.body.classList.add('theme-light');
+
+const DEP_BONUS_MIN=100;
+const REF_BONUS_MIN=500;
+
+function getDepBonus(){return parseFloat(sessionStorage.getItem('ph_dep_bonus')||'0');}
+function setDepBonus(v){sessionStorage.setItem('ph_dep_bonus',Math.max(0,parseFloat(v)).toFixed(2));}
+function getRefBonus(){return parseFloat(sessionStorage.getItem('ph_ref_bonus')||'0');}
+function setRefBonus(v){sessionStorage.setItem('ph_ref_bonus',Math.max(0,parseFloat(v)).toFixed(2));}
+
+function getReferralCode(){
+  const u=PH.getUser();if(!u)return'';
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
+  let code='';
+  for(let i=0;i<6;i++)code+=chars[(u.username.charCodeAt(i%u.username.length)+i*7)%chars.length];
+  return'PH-'+code;
+}
+function getReferralStats(){
+  try{return JSON.parse(sessionStorage.getItem('ph_referrals')||'{"count":0,"earned":0}');}catch(e){return{count:0,earned:0};}
+}
+function copyRefCode(){
+  const code=getReferralCode();
+  navigator.clipboard?.writeText('Join PepetaHigh with my code '+code+' and get a bonus! https://pepetahigh.com').catch(()=>{});
+  showToast('Referral link copied! Share with friends 🎉','success');
+}
+
+// ── Sync wallet balance from backend ──────────────────────────────────
+async function syncWalletFromServer(){
+  const user=PH.getUser();
+  if(!user) return;
+  try{
+    const jwt=sessionStorage.getItem('ph_jwt');
+    const res=await fetch(`${BACKEND_URL}/api/wallet/${user.username}`,{
+      headers: jwt ? { 'Authorization': 'Bearer '+jwt } : {}
+    });
+    if(!res.ok) return;
+    const data=await res.json();
+    if(data.wallet !== undefined){
+      PH.setWallet(data.wallet);
+      render();
+    }
+  }catch(err){
+    console.log('[wallet] Sync failed:', err.message);
+  }
+}
+
+function redeemDepBonus(){
+  const b=getDepBonus();
+  if(b<DEP_BONUS_MIN){showToast('Minimum KSh '+DEP_BONUS_MIN+' needed to redeem','error');return;}
+  PH.setWallet(PH.getWallet()+b);
+  setDepBonus(0);
+  PH.saveTxn({type:'bonus',amount:b,reason:'Deposit bonus redeemed (play only)',status:'credited'});
+  try{parent._onBonusRedeemed(b);}catch(e){}
+  render();
+  showToast(PH.fmt(b)+' deposit bonus added to balance! 🎉','success',4000);
+}
+function redeemRefBonus(){
+  const b=getRefBonus();
+  if(b<REF_BONUS_MIN){showToast('Minimum KSh '+REF_BONUS_MIN+' needed to redeem','error');return;}
+  PH.setWallet(PH.getWallet()+b);
+  setRefBonus(0);
+  PH.saveTxn({type:'bonus',amount:b,reason:'Referral bonus redeemed (play only)',status:'credited'});
+  try{parent._onBonusRedeemed(b);}catch(e){}
+  render();
+  showToast(PH.fmt(b)+' referral bonus added to balance! 🔗','success',4000);
+}
+function progressPct(val,min){return Math.min(100,Math.round((val/min)*100));}
+
+function render(){
+  const el=document.getElementById('root'),user=PH.getUser();
+  if(!user){
+    el.innerHTML=`<div class="login-gate"><div class="gate-ic">💳</div>
+      <div style="font-size:.86rem;color:var(--text2);margin-bottom:16px">Login to access your wallet</div>
+      <button class="btn btn-primary" style="max-width:240px" onclick="parent.openModal('login-modal')">Login →</button>
+    </div>`;
+    return;
+  }
+
+  const realBal=PH.getWallet();
+  const depB=getDepBonus(),refB=getRefBonus();
+  const refCode=getReferralCode(),refStats=getReferralStats();
+  const depPct=progressPct(depB,DEP_BONUS_MIN);
+  const refPct=progressPct(refB,REF_BONUS_MIN);
+  const depReady=depB>=DEP_BONUS_MIN,refReady=refB>=REF_BONUS_MIN;
+  const txns=PH.getTxns().filter(t=>['deposit','withdraw','win','bonus'].includes(t.type)).slice(0,16);
+
+  el.innerHTML=`<div class="wrap">
+
+    <div class="bal-card">
+      <div class="bal-lbl">Real Balance</div>
+      <div class="bal-amt">${PH.fmt(realBal)}</div>
+      <div style="font-size:.7rem;color:var(--text3);margin-top:4px">Your deposited & won funds</div>
+      <div class="bal-actions">
+        <button class="btn btn-green" onclick="parent.openModal('dep-modal')">+ Deposit</button>
+        <button class="btn btn-outline" onclick="parent.openWd()">↑ Withdraw</button>
+      </div>
+    </div>
+
+    <div class="wd-notice">
+      <span style="font-size:1.1rem;flex-shrink:0">⚡</span>
+      <span>Withdrawals processed within <strong style="color:var(--green)">5 minutes</strong> — sent to your M-Pesa or Airtel Money.</span>
+    </div>
+
+    <div style="background:rgba(245,197,66,.05);border:1px solid rgba(245,197,66,.15);border-radius:10px;padding:10px 13px;font-size:.76rem;color:var(--text2);display:flex;align-items:center;gap:8px">
+      <span style="font-size:1rem;flex-shrink:0">🎮</span>
+      <span>Demo mode available in each game — select <strong style="color:var(--gold)">Demo Mode</strong> when launching any game to practice with virtual credits.</span>
+    </div>
+
+    <div>
+      <div class="sec-lbl">Bonus Wallets <span style="font-size:.6rem;color:var(--red);font-weight:400;text-transform:none;letter-spacing:0">· Not withdrawable · For betting only</span></div>
+
+      <div class="bonus-card">
+        <div class="bonus-hd">
+          <span class="bonus-hd-ic">🎁</span>
+          <span class="bonus-hd-title">Deposit Bonus</span>
+          <span class="bonus-badge ${depReady?'green':'grey'}">${depReady?'Ready to redeem':'10% per deposit'}</span>
+        </div>
+        <div class="bonus-body">
+          <div class="bonus-row">
+            <span class="bonus-label">Balance</span>
+            <span class="bonus-val ${depReady?'gold':'grey'}">${PH.fmt(depB)}</span>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:.68rem;color:var(--text3)">Progress to redeem</span>
+              <span style="font-size:.68rem;color:${depReady?'var(--green)':'var(--text3)'}">KSh ${depB.toFixed(0)} / ${DEP_BONUS_MIN}</span>
+            </div>
+            <div class="bonus-progress-bg">
+              <div class="bonus-progress-fill" style="width:${depPct}%;background:${depReady?'var(--green)':'var(--primary)'}"></div>
+            </div>
+          </div>
+          <div class="bonus-note">
+            Earn <strong>10%</strong> on every deposit. Redeem once you reach <strong>KSh ${DEP_BONUS_MIN}</strong>.
+            <span class="no-wd-tag">🔒 Not withdrawable</span>
+          </div>
+          ${depReady
+            ?`<button class="btn btn-green" style="font-size:.82rem;padding:10px;margin-top:2px" onclick="redeemDepBonus()">Redeem ${PH.fmt(depB)} →</button>`
+            :`<div style="font-size:.74rem;color:var(--text3);text-align:center;padding:6px 0">Need KSh ${Math.max(0,DEP_BONUS_MIN-depB).toFixed(2)} more to redeem</div>`
+          }
+        </div>
+      </div>
+
+      <div class="bonus-card">
+        <div class="bonus-hd">
+          <span class="bonus-hd-ic">🔗</span>
+          <span class="bonus-hd-title">Referral Bonus</span>
+          <span class="bonus-badge ${refReady?'green':'gold'}">Up to 50% per friend</span>
+        </div>
+        <div class="bonus-body">
+          <div class="bonus-row">
+            <span class="bonus-label">Referral balance</span>
+            <span class="bonus-val ${refReady?'gold':'grey'}">${PH.fmt(refB)}</span>
+          </div>
+          <div class="bonus-row">
+            <span class="bonus-label">Friends referred</span>
+            <span class="bonus-val green">${refStats.count}</span>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span style="font-size:.68rem;color:var(--text3)">Progress to redeem</span>
+              <span style="font-size:.68rem;color:${refReady?'var(--green)':'var(--text3)'}">KSh ${refB.toFixed(0)} / ${REF_BONUS_MIN}</span>
+            </div>
+            <div class="bonus-progress-bg">
+              <div class="bonus-progress-fill" style="width:${refPct}%;background:${refReady?'var(--green)':'var(--gold)'}"></div>
+            </div>
+          </div>
+          <div class="bonus-note">
+            • Friend deposits <strong>&lt; KSh 1,000</strong> → you earn <strong>10%</strong><br>
+            • Friend deposits <strong>≥ KSh 1,000</strong> → you earn <strong>50%</strong><br>
+            Redeem once balance reaches <strong>KSh ${REF_BONUS_MIN}</strong>.
+            <span class="no-wd-tag">🔒 Not withdrawable</span>
+          </div>
+          <div style="font-size:.72rem;color:var(--text3);margin-bottom:6px;margin-top:4px">Your referral code</div>
+          <div class="ref-box">
+            <span class="ref-code">${refCode}</span>
+            <button class="ref-copy-btn" onclick="copyRefCode()">Copy Link</button>
+          </div>
+          ${refReady
+            ?`<button class="btn btn-green" style="font-size:.82rem;padding:10px;margin-top:8px" onclick="redeemRefBonus()">Redeem ${PH.fmt(refB)} Referral Bonus →</button>`
+            :`<div style="font-size:.74rem;color:var(--text3);text-align:center;padding:6px 0">Need KSh ${Math.max(0,REF_BONUS_MIN-refB).toFixed(2)} more to redeem</div>`
+          }
+        </div>
+      </div>
+    </div>
+
+    ${txns.length
+      ?`<div><div class="sec-lbl">Recent Transactions</div><div class="txn-list">${txns.map(t=>{
+          const isIn=['deposit','win','bonus'].includes(t.type);
+          const ic={deposit:'↓',withdraw:'↑',win:'✓',bonus:'🎁'}[t.type]||'•';
+          const label=t.type==='bonus'?(t.reason||'Bonus').split('(')[0].trim():{deposit:'Deposit',withdraw:'Withdraw',win:'Win'}[t.type]||t.type;
+          const color=t.type==='bonus'?'var(--gold)':isIn?'var(--green)':'var(--red)';
+          return`<div class="txn-row">
+            <div class="txn-ic" style="background:${isIn?'rgba(41,217,128,.08)':'rgba(242,78,78,.08)'}">${ic}</div>
+            <div class="txn-body">
+              <div class="txn-type">${label}</div>
+              <div class="txn-time">${new Date(t.ts).toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'})}</div>
+            </div>
+            <div class="txn-amt" style="color:${color}">${isIn?'+':'-'}${PH.fmt(t.amount)}</div>
+          </div>`;
+        }).join('')}</div></div>`
+      :`<div style="text-align:center;padding:28px;color:var(--text3);font-size:.82rem">No transactions yet.</div>`
+    }
+
+  </div>`;
+}
+
+function onTabVisible(){ syncWalletFromServer(); render(); }
+function onAuthChange(){ render(); }
+
+// Sync on load
+syncWalletFromServer();
+render();
+</script>
+</body>
+</html>

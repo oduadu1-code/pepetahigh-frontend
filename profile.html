@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Profile — PepetaHigh</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bottom:80px}
+.login-gate{display:flex;flex-direction:column;align-items:center;padding:38px 20px;text-align:center}
+.gate-ic{width:60px;height:60px;border-radius:50%;background:var(--bg4);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="utils.js"></script>
+<script>
+'use strict';
+if(sessionStorage.getItem('ph_theme')==='light') document.body.classList.add('theme-light');
+let sndOn=sessionStorage.getItem('ph_sound')!=='off';
+let musOn=sessionStorage.getItem('ph_music')!=='off';
+const isLight=()=>document.body.classList.contains('theme-light');
+
+function render(){
+  const el=document.getElementById('root'),user=PH.getUser();
+  if(!user){
+    el.innerHTML=`<div class="prof-hdr" style="background:var(--bg2);border-bottom:1px solid var(--border);padding:20px 16px;display:flex;flex-direction:column;align-items:center">
+      <div style="width:64px;height:64px;border-radius:50%;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:8px">👤</div>
+      <div style="font-size:.86rem;color:var(--text2)">Login to access your profile</div>
+    </div>
+    <div style="padding:14px"><button class="btn btn-primary" onclick="parent.openModal('login-modal')">Login →</button></div>
+    ${menuRows(false)}`;
+    return;
+  }
+  const txns=PH.getTxns();
+  const wins=txns.filter(t=>t.type==='win').reduce((a,t)=>a+t.amount,0);
+  const rnds=txns.filter(t=>t.type==='bet').length;
+  el.innerHTML=`
+    <div class="prof-hdr">
+      <div class="prof-av">${(user.username[0]||'P').toUpperCase()}</div>
+      <div style="font-size:.98rem;font-weight:700;margin-bottom:2px">${user.username}</div>
+      <div style="font-size:.76rem;color:var(--text2)">${user.phone||''}</div>
+    </div>
+    <div class="prof-stats">
+      <div class="ps"><div class="ps-val">${rnds}</div><div class="ps-lbl">Rounds</div></div>
+      <div class="ps"><div class="ps-val">${wins>=1000?(wins/1000).toFixed(1)+'K':wins.toFixed(0)}</div><div class="ps-lbl">Won (KSh)</div></div>
+      <div class="ps"><div class="ps-val">${PH.getMode()==='demo'?'Demo':'Play'}</div><div class="ps-lbl">Mode</div></div>
+    </div>
+    ${menuRows(true)}`;
+  document.getElementById('tog-sound')?.classList.toggle('on',sndOn);
+  document.getElementById('tog-music')?.classList.toggle('on',musOn);
+  document.getElementById('tog-theme')?.classList.toggle('on',isLight());
+}
+
+function menuRows(loggedIn){return`<div>
+  <div class="sec-lbl">Settings</div>
+  <div class="menu-row"><div class="mr-ic" style="background:rgba(79,110,247,.08)">🔊</div><div class="mr-bd"><div class="mr-title">Sound Effects</div></div><button class="toggle${sndOn?' on':''}" id="tog-sound" onclick="toggleSound()"></button></div>
+  <div class="menu-row"><div class="mr-ic" style="background:rgba(162,89,255,.08)">🎵</div><div class="mr-bd"><div class="mr-title">Game Music</div></div><button class="toggle${musOn?' on':''}" id="tog-music" onclick="toggleMusic()"></button></div>
+  <div class="menu-row"><div class="mr-ic" style="background:rgba(245,197,66,.08)">☀️</div><div class="mr-bd"><div class="mr-title">Light Theme</div></div><button class="toggle${isLight()?' on':''}" id="tog-theme" onclick="toggleTheme()"></button></div>
+  <div class="sec-lbl">Rewards</div>
+  <div class="menu-row" onclick="showToast('Referral link copied! Share with friends 🎉','success')"><div class="mr-ic" style="background:rgba(79,110,247,.1)">🔗</div><div class="mr-bd"><div class="mr-title">Refer Friends</div><div class="mr-sub">Earn 10% on first deposit</div></div><span class="mr-arr">›</span></div>
+  <div class="menu-row" onclick="showToast('No active promotions right now','info')"><div class="mr-ic" style="background:rgba(41,217,128,.08)">🎁</div><div class="mr-bd"><div class="mr-title">Promotions</div></div><span class="mr-arr">›</span></div>
+  <div class="sec-lbl">Support</div>
+  <div class="menu-row" onclick="showToast('support@pepetahigh.co.ke','info',5000)"><div class="mr-ic" style="background:rgba(162,89,255,.08)">💬</div><div class="mr-bd"><div class="mr-title">Contact Us</div></div><span class="mr-arr">›</span></div>
+  ${loggedIn?`<div class="sec-lbl">Account</div><div class="menu-row" onclick="parent.doLogout()"><div class="mr-ic" style="background:rgba(242,78,78,.07)">🚪</div><div class="mr-bd"><div class="mr-title" style="color:var(--red)">Logout</div></div><span class="mr-arr">›</span></div>`:''}
+</div>`;}
+
+function toggleSound(){
+  sndOn=!sndOn;sessionStorage.setItem('ph_sound',sndOn?'on':'off');
+  document.getElementById('tog-sound')?.classList.toggle('on',sndOn);
+  showToast('Sound '+(sndOn?'on':'off'),'info');
+}
+function toggleMusic(){
+  musOn=!musOn;sessionStorage.setItem('ph_music',musOn?'on':'off');
+  document.getElementById('tog-music')?.classList.toggle('on',musOn);
+  // Tell aviator iframe to update music playback
+  try{const fr=parent.document.getElementById('fr-aviator');if(fr?.contentWindow?.onMusicToggle)fr.contentWindow.onMusicToggle();}catch(e){}
+  showToast('Music '+(musOn?'on':'off'),'info');
+}
+function toggleTheme(){
+  const light=document.body.classList.toggle('theme-light');
+  try{parent.document.body.classList.toggle('theme-light',light);}catch(e){}
+  sessionStorage.setItem('ph_theme',light?'light':'dark');
+  document.getElementById('tog-theme')?.classList.toggle('on',light);
+  ['home','bets','wallet','aviator'].forEach(n=>{try{const fr=parent.document.getElementById('fr-'+n);if(fr?.contentDocument?.body)fr.contentDocument.body.classList.toggle('theme-light',light);}catch(e){}});
+  showToast(light?'Light theme ☀️':'Dark theme 🌙','info');
+}
+
+function onTabVisible(){render();}
+function onAuthChange(){render();}
+render();
+</script>
+</body>
+</html>

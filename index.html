@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PepetaHigh</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✈</text></svg>">
+<link rel="stylesheet" href="styles.css">
+<style>
+*{box-sizing:border-box}
+body{overflow:hidden;margin:0}
+
+@keyframes bounceIn{0%{transform:scale(.5);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+@keyframes pulsePlane{0%,100%{transform:translateY(0) scale(1);opacity:1}50%{transform:translateY(-7px) scale(1.07);opacity:.85}}
+.spin-dot{width:7px;height:7px;border-radius:50%;background:var(--primary);animation:dotBounce .9s ease-in-out infinite;display:inline-block}
+@keyframes dotBounce{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-6px);opacity:1}}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="top-nav">
+  <div class="nav-logo">✈ Pepeta<span>High</span></div>
+  <div id="nav-right"></div>
+</nav>
+
+<!-- HISTORY BAR -->
+<div class="hist-bar" id="histbar" style="display:none;position:fixed;z-index:289;left:0;right:0;top:50px"></div>
+
+<!-- IFRAME SHELL -->
+<div id="shell">
+  <iframe id="fr-home"         src="home.html"         class="active-fr"></iframe>
+  <iframe id="fr-bets"         src="bets.html"></iframe>
+  <iframe id="fr-wallet"       src="wallet.html"></iframe>
+  <iframe id="fr-profile"      src="profile.html"></iframe>
+  <iframe id="fr-aviator"      src="aviator.html"></iframe>
+  <iframe id="fr-fortunespin"  src="fortune-spin.html"></iframe>
+</div>
+
+<!-- RELOADING SCREEN -->
+<div id="reload-screen" style="
+  position:fixed;inset:0;z-index:9000;
+  background:#09090f;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+">
+  <div style="font-size:2.8rem;animation:pulsePlane 1.2s ease-in-out infinite">✈</div>
+  <div style="font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:900;color:#eef0ff;letter-spacing:.06em">PepetaHigh</div>
+  <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+    <div class="spin-dot"></div>
+    <div class="spin-dot" style="animation-delay:.15s"></div>
+    <div class="spin-dot" style="animation-delay:.3s"></div>
+  </div>
+  <div style="font-size:.76rem;color:#4a4f7a;letter-spacing:.08em;text-transform:uppercase">Loading…</div>
+</div>
+
+<!-- RECONNECTING SCREEN -->
+<div id="reconnect-screen" style="
+  position:fixed;inset:0;z-index:8999;
+  background:rgba(9,9,15,.96);backdrop-filter:blur(10px);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+">
+  <div style="font-size:2.4rem;animation:pulsePlane 1.4s ease-in-out infinite">📡</div>
+  <div style="font-family:'Orbitron',monospace;font-size:.95rem;font-weight:900;color:#eef0ff">Reconnecting…</div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="spin-dot"></div>
+    <div class="spin-dot" style="animation-delay:.15s"></div>
+    <div class="spin-dot" style="animation-delay:.3s"></div>
+  </div>
+  <div id="reconnect-msg" style="font-size:.74rem;color:#4a4f7a;text-align:center;max-width:240px;line-height:1.5">
+    Waiting for connection…
+  </div>
+</div>
+
+<style>
+@keyframes pulsePlane{0%,100%{transform:translateY(0) scale(1);opacity:1}50%{transform:translateY(-8px) scale(1.08);opacity:.85}}
+.spin-dot{width:8px;height:8px;border-radius:50%;background:#4f6ef7;animation:dotBounce .9s ease-in-out infinite}
+@keyframes dotBounce{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-7px);opacity:1}}
+</style>
+
+<!-- BOTTOM TAB BAR -->
+<div class="tab-bar">
+  <button class="tab-item active" id="tb-home" onclick="navTo('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>Home
+  </button>
+  <button class="tab-item" id="tb-bets" onclick="navTo('bets')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>Bets
+  </button>
+  <button class="tab-item" id="tb-wallet" onclick="navTo('wallet')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 3H8a2 2 0 00-2 2v2h12V5a2 2 0 00-2-2z"/><circle cx="17" cy="13" r="1" fill="currentColor"/></svg>Wallet
+  </button>
+  <button class="tab-item" id="tb-profile" onclick="navTo('profile')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Profile
+  </button>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay hidden" id="login-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('login-modal')">✕</button>
+    <div class="modal-title">Welcome Back 👋</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="inp-wrap"><label class="inp-label">Username</label><input class="inp" type="text" id="l-u" placeholder="Your username"></div>
+      <div class="inp-wrap"><label class="inp-label">Phone</label><div class="phone-wrap"><div class="phone-prefix">🇰🇪 +254</div><input class="inp" type="tel" id="l-p" placeholder="7XXXXXXXX" maxlength="9"></div></div>
+      <div class="inp-wrap"><label class="inp-label">Password</label><input class="inp" type="password" id="l-pw" placeholder="••••••••"></div>
+      <button class="btn btn-primary" onclick="doLogin()">Login →</button>
+      <p style="text-align:center;font-size:.78rem;color:var(--text2)">No account? <a href="#" style="color:var(--primary);font-weight:600" onclick="closeModal('login-modal');openModal('reg-modal')">Register free</a></p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="reg-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('reg-modal')">✕</button>
+    <div class="reg-hero"><h2>Welcome to PEPETAHIGH!</h2><h3>JOIN THE ACTION</h3><p>Deposit &amp; Start Winning</p></div>
+    <div id="reg-step1" style="display:flex;flex-direction:column;gap:12px">
+      <div class="inp-wrap"><label class="inp-label">Username</label><input class="inp" type="text" id="r-u" placeholder="Choose a username"></div>
+      <div class="inp-wrap"><label class="inp-label">Phone Number</label><div class="phone-wrap"><div class="phone-prefix">🇰🇪 +254</div><input class="inp" type="tel" id="r-p" placeholder="7XXXXXXXX" maxlength="9"></div></div>
+      <div class="pass-row">
+        <div class="inp-wrap"><label class="inp-label">Password</label><input class="inp" type="password" id="r-pw" placeholder="••••••"></div>
+        <div class="inp-wrap"><label class="inp-label">Confirm</label><input class="inp" type="password" id="r-pw2" placeholder="••••••"></div>
+      </div>
+      <label class="check-row"><input type="checkbox" id="r-terms"><span>I agree to the Terms of Use</span></label>
+      <button class="btn btn-primary" id="reg-submit-btn" onclick="doRegister()">Sign Up →</button>
+      <p style="text-align:center;font-size:.78rem;color:var(--text2)">Have an account? <a href="#" style="color:var(--primary);font-weight:600" onclick="closeModal('reg-modal');openModal('login-modal')">Login</a></p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="mode-modal">
+  <div class="modal" style="max-width:320px">
+    <button class="modal-close" onclick="closeModal('mode-modal')">✕</button>
+    <div class="modal-title" style="text-align:center;margin-bottom:14px">Choose How to Play</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button onclick="pickMode('play')" style="padding:16px;background:var(--bg4);border:2px solid var(--green);border-radius:var(--radius2);cursor:pointer;font-family:var(--font-b);font-size:1rem;font-weight:700;color:var(--green);width:100%">💰 Real Play</button>
+      <button onclick="pickMode('demo')" style="padding:16px;background:var(--bg4);border:2px solid var(--gold);border-radius:var(--radius2);cursor:pointer;font-family:var(--font-b);font-size:1rem;font-weight:700;color:var(--gold);width:100%">🎮 Demo Mode</button>
+    </div>
+    <div style="text-align:center;font-size:.72rem;color:var(--text3);margin-top:12px" id="mo-info"></div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="game-mode-modal">
+  <div class="modal" style="max-width:320px">
+    <button class="modal-close" onclick="closeModal('game-mode-modal')">✕</button>
+    <div class="modal-title" style="text-align:center;margin-bottom:6px" id="gm-title">Choose How to Play</div>
+    <div style="font-size:.76rem;color:var(--text3);text-align:center;margin-bottom:16px" id="gm-sub"></div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button onclick="pickGameMode('play')" style="padding:16px;background:var(--bg4);border:2px solid var(--green);border-radius:var(--radius2);cursor:pointer;font-family:var(--font-b);font-size:1rem;font-weight:700;color:var(--green);width:100%">💰 Real Play</button>
+      <button onclick="pickGameMode('demo')" style="padding:16px;background:var(--bg4);border:2px solid var(--gold);border-radius:var(--radius2);cursor:pointer;font-family:var(--font-b);font-size:1rem;font-weight:700;color:var(--gold);width:100%">🎮 Demo Mode</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="dep-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="cancelDeposit()">✕</button>
+    <div class="modal-title">💳 Deposit</div>
+    <div id="dep-step1" style="display:flex;flex-direction:column;gap:11px">
+      <div id="dep-methods" style="display:flex;flex-direction:column;gap:7px">
+        <div class="pay-opt sel" onclick="selPay(this,'dep','mpesa')">
+          <span class="poi">📱</span>
+          <div><div class="pon">M-Pesa</div><div class="pod">STK Push to your phone</div></div>
+          <div class="por"></div>
+        </div>
+        <div class="pay-opt" onclick="selPay(this,'dep','airtel')">
+          <span class="poi">📶</span>
+          <div><div class="pon">Airtel Money</div><div class="pod">Instant transfer</div></div>
+          <div class="por"></div>
+        </div>
+      </div>
+      <div class="inp-wrap">
+        <label class="inp-label" id="dep-ph-lbl">M-Pesa Number</label>
+        <div class="phone-wrap"><div class="phone-prefix">🇰🇪 +254</div>
+          <input class="inp" type="tel" id="dep-ph" placeholder="7XXXXXXXX" maxlength="9">
+        </div>
+      </div>
+      <div class="inp-wrap">
+        <label class="inp-label">Amount (KSh)</label>
+        <input class="inp" type="number" id="dep-amt" placeholder="Min KSh 200" min="200">
+        <div class="quick-amts">
+          <span class="qa-chip" onclick="document.getElementById('dep-amt').value=200">200</span>
+          <span class="qa-chip" onclick="document.getElementById('dep-amt').value=500">500</span>
+          <span class="qa-chip" onclick="document.getElementById('dep-amt').value=1000">1,000</span>
+          <span class="qa-chip" onclick="document.getElementById('dep-amt').value=2000">2,000</span>
+          <span class="qa-chip" onclick="document.getElementById('dep-amt').value=5000">5,000</span>
+          <span class="qa-chip" onclick="document.getElementById('dep-amt').value=10000">10,000</span>
+        </div>
+      </div>
+      <div style="background:rgba(41,217,128,.05);border:1px solid rgba(41,217,128,.13);border-radius:8px;padding:9px 12px;font-size:.74rem;color:var(--text2)">
+        ✓ Min <strong>KSh 200</strong> &nbsp;·&nbsp; Paybill <strong>522533</strong> &nbsp;·&nbsp; +10% bonus on every deposit
+      </div>
+      <button class="btn btn-primary" onclick="initiateDeposit()">Send STK Push →</button>
+    </div>
+
+    <div id="dep-step2" style="display:none;flex-direction:column;align-items:center;gap:16px;padding:10px 0;text-align:center">
+      <div style="font-size:2.6rem;animation:pulsePlane 1.2s ease-in-out infinite">📱</div>
+      <div style="font-weight:700;font-size:.96rem;color:var(--text)">Check your phone</div>
+      <div style="font-size:.8rem;color:var(--text2);line-height:1.6" id="dep-stk-msg">
+        An M-Pesa prompt has been sent to<br>
+        <strong style="color:var(--primary)" id="dep-stk-num"></strong><br><br>
+        Enter your <strong>M-Pesa PIN</strong> to complete the deposit.
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--text3)">
+        <div class="spin-dot"></div><div class="spin-dot" style="animation-delay:.15s"></div><div class="spin-dot" style="animation-delay:.3s"></div>
+        <span id="dep-countdown">Waiting for payment…</span>
+      </div>
+      <div style="width:100%;background:var(--bg4);border-radius:6px;height:5px;overflow:hidden;margin-top:4px">
+        <div id="dep-progress-bar" style="height:100%;background:var(--primary);border-radius:6px;width:0%;transition:width .4s linear"></div>
+      </div>
+      <button onclick="cancelDeposit()" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:8px 20px;cursor:pointer;font-size:.78rem;margin-top:4px">Cancel</button>
+    </div>
+
+    <div id="dep-step3" style="display:none;flex-direction:column;align-items:center;gap:14px;padding:10px 0;text-align:center">
+      <div style="font-size:2.8rem;animation:bounceIn .4s ease">✅</div>
+      <div style="font-weight:700;font-size:1rem;color:var(--green)">Payment Confirmed!</div>
+      <div style="font-size:.82rem;color:var(--text2);line-height:1.6" id="dep-success-msg"></div>
+      <button class="btn btn-green" onclick="closeModal('dep-modal')" style="margin-top:6px">Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="wd-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('wd-modal')">✕</button>
+    <div class="modal-title">↑ Withdraw</div>
+    <div style="display:flex;flex-direction:column;gap:11px">
+      <div id="wd-methods" style="display:flex;flex-direction:column;gap:7px">
+        <div class="pay-opt sel" onclick="selPay(this,'wd','mpesa')"><span class="poi">📱</span><div><div class="pon">M-Pesa</div><div class="pod">Within 2 minutes</div></div><div class="por"></div></div>
+        <div class="pay-opt" onclick="selPay(this,'wd','airtel')"><span class="poi">📶</span><div><div class="pon">Airtel Money</div><div class="pod">Within 5 minutes</div></div><div class="por"></div></div>
+      </div>
+      <div class="inp-wrap"><label class="inp-label">Phone Number</label><div class="phone-wrap"><div class="phone-prefix">🇰🇪 +254</div><input class="inp" type="tel" id="wd-ph" placeholder="7XXXXXXXX" maxlength="9"></div></div>
+      <div class="inp-wrap">
+        <label class="inp-label">Amount (KSh)</label>
+        <input class="inp" type="number" id="wd-amt" placeholder="Min KSh 1,000" min="1000">
+        <div class="quick-amts"><span class="qa-chip" onclick="document.getElementById('wd-amt').value=1000">1,000</span><span class="qa-chip" onclick="document.getElementById('wd-amt').value=2000">2,000</span><span class="qa-chip" onclick="document.getElementById('wd-amt').value=5000">5,000</span></div>
+      </div>
+      <div style="background:rgba(245,197,66,.05);border:1px solid rgba(245,197,66,.13);border-radius:8px;padding:9px 12px;font-size:.74rem;color:var(--text2)">⚠ Min <strong>KSh 1,000</strong> · Available: <strong style="color:var(--green)" id="wd-avail">KSh 0.00</strong></div>
+      <button class="btn btn-primary" onclick="processWithdraw()">Withdraw Now →</button>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="utils.js"></script>
+<script src="engine.js"></script>
+<script>
+'use strict';
+if(sessionStorage.getItem('ph_theme')==='light') document.body.classList.add('theme-light');
+
+const FRAMES=['home','bets','wallet','profile'];
+let activeTab='home';
+let _betsGame='aviator';
+let _pendingGame=null;
+
+function onBetsGameChange(g){ _betsGame=g; renderHistBar(); }
+
+function adjustShell(){
+  const hb=document.getElementById('histbar');
+  const shell=document.getElementById('shell');
+  const hbH=(hb&&hb.style.display!=='none')?hb.offsetHeight||36:0;
+  if(hb) hb.style.top='50px';
+  shell.style.top=(50+hbH)+'px';
+}
+
+function notify(name,fn,...args){try{const fr=document.getElementById('fr-'+name);if(fr?.contentWindow?.[fn])fr.contentWindow[fn](...args);}catch(e){}}
+function showFr(n){document.getElementById('fr-'+n).classList.add('active-fr');}
+function hideFr(n){document.getElementById('fr-'+n).classList.remove('active-fr');}
+function showOnly(n){FRAMES.forEach(f=>f===n?showFr(f):hideFr(f));}
+
+function navTo(tab){
+  const G=window.G;
+  if(G.inAviator&&tab==='home'){exitAviator();return;}
+  if(window._inFortuneSpin&&tab==='home'){exitFortuneSpin();return;}
+  if(G.inAviator){G.inAviator=false;notify('aviator','onNavAway');hideFr('aviator');}
+  if(window._inFortuneSpin){window._inFortuneSpin=false;notify('fortunespin','onNavAway');hideFr('fortunespin');}
+  showOnly(tab);
+  FRAMES.forEach(n=>document.getElementById('tb-'+n).classList.toggle('active',n===tab));
+  activeTab=tab;
+  renderHistBar();adjustShell();
+  if(tab==='bets'){ _betsGame='aviator';
+    setTimeout(()=>{
+      const G=window.G;
+      const lc=G.roundHist.length?G.roundHist[0]:G.mult;
+      if(G.state==='fly')       notify('bets','onGameFly',G.roundBets,G.mult);
+      else if(G.state==='wait') notify('bets','onGameWait',G.roundBets);
+      else if(G.state==='crash')notify('bets','onGameCrash',lc,G.roundBets,lc);
+      else                      notify('bets','onBetsChange','tab',G.roundBets,G.mult);
+    },80);
+  } else notify(tab,'onTabVisible');
+}
+
+function launchAviator(){
+  FRAMES.forEach(n=>{hideFr(n);document.getElementById('tb-'+n).classList.remove('active');});
+  if(window._inFortuneSpin){window._inFortuneSpin=false;notify('fortunespin','onNavAway');hideFr('fortunespin');}
+  document.getElementById('tb-home').classList.add('active');
+  showFr('aviator');
+  window.G.inAviator=true; activeTab='home';
+  renderHistBar();adjustShell();
+  notify('aviator','onLaunched');
+}
+function exitAviator(){
+  window.G.inAviator=false;
+  notify('aviator','onNavAway');
+  hideFr('aviator');showOnly('home');
+  activeTab='home';
+  FRAMES.forEach(n=>document.getElementById('tb-'+n).classList.toggle('active',n==='home'));
+  renderHistBar();adjustShell();
+  notify('home','onTabVisible');
+}
+
+window._inFortuneSpin=false;
+function launchFortuneSpin(){
+  FRAMES.forEach(n=>{hideFr(n);document.getElementById('tb-'+n).classList.remove('active');});
+  if(window.G.inAviator){window.G.inAviator=false;notify('aviator','onNavAway');hideFr('aviator');}
+  document.getElementById('tb-home').classList.add('active');
+  showFr('fortunespin');
+  window._inFortuneSpin=true; activeTab='home';
+  adjustShell();
+  notify('fortunespin','onLaunched');
+}
+function exitFortuneSpin(){
+  window._inFortuneSpin=false;
+  notify('fortunespin','onNavAway');
+  hideFr('fortunespin');showOnly('home');
+  activeTab='home';
+  FRAMES.forEach(n=>document.getElementById('tb-'+n).classList.toggle('active',n==='home'));
+  renderHistBar();adjustShell();
+  notify('home','onTabVisible');
+}
+
+function openFortuneSpinModal(){
+  _pendingGame='fortunespin';
+  const user=PH.getUser();
+  document.getElementById('gm-title').textContent='🎰 Fortune Spin';
+  document.getElementById('gm-sub').textContent=user
+    ?'Balance: '+PH.fmt(PH.getWallet())+'  ·  Demo: '+PH.fmt(PH.getDemoBal())
+    :'Real Play requires login';
+  openModal('game-mode-modal');
+}
+function pickGameMode(m){
+  if(m==='play'&&!PH.getUser()){closeModal('game-mode-modal');openModal('login-modal');return;}
+  PH.setMode(m); if(m==='demo') PH.resetDemo();
+  closeModal('game-mode-modal'); updateNavBal(); renderNav();
+  if(_pendingGame==='fortunespin') launchFortuneSpin();
+  _pendingGame=null;
+}
+
+function openGameModal(){
+  const user=PH.getUser();
+  const info=document.getElementById('mo-info');
+  if(info) info.textContent=user?'Balance: '+PH.fmt(PH.getWallet())+'  ·  Demo: '+PH.fmt(PH.getDemoBal()):'Real Play requires login';
+  openModal('mode-modal');
+}
+function pickMode(m){
+  if(m==='play'&&!PH.getUser()){closeModal('mode-modal');openModal('login-modal');return;}
+  PH.setMode(m);if(m==='demo')PH.resetDemo();
+  window.switchWorld();
+  closeModal('mode-modal');updateNavBal();renderNav();
+  launchAviator();
+}
+
+function _wireWorld(W){
+  W.onCrash=(recorded)=>{
+    if(window.G!==W)return;
+    renderHistBar();
+    notify('bets','onGameCrash',recorded,W.roundBets,recorded);
+    notify('aviator','onGameCrash',recorded);
+  };
+  W.onFly=()=>{
+    if(window.G!==W)return;
+    notify('aviator','onGameFly');
+    notify('bets','onGameFly',W.roundBets,W.mult);
+  };
+  W.onWait=()=>{
+    if(window.G!==W)return;
+    notify('aviator','onGameWait');
+    notify('bets','onGameWait',W.roundBets);
+  };
+  W.onRoundBetsChange=(reason)=>{
+    if(window.G!==W)return;
+    notify('bets','onBetsChange',reason,W.roundBets,W.mult);
+  };
+  W.onAutoCashout=(i,won)=>{
+    if(window.G!==W)return;
+    notify('aviator','onAutoCashout',i,won);
+  };
+}
+function wireCallbacks(){
+  _wireWorld(window.G_real);
+  _wireWorld(window.G_demo);
+}
+
+function renderNav(){
+  const user=PH.getUser(),nr=document.getElementById('nav-right');
+  if(user){
+    const bal=PH.balance(),mode=PH.getMode();
+    nr.innerHTML=`<div style="display:flex;align-items:center;gap:10px">
+      <button onclick="openModal('dep-modal')" style="background:linear-gradient(135deg,var(--green),var(--green2));border:none;color:#000;padding:8px 16px;border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer">+ Deposit</button>
+      <div style="text-align:right">
+        <div style="font-size:.6rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px">Balance</div>
+        <div id="nav-bal" style="font-family:var(--font-d);font-size:.82rem;font-weight:700;color:${mode==='demo'?'var(--gold)':'var(--text)'}">${PH.fmt(bal)}</div>
+      </div></div>`;
+  } else {
+    nr.innerHTML=`<button onclick="openModal('login-modal')" style="background:transparent;border:1.5px solid var(--border2);color:var(--text);padding:5px 13px;border-radius:8px;font-size:.8rem;font-weight:600;cursor:pointer">LOGIN</button>`;
+  }
+  adjustShell();
+}
+function updateNavBal(){
+  const el=document.getElementById('nav-bal');if(!el){renderNav();return;}
+  const mode=PH.getMode(),bal=PH.balance();
+  el.textContent=PH.fmt(bal);el.style.color=mode==='demo'?'var(--gold)':'var(--text)';
+}
+
+function renderHistBar(){
+  const bar=document.getElementById('histbar');if(!bar)return;
+  const isDemo=PH.getMode()==='demo';
+  const inAv=window.G.inAviator;
+  const inFS=window._inFortuneSpin;
+  const showHist = !inAv && !inFS && activeTab==='bets' && !isDemo && _betsGame==='aviator';
+  bar.style.display=showHist?'flex':'none';
+  if(!showHist){adjustShell();return;}
+  const hist = window.G_real?window.G_real.roundHist:[];
+  const jmax = window.JACKPOT_MAX||5000;
+  const lbl = '<span class="online-dot" style="flex-shrink:0;margin-right:4px"></span>';
+  const chips = hist.length
+    ?lbl+hist.slice(0,22).map(m=>{const v=Math.min(m,jmax);const c=v<2?'hc-safe':v<5?'hc-mid':v<20?'hc-high':'hc-mega';return`<span class="hchip ${c}">${v.toFixed(2)}×</span>`;}).join('')
+    :lbl+'<span style="font-size:.64rem;color:var(--text3)">No rounds yet</span>';
+  bar.innerHTML = `<div style="display:flex;align-items:center;gap:5px;overflow-x:auto;flex:1;min-width:0">${chips}</div>`;
+  adjustShell();
+}
+
+// ── Modal helpers ─────────────────────────────────────────────────────
+function openModal(id){document.getElementById(id)?.classList.remove('hidden');}
+function closeModal(id){document.getElementById(id)?.classList.add('hidden');}
+function _setBtn(id,txt,dis){const b=document.getElementById(id);if(!b)return;b.textContent=txt;b.disabled=dis;}
+function _notifyAll(){FRAMES.forEach(n=>notify(n,'onAuthChange'));notify('aviator','onAuthChange');notify('fortunespin','onAuthChange');notify('rocketcrash','onAuthChange');}
+
+// ── LOGIN ─────────────────────────────────────────────────────────────
+async function doLogin(){
+  const u=document.getElementById('l-u').value.trim();
+  const pw=document.getElementById('l-pw').value;
+  if(!u){showToast('Enter username','error');return;}
+  if(!pw){showToast('Enter password','error');return;}
+
+  const btn=document.querySelector('#login-modal .btn-primary');
+  if(btn){btn.textContent='Logging in…';btn.disabled=true;}
+
+  try{
+    const res=await fetch(BACKEND_URL+'/api/auth/login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:u,password:pw})
+    });
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||'Login failed');
+
+    sessionStorage.setItem('ph_jwt',data.token);
+    PH.setUser({username:data.user.username,phone:data.user.phone,id:data.user.id});
+    PH.setWallet(data.user.wallet||0);
+    closeModal('login-modal');
+    renderNav();
+    _notifyAll();
+    showToast('Welcome back, '+data.user.username+'! 🎉','success');
+  }catch(err){
+    showToast(err.message,'error');
+  }finally{
+    if(btn){btn.textContent='Login →';btn.disabled=false;}
+  }
+}
+
+// ── REGISTER (no OTP — instant login) ────────────────────────────────
+async function doRegister(){
+  const u=document.getElementById('r-u').value.trim();
+  const p=document.getElementById('r-p').value.trim();
+  const pw=document.getElementById('r-pw').value;
+  const pw2=document.getElementById('r-pw2').value;
+  const terms=document.getElementById('r-terms').checked;
+
+  if(!u||!/^[a-zA-Z][a-zA-Z0-9_]{2,19}$/.test(u)){showToast('Username: 3–20 chars, start with a letter','error');return;}
+  if(!p||p.length<9){showToast('Enter a valid 9-digit phone number','error');return;}
+  if(pw.length<6){showToast('Password must be 6+ characters','error');return;}
+  if(pw!==pw2){showToast('Passwords do not match','error');return;}
+  if(!terms){showToast('Please accept the Terms of Use','error');return;}
+
+  _setBtn('reg-submit-btn','Creating account…',true);
+
+  try{
+    const res=await fetch(BACKEND_URL+'/api/auth/register',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:u,phone:'+254'+p,password:pw})
+    });
+    const data=await res.json();
+    if(!res.ok) throw new Error(data.error||'Registration failed');
+
+    // Auto-login immediately — no OTP needed
+    sessionStorage.setItem('ph_jwt',data.token);
+    PH.setUser({username:data.user.username,phone:data.user.phone,id:data.user.id});
+    PH.setWallet(data.user.wallet||0);
+    PH.resetDemo();
+
+    closeModal('reg-modal');
+    renderNav();
+    _notifyAll();
+    showToast('Welcome to PepetaHigh, '+data.user.username+'! 🚀','success',5000);
+  }catch(err){
+    showToast(err.message,'error');
+  }finally{
+    _setBtn('reg-submit-btn','Sign Up →',false);
+  }
+}
+
+// ── LOGOUT ────────────────────────────────────────────────────────────
+function doLogout(){
+  window.G.inAviator=false;notify('aviator','onNavAway');hideFr('aviator');
+  window._inFortuneSpin=false;notify('fortunespin','onNavAway');hideFr('fortunespin');
+  showOnly('home');activeTab='home';
+  sessionStorage.removeItem('ph_jwt');
+  PH.clearUser();
+  FRAMES.forEach(n=>document.getElementById('tb-'+n).classList.toggle('active',n==='home'));
+  renderNav();FRAMES.forEach(n=>notify(n,'onAuthChange'));
+  showToast('Logged out','info');
+}
+
+// ── Bonus wallets ─────────────────────────────────────────────────────
+function _getDepBonus(){ return parseFloat(sessionStorage.getItem('ph_dep_bonus')||'0'); }
+function _setDepBonus(v){ sessionStorage.setItem('ph_dep_bonus',Math.max(0,parseFloat(v)).toFixed(2)); }
+function _getRefBonus(){ return parseFloat(sessionStorage.getItem('ph_ref_bonus')||'0'); }
+function _setRefBonus(v){ sessionStorage.setItem('ph_ref_bonus',Math.max(0,parseFloat(v)).toFixed(2)); }
+function _getBonusInWallet(){ return parseFloat(sessionStorage.getItem('ph_bonus_in_wallet')||'0'); }
+function _setBonusInWallet(v){ sessionStorage.setItem('ph_bonus_in_wallet',Math.max(0,parseFloat(v)).toFixed(2)); }
+function _onBonusRedeemed(amt){ _setBonusInWallet(_getBonusInWallet()+amt); updateNavBal(); }
+
+// ── Payments ──────────────────────────────────────────────────────────
+let _dm='mpesa',_wm='mpesa';
+function selPay(el,type,m){
+  const grp=type==='dep'?'dep-methods':'wd-methods';
+  document.querySelectorAll('#'+grp+' .pay-opt').forEach(e=>e.classList.remove('sel'));el.classList.add('sel');
+  if(type==='dep'){_dm=m;const L={mpesa:'M-Pesa Number',airtel:'Airtel Number'};document.getElementById('dep-ph-lbl').textContent=L[m]||'Phone Number';}else _wm=m;
+}
+let _depAmt=0, _depCountdownInt=null, _depCheckoutId=null;
+
+async function initiateDeposit(){
+  const ph=document.getElementById('dep-ph').value.trim();
+  const amt=parseFloat(document.getElementById('dep-amt').value);
+  if(!ph||ph.length<9){showToast('Enter a valid 9-digit phone number','error');return;}
+  if(!amt||amt<200){showToast('Minimum deposit is KSh 200','error');return;}
+  _depAmt=amt;
+  document.getElementById('dep-step1').style.display='none';
+  document.getElementById('dep-step2').style.display='flex';
+  const fullPhone='254'+ph;
+  const label=_dm==='airtel'?'Airtel Money':'M-Pesa';
+  document.getElementById('dep-stk-msg').innerHTML=
+    `A ${label} prompt has been sent to<br><strong style="color:var(--primary)">+254 ${ph}</strong><br><br>Enter your <strong>${label} PIN</strong> to complete.`;
+  document.getElementById('dep-countdown').textContent='Sending prompt…';
+  document.getElementById('dep-progress-bar').style.width='5%';
+  try {
+    const jwt=sessionStorage.getItem('ph_jwt');
+    const res = await fetch(`${BACKEND_URL}/api/deposit/stk`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(jwt ? {'Authorization':'Bearer '+jwt} : {})
+      },
+      body: JSON.stringify({phone:fullPhone,amount:Math.round(amt),userId:PH.getUser()?.username||'guest',method:_dm})
+    });
+    const data = await res.json();
+    if(!res.ok || !data.CheckoutRequestID) throw new Error(data.error || 'STK push failed');
+    _depCheckoutId = data.CheckoutRequestID;
+    let secs=60;
+    const bar=document.getElementById('dep-progress-bar');
+    const cd=document.getElementById('dep-countdown');
+    bar.style.width='10%';
+    if(_depCountdownInt) clearInterval(_depCountdownInt);
+    _depCountdownInt=setInterval(()=>{
+      secs--;
+      const pct=10+Math.round((60-secs)/60*85);
+      bar.style.width=Math.min(95,pct)+'%';
+      cd.textContent=secs>0?'Waiting for PIN… '+secs+'s':'Confirming…';
+      if(secs<=0){ clearInterval(_depCountdownInt); _depCountdownInt=null; }
+    },1000);
+    _pollDeposit(_depCheckoutId, amt, 0);
+  } catch(err){
+    showToast('Payment failed: '+err.message,'error',5000);
+    cancelDeposit();
+  }
+}
+
+async function _pollDeposit(checkoutId, amt, attempts){
+  if(attempts > 12){cancelDeposit();showToast('Payment timed out — please try again','error',5000);return;}
+  if(_depCheckoutId !== checkoutId) return;
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/deposit/status/${encodeURIComponent(checkoutId)}`);
+    const data = await res.json();
+    if(data.status === 'completed'){clearInterval(_depCountdownInt);_depCountdownInt=null;confirmDeposit();}
+    else if(data.status === 'failed'){cancelDeposit();showToast('Payment declined — please try again','error',5000);}
+    else{setTimeout(()=>_pollDeposit(checkoutId, amt, attempts+1), 5000);}
+  } catch(e){setTimeout(()=>_pollDeposit(checkoutId, amt, attempts+1), 5000);}
+}
+
+function confirmDeposit(){
+  const amt=_depAmt; if(!amt) return;
+  PH.setWallet(PH.getWallet()+amt);
+  PH.saveTxn({type:'deposit',amount:amt,method:_dm,status:'completed'});
+  const depBonus=parseFloat((amt*0.10).toFixed(2));
+  _setDepBonus(_getDepBonus()+depBonus);
+  PH.saveTxn({type:'bonus',amount:depBonus,reason:'Deposit bonus +10% (redeem at KSh 100)',status:'credited'});
+  const pendRef=sessionStorage.getItem('ph_pending_ref');
+  let refMsg='';
+  if(pendRef){
+    const pct=amt>=1000?0.50:0.10;
+    const refBonus=parseFloat((amt*pct).toFixed(2));
+    _setRefBonus(_getRefBonus()+refBonus);
+    try{const s=JSON.parse(sessionStorage.getItem('ph_referrals')||'{"count":0,"earned":0}');s.count+=1;s.earned=parseFloat((s.earned+refBonus).toFixed(2));sessionStorage.setItem('ph_referrals',JSON.stringify(s));}catch(e){}
+    PH.saveTxn({type:'bonus',amount:refBonus,reason:(pct===0.50?'50%':'10%')+' referral bonus (redeem at KSh 500)',status:'credited'});
+    sessionStorage.removeItem('ph_pending_ref');
+    refMsg=`<br><span style="color:var(--gold)">+ ${PH.fmt(refBonus)} referral bonus credited! 🔗</span>`;
+  }
+  updateNavBal(); notify('wallet','onTabVisible');
+  document.getElementById('dep-step2').style.display='none';
+  document.getElementById('dep-step3').style.display='flex';
+  document.getElementById('dep-success-msg').innerHTML=
+    `<strong style="color:var(--green)">${PH.fmt(amt)}</strong> has been added to your balance.<br>`+
+    `<span style="color:var(--gold)">+ ${PH.fmt(depBonus)} deposit bonus credited 🎁</span>${refMsg}<br><br>`+
+    `<span style="font-size:.74rem;color:var(--text3)">New balance: ${PH.fmt(PH.getWallet())}</span>`;
+  _depAmt=0;
+}
+
+function cancelDeposit(){
+  if(_depCountdownInt){ clearInterval(_depCountdownInt); _depCountdownInt=null; }
+  _depAmt=0; _depCheckoutId=null;
+  document.getElementById('dep-step1').style.display='flex';
+  document.getElementById('dep-step2').style.display='none';
+  document.getElementById('dep-step3').style.display='none';
+  closeModal('dep-modal');
+}
+
+function processWithdraw(){
+  const ph=document.getElementById('wd-ph').value.trim(),amt=parseFloat(document.getElementById('wd-amt').value),bal=PH.getWallet();
+  if(!ph||ph.length<9){showToast('Enter valid phone number','error');return;}
+  if(!amt||amt<1000){showToast('Minimum withdrawal is KSh 1,000','error');return;}
+  if(amt>bal){showToast('Insufficient balance','error');return;}
+  const bonusInWallet=_getBonusInWallet();
+  const withdrawable=Math.max(0,parseFloat((bal-bonusInWallet).toFixed(2)));
+  if(amt>withdrawable){
+    showToast('KSh '+bonusInWallet.toFixed(0)+' of your balance is bonus funds — not withdrawable. Max: KSh '+withdrawable.toFixed(2),'error',6000);
+    return;
+  }
+  PH.setWallet(bal-amt);
+  PH.saveTxn({type:'withdraw',amount:amt,method:_wm,status:'pending'});
+  closeModal('wd-modal');updateNavBal();notify('wallet','onTabVisible');
+  showToast('KSh '+amt.toLocaleString()+' processing — arrives in 5 mins ✓','success',5000);
+}
+function openWd(){
+  if(!PH.getUser()){openModal('login-modal');return;}
+  document.getElementById('wd-avail').textContent=PH.fmt(PH.getWallet());openModal('wd-modal');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+renderNav();renderHistBar();adjustShell();
+wireCallbacks();
+window.startWorld(window.G_real);
+window.startWorld(window.G_demo);
+
+document.getElementById('fr-bets').addEventListener('load',()=>{
+  const G=window.G;
+  try{
+    const fr=document.getElementById('fr-bets');if(!fr?.contentWindow)return;
+    const lc=G.roundHist.length?G.roundHist[0]:G.mult;
+    if(G.state==='fly')       fr.contentWindow.onGameFly(G.roundBets,G.mult);
+    else if(G.state==='wait') fr.contentWindow.onGameWait(G.roundBets);
+    else if(G.state==='crash')fr.contentWindow.onGameCrash(lc,G.roundBets,lc);
+  }catch(e){}
+});
+
+function avMenu(){ notify('aviator','toggleMenu'); }
+function avChat(){ notify('aviator','toggleChat'); }
+
+setInterval(()=>{PlayerCount.next();},5000);
+setInterval(()=>{if(activeTab==='bets')notify('bets','onBetsChange','tick',window.G.roundBets,window.G.mult);},1000);
+
+function showReloadScreen(){ document.getElementById('reload-screen').style.display='flex'; }
+function hideReloadScreen(){
+  const el=document.getElementById('reload-screen');
+  el.style.transition='opacity .5s ease'; el.style.opacity='0';
+  setTimeout(()=>{ el.style.display='none'; el.style.opacity='1'; }, 520);
+}
+function showReconnectScreen(msg){
+  const el=document.getElementById('reconnect-screen'); el.style.display='flex';
+  const m=document.getElementById('reconnect-msg'); if(m) m.textContent=msg||'Waiting for connection…';
+}
+function hideReconnectScreen(){
+  const el=document.getElementById('reconnect-screen');
+  el.style.transition='opacity .4s ease'; el.style.opacity='0';
+  setTimeout(()=>{ el.style.display='none'; el.style.opacity='1'; }, 420);
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    try{ const fr=document.getElementById('fr-aviator');if(fr?.contentWindow?.onTabHidden)fr.contentWindow.onTabHidden(); }catch(e){}
+  } else {
+    if(window.G.inAviator){
+      try{ const fr=document.getElementById('fr-aviator');if(fr?.contentWindow?.onLaunched)fr.contentWindow.onLaunched(); }catch(e){}
+    }
+    updateNavBal();
+  }
+});
+
+let _autoBetSaved=[false,false];
+window.addEventListener('offline', ()=>{
+  window.stopAllWorlds();
+  [window.G_real,window.G_demo].forEach(W=>{W.myBets.forEach((b,i)=>{ _autoBetSaved[i]=b.autoBet; b.autoBet=false; });});
+  try{ const fr=document.getElementById('fr-aviator');if(fr?.contentWindow?.onTabHidden)fr.contentWindow.onTabHidden(); }catch(e){}
+  showReconnectScreen('Connection lost. Waiting to reconnect…');
+});
+window.addEventListener('online', ()=>{
+  window.resumeAllWorlds();
+  [window.G_real,window.G_demo].forEach(W=>{W.myBets.forEach((b,i)=>{ b.autoBet=_autoBetSaved[i]||false; });});
+  const m=document.getElementById('reconnect-msg'); if(m) m.textContent='Connection restored. Resuming game…';
+  setTimeout(()=>{
+    hideReconnectScreen();
+    if(window.G.inAviator){try{ const fr=document.getElementById('fr-aviator');if(fr?.contentWindow?.onLaunched)fr.contentWindow.onLaunched(); }catch(e){}}
+    updateNavBal(); showToast('Back online ✓','success',2500);
+  }, 1200);
+});
+
+(function waitForReady(){
+  const ready = window.G_real && window.G_demo &&
+                window.G_real.state !== 'idle' && window.G_demo.state !== 'idle';
+  if(ready){ hideReloadScreen(); }
+  else { setTimeout(waitForReady, 120); }
+})();
+</script>
+</body>
+</html>

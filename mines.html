@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Mines — PepetaHigh</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:var(--font-b);overflow:hidden;height:100vh;display:flex;flex-direction:column}
+.game-hdr{display:flex;align-items:center;justify-content:space-between;padding:0 14px;height:46px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0}
+.back-btn{display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--text2);font-family:var(--font-b);font-size:.8rem;font-weight:600;cursor:pointer;padding:6px 0;transition:color .2s}
+.back-btn:hover{color:var(--text)}
+.ghdr-title{font-family:var(--font-d);font-size:.85rem;font-weight:900;color:var(--text);letter-spacing:.08em}
+.ghdr-title span{color:#f43f5e}
+.demo-tag{display:none;background:rgba(245,197,66,.12);border:1px solid rgba(245,197,66,.3);color:var(--gold);font-size:.6rem;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:.1em;text-transform:uppercase}
+.demo-tag.show{display:inline-block}
+.hdr-bal-lbl{font-size:.55rem;color:var(--text3);text-transform:uppercase;letter-spacing:.08em}
+.hdr-bal-amt{font-family:var(--font-d);font-size:.82rem;font-weight:700;color:var(--text)}
+.hdr-bal-amt.dm{color:var(--gold)}
+.game-body{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+/* Streak bar */
+.streak-bar{height:34px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:0 14px;flex-shrink:0}
+.streak-lbl{font-size:.58rem;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;font-weight:700;flex-shrink:0}
+.streak-gems{display:flex;gap:4px;align-items:center}
+.streak-gem{width:18px;height:18px;border-radius:4px;background:var(--bg4);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.7rem;transition:all .2s}
+.streak-gem.safe{background:rgba(41,217,128,.15);border-color:var(--green)}
+.streak-gem.mine{background:rgba(242,78,78,.15);border-color:var(--red)}
+.mult-badge{margin-left:auto;font-family:var(--font-d);font-size:.72rem;font-weight:700;color:var(--gold);background:rgba(245,197,66,.08);border:1px solid rgba(245,197,66,.2);padding:3px 10px;border-radius:12px}
+/* Play area */
+.play-area{flex:1;display:grid;grid-template-columns:1fr 152px;min-height:0;overflow:hidden}
+/* Grid area */
+.grid-sec{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;position:relative;overflow:hidden}
+.mines-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;width:100%;max-width:320px;max-height:100%}
+.tile{aspect-ratio:1;border-radius:10px;border:1.5px solid var(--border);background:var(--bg3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.3rem;transition:all .15s;position:relative;overflow:hidden;user-select:none}
+.tile::before{content:'';position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,.05),transparent);border-radius:9px}
+.tile:hover:not(.revealed):not(.locked){background:var(--bg4);border-color:var(--primary);transform:scale(1.04);box-shadow:0 0 12px rgba(79,110,247,.2)}
+.tile:active:not(.revealed):not(.locked){transform:scale(.97)}
+.tile.revealed-safe{background:linear-gradient(145deg,rgba(41,217,128,.18),rgba(41,217,128,.08));border-color:var(--green);cursor:default;animation:revealPop .2s cubic-bezier(.175,.885,.32,1.275)}
+.tile.revealed-mine{background:linear-gradient(145deg,rgba(242,78,78,.25),rgba(242,78,78,.12));border-color:var(--red);cursor:default;animation:mineExplode .3s ease}
+.tile.show-mine{background:rgba(242,78,78,.08);border-color:rgba(242,78,78,.3);cursor:default;opacity:.7}
+.tile.locked{cursor:not-allowed;opacity:.7}
+@keyframes revealPop{0%{transform:scale(.8);opacity:.5}100%{transform:scale(1);opacity:1}}
+@keyframes mineExplode{0%{transform:scale(1.2);background:rgba(255,80,80,.6)}30%{transform:scale(1.35)}100%{transform:scale(1)}}
+/* Result overlay */
+.result-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(9,9,15,.88);backdrop-filter:blur(6px);z-index:20;opacity:0;pointer-events:none;transition:opacity .25s;border-radius:0}
+.result-overlay.show{opacity:1;pointer-events:auto}
+.result-icon{font-size:2.8rem;margin-bottom:8px;animation:bounceIn .4s cubic-bezier(.175,.885,.32,1.275)}
+@keyframes bounceIn{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+.result-title{font-family:var(--font-d);font-size:1rem;font-weight:900;margin-bottom:4px}
+.result-sub{font-size:.76rem;color:var(--text2);margin-bottom:16px}
+.result-play-again{padding:10px 28px;border-radius:8px;border:none;font-family:var(--font-d);font-size:.78rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#be123c,#f43f5e,#fda4af,#f43f5e,#be123c);color:#fff;letter-spacing:.08em}
+/* Controls */
+.ctrl{width:152px;flex-shrink:0;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;padding:10px 9px;overflow-y:auto;gap:0}
+.ctrl::-webkit-scrollbar{display:none}
+.cl{font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
+.csec{margin-bottom:11px}
+.mode-tog{display:flex;background:var(--bg4);border-radius:6px;padding:3px;gap:2px}
+.mtb{flex:1;padding:5px 2px;border-radius:4px;border:none;background:transparent;color:var(--text3);font-family:var(--font-b);font-size:.72rem;font-weight:700;cursor:pointer;transition:all .18s}
+.mtb.on{background:var(--bg3);color:var(--text)}
+.mtb.dm-on{background:rgba(245,197,66,.1);color:var(--gold)}
+.bet-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin-bottom:5px}
+.bchip{background:var(--bg4);border:1px solid var(--border);border-radius:5px;padding:5px 2px;text-align:center;font-family:var(--font-d);font-size:.6rem;font-weight:700;color:var(--text2);cursor:pointer;transition:all .14s}
+.bchip:hover{border-color:#f43f5e;color:#f43f5e}
+.bchip.on{background:rgba(244,63,94,.1);border-color:#f43f5e;color:#f43f5e}
+.bet-adj{display:flex;align-items:center;gap:3px}
+.bet-adj button{width:25px;height:25px;border-radius:5px;border:1px solid var(--border);background:var(--bg4);color:var(--text);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .14s}
+.bet-adj button:hover{border-color:#f43f5e}
+.betd{flex:1;text-align:center;font-family:var(--font-d);font-size:.7rem;font-weight:700;color:var(--gold);background:var(--bg4);border:1px solid rgba(245,197,66,.18);border-radius:5px;padding:4px 2px}
+/* Mine count selector */
+.mine-sel{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-bottom:4px}
+.mine-opt{background:var(--bg4);border:1px solid var(--border);border-radius:5px;padding:5px 2px;text-align:center;font-family:var(--font-d);font-size:.6rem;font-weight:700;color:var(--text2);cursor:pointer;transition:all .14s}
+.mine-opt:hover{border-color:#f43f5e;color:#f43f5e}
+.mine-opt.on{background:rgba(244,63,94,.1);border-color:#f43f5e;color:#f43f5e}
+/* Action buttons */
+.start-btn{width:100%;padding:12px 5px;border-radius:10px;border:none;font-family:var(--font-d);font-size:.76rem;font-weight:900;letter-spacing:.08em;cursor:pointer;background:linear-gradient(135deg,#be123c,#f43f5e,#fda4af,#f43f5e,#be123c);color:#fff;box-shadow:0 3px 14px rgba(244,63,94,.28);transition:all .18s;margin-top:2px;position:relative;overflow:hidden}
+.start-btn::after{content:'';position:absolute;top:0;left:-100%;width:55%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);transform:skewX(-20deg);transition:left .45s}
+.start-btn:hover::after{left:160%}
+.start-btn:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(244,63,94,.45)}
+.start-btn:disabled{opacity:.38;cursor:not-allowed;transform:none}
+.cashout-btn2{width:100%;padding:10px 5px;border-radius:10px;border:none;font-family:var(--font-d);font-size:.73rem;font-weight:900;letter-spacing:.08em;cursor:pointer;background:linear-gradient(135deg,#166534,var(--green),#86efac,var(--green),#166534);color:#fff;box-shadow:0 3px 14px rgba(41,217,128,.25);transition:all .18s;margin-top:4px;display:none;animation:greenPulse 1.2s ease-in-out infinite}
+@keyframes greenPulse{0%,100%{box-shadow:0 3px 14px rgba(41,217,128,.25)}50%{box-shadow:0 4px 22px rgba(41,217,128,.55)}}
+.cashout-btn2.show{display:block}
+.stats-g{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-top:10px}
+.stat-b{background:var(--bg4);border:1px solid var(--border);border-radius:6px;padding:5px 3px;text-align:center}
+.sv{font-family:var(--font-d);font-size:.7rem;font-weight:700;color:var(--gold)}
+.sl{font-size:.54rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-top:1px}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:9px 18px;border-radius:10px;font-size:.78rem;font-weight:600;z-index:400;white-space:nowrap;pointer-events:none;animation:fadeIn .2s ease}
+.cf-wrap{position:fixed;inset:0;pointer-events:none;z-index:200;overflow:hidden}
+.cp{position:absolute;top:-10px;animation:cfFall linear forwards}
+@keyframes cfFall{0%{opacity:1;transform:translateY(0) rotateZ(0)}100%{opacity:0;transform:translateY(110vh) rotateZ(720deg)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+</style>
+</head>
+<body>
+<div class="game-hdr">
+  <button class="back-btn" onclick="goBack()"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>Back</button>
+  <div class="ghdr-title">Mines<span>field</span></div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="demo-tag" id="demoTag">DEMO</div>
+    <div><div class="hdr-bal-lbl">Balance</div><div class="hdr-bal-amt" id="hdrBal">KSh 0.00</div></div>
+  </div>
+</div>
+<div class="game-body">
+  <div class="streak-bar">
+    <span class="streak-lbl">Tiles:</span>
+    <div class="streak-gems" id="streakGems"></div>
+    <div class="mult-badge" id="multBadge">×1.00</div>
+  </div>
+  <div class="play-area">
+    <div class="grid-sec" id="gridSec">
+      <div class="mines-grid" id="minesGrid"></div>
+      <div class="result-overlay" id="resultOverlay">
+        <div class="result-icon" id="resultIcon">💎</div>
+        <div class="result-title" id="resultTitle">You won!</div>
+        <div class="result-sub" id="resultSub">+0 KES</div>
+        <button class="result-play-again" onclick="resetGame()">Play Again</button>
+      </div>
+    </div>
+    <div class="ctrl">
+      <div class="csec"><div class="cl">Mode</div>
+        <div class="mode-tog">
+          <button class="mtb on" id="btnReal" onclick="setMode('real')">Real</button>
+          <button class="mtb" id="btnDemo" onclick="setMode('demo')">Demo</button>
+        </div>
+      </div>
+      <div class="csec"><div class="cl">Bet (KES)</div>
+        <div class="bet-grid" id="betGrid"></div>
+        <div class="bet-adj">
+          <button onclick="adjBet(-1)">−</button>
+          <div class="betd" id="betDisp">30</div>
+          <button onclick="adjBet(1)">+</button>
+        </div>
+      </div>
+      <div class="csec"><div class="cl">Mines (of 25)</div>
+        <div class="mine-sel" id="mineSel"></div>
+      </div>
+      <button class="start-btn" id="startBtn" onclick="startGame()">START</button>
+      <button class="cashout-btn2" id="cashoutBtn2" onclick="doCashout()">CASH OUT</button>
+      <div class="stats-g">
+        <div class="stat-b"><div class="sv" id="stGames">0</div><div class="sl">Games</div></div>
+        <div class="stat-b"><div class="sv" id="stWins">0</div><div class="sl">Wins</div></div>
+        <div class="stat-b" style="grid-column:span 2"><div class="sv" id="stPnl" style="color:var(--text2)">0</div><div class="sl">P&amp;L (KES)</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="cf-wrap" id="cfWrap"></div>
+
+<script>
+'use strict';
+function ph(){try{return parent.window.PH;}catch(e){return null;}}
+function getbal(){const p=ph();if(!p)return parseFloat(sessionStorage.getItem('mn_db')||'10000');try{return _dm?p.getDemoBal():p.getWallet();}catch(e){return 0;}}
+function goBack(){try{parent.window.exitMines();}catch(e){history.back();}}
+function notifyNav(){try{parent.window.updateNavBal();}catch(e){}}
+
+// ── STATE ─────────────────────────────────────────────────────────────
+let _dm=false,_bet=30,_mines=3,_playing=false;
+let _board=[],_revealed=[],_safeCount=0;
+let _games=0,_wins=0,_pnl=0;
+const PRESETS=[5,10,20,50,100,200];
+const MINE_OPTS=[1,3,5,10];
+const GRID=25; // 5×5
+
+// Multiplier table: given mines and reveals, what's the payout multiplier
+// Uses hypergeometric: (25-mines)!/(25-mines-reveals)! / (25!/(25-reveals)!) * house_edge
+function calcMult(mines,reveals){
+  if(reveals===0)return 1;
+  let mult=1;
+  for(let i=0;i<reveals;i++){
+    const safe=GRID-mines-i, total=GRID-i;
+    mult*=(total/safe);
+  }
+  return parseFloat((mult*0.97).toFixed(2)); // 97% RTP
+}
+
+// ── GAME LOGIC ────────────────────────────────────────────────────────
+function startGame(){
+  const bal=getbal();
+  if(bal<_bet){showToast(_dm?'Demo balance empty!':'Insufficient balance!');return;}
+  // Deduct bet
+  try{const p=ph();if(p){if(!_dm){p.setWallet(p.getWallet()-_bet);p.saveTxn&&p.saveTxn({type:'game_bet',amount:_bet,game:'mines',status:'pending'});}else{const db=parseFloat(sessionStorage.getItem('ph_demo_bal')||p.getDemoBal()||10000);sessionStorage.setItem('ph_demo_bal',(db-_bet).toFixed(2));}}else{const db=parseFloat(sessionStorage.getItem('mn_db')||10000);sessionStorage.setItem('mn_db',(db-_bet).toFixed(2));}notifyNav();}catch(e){}
+  updateBal();_pnl-=_bet;
+
+  // Build board
+  _board=Array(GRID).fill(0);
+  const minePos=[];
+  while(minePos.length<_mines){const p=Math.floor(Math.random()*GRID);if(!minePos.includes(p))minePos.push(p);}
+  minePos.forEach(p=>_board[p]=1);
+  _revealed=Array(GRID).fill(false);
+  _safeCount=0;
+  _playing=true;
+
+  document.getElementById('startBtn').disabled=true;
+  document.getElementById('startBtn').style.display='none';
+  document.getElementById('cashoutBtn2').classList.add('show');
+  document.getElementById('resultOverlay').classList.remove('show');
+
+  renderGrid();
+  updateStreakBar();
+  updateMultBadge();
+}
+
+function revealTile(idx){
+  if(!_playing||_revealed[idx])return;
+  _revealed[idx]=true;
+
+  if(_board[idx]===1){
+    // Hit a mine
+    _playing=false;
+    _games++;
+    updateStats();
+    renderGrid(true); // show all mines
+    document.getElementById('cashoutBtn2').classList.remove('show');
+
+    // Overlay
+    document.getElementById('resultIcon').textContent='💥';
+    document.getElementById('resultTitle').textContent='BOOM! Mine hit!';
+    document.getElementById('resultSub').textContent='−'+_bet+' KES lost';
+    document.getElementById('resultTitle').style.color='var(--red)';
+    document.getElementById('resultOverlay').classList.add('show');
+
+    // Sound
+    mineSound();
+    updateStreakBar(true);
+    setTimeout(()=>document.getElementById('startBtn').style.display='',200);
+  } else {
+    _safeCount++;
+    renderGrid();
+    updateStreakBar();
+    updateMultBadge();
+
+    // Auto cashout if all safe tiles revealed
+    const totalSafe=GRID-_mines;
+    if(_safeCount>=totalSafe){
+      doCashout();
+    }
+    gemSound();
+  }
+}
+
+function doCashout(){
+  if(!_playing)return;
+  _playing=false;_games++;_wins++;
+  const mult=calcMult(_mines,_safeCount);
+  const win=parseFloat((_bet*mult).toFixed(2));
+  _pnl+=win-_bet;
+
+  try{const p=ph();if(p){if(!_dm){p.setWallet(p.getWallet()+win);p.saveTxn&&p.saveTxn({type:'game_win',amount:win,game:'mines',status:'completed'});}else{const db=parseFloat(sessionStorage.getItem('ph_demo_bal')||p.getDemoBal()||0);sessionStorage.setItem('ph_demo_bal',(db+win).toFixed(2));}}else{const db=parseFloat(sessionStorage.getItem('mn_db')||0);sessionStorage.setItem('mn_db',(db+win).toFixed(2));}notifyNav();}catch(e){}
+  updateBal();updateStats();
+
+  document.getElementById('cashoutBtn2').classList.remove('show');
+  renderGrid(true); // reveal mines
+
+  document.getElementById('resultIcon').textContent='💎';
+  document.getElementById('resultTitle').textContent='Cashed Out!';
+  document.getElementById('resultTitle').style.color='var(--green)';
+  document.getElementById('resultSub').textContent='+'+win.toFixed(2)+' KES  ('+mult+'×)';
+  document.getElementById('resultOverlay').classList.add('show');
+
+  if(mult>3)confetti(mult>10?50:22);
+  setTimeout(()=>document.getElementById('startBtn').style.display='',200);
+}
+
+function resetGame(){
+  document.getElementById('resultOverlay').classList.remove('show');
+  document.getElementById('startBtn').disabled=false;
+  document.getElementById('startBtn').style.display='';
+  _safeCount=0;
+  renderGrid();
+  updateStreakBar();
+  updateMultBadge();
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────
+function renderGrid(showAll=false){
+  const grid=document.getElementById('minesGrid');
+  grid.innerHTML='';
+  for(let i=0;i<GRID;i++){
+    const tile=document.createElement('div');
+    tile.className='tile';
+    if(_revealed[i]){
+      if(_board[i]===1){
+        tile.className+=' revealed-mine';tile.textContent='💣';
+      } else {
+        tile.className+=' revealed-safe';tile.textContent='💎';
+      }
+    } else if(showAll&&_board[i]===1){
+      tile.className+=' show-mine';tile.textContent='💣';
+    } else if(!_playing&&_revealed[i]===false&&showAll){
+      tile.textContent='';
+    } else {
+      if(!_playing){tile.className+=' locked';}
+      else tile.onclick=()=>revealTile(i);
+    }
+    grid.appendChild(tile);
+  }
+}
+
+function updateStreakBar(){
+  const container=document.getElementById('streakGems');container.innerHTML='';
+  for(let i=0;i<Math.min(_safeCount+(_playing?3:0),20);i++){
+    const gem=document.createElement('div');
+    gem.className='streak-gem '+(i<_safeCount?'safe':'');
+    gem.textContent=i<_safeCount?'💎':'';
+    container.appendChild(gem);
+  }
+}
+
+function updateMultBadge(exploded=false){
+  const badge=document.getElementById('multBadge');
+  const mult=calcMult(_mines,_safeCount);
+  badge.textContent='×'+mult.toFixed(2);
+  badge.style.color=_safeCount>0?'var(--green)':'var(--gold)';
+}
+
+// ── SOUND ──────────────────────────────────────────────────────────────
+let _ac=null;
+function initAC(){if(!_ac)try{_ac=new AudioContext();}catch(e){}}
+function gemSound(){initAC();try{const osc=_ac.createOscillator(),g=_ac.createGain();osc.type='sine';osc.frequency.setValueAtTime(880+_safeCount*60,_ac.currentTime);g.gain.setValueAtTime(.15,_ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,_ac.currentTime+.25);osc.connect(g);g.connect(_ac.destination);osc.start();osc.stop(_ac.currentTime+.25);}catch(e){}}
+function mineSound(){initAC();try{const buf=_ac.createBuffer(1,_ac.sampleRate*.18,_ac.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<d.length;i++){const t=i/d.length;d[i]=(Math.random()*2-1)*Math.pow(1-t,1.2)*.9;}const src=_ac.createBufferSource(),g=_ac.createGain();src.buffer=buf;g.gain.value=.35;src.connect(g);g.connect(_ac.destination);src.start();}catch(e){}}
+
+// ── UI ─────────────────────────────────────────────────────────────────
+function buildBetGrid(){const gr=document.getElementById('betGrid');gr.innerHTML='';PRESETS.forEach(a=>{const b=document.createElement('button');b.className='bchip'+(a===_bet?' on':'');b.textContent=a>=1000?(a/1000)+'K':a;b.onclick=()=>setBet(a);gr.appendChild(b);});}
+function setBet(a){_bet=a;document.getElementById('betDisp').textContent=a;document.querySelectorAll('.bchip').forEach((c,i)=>c.classList.toggle('on',PRESETS[i]===a));}
+function adjBet(d){const i=PRESETS.indexOf(_bet);setBet(i===-1?PRESETS[d>0?0:PRESETS.length-1]:PRESETS[Math.max(0,Math.min(PRESETS.length-1,i+d))]);}
+
+function buildMineSel(){const s=document.getElementById('mineSel');s.innerHTML='';MINE_OPTS.forEach(n=>{const b=document.createElement('button');b.className='mine-opt'+(n===_mines?' on':'');b.textContent=n;b.onclick=()=>{_mines=n;document.querySelectorAll('.mine-opt').forEach((c,i)=>c.classList.toggle('on',MINE_OPTS[i]===n));updateMultBadge();};s.appendChild(b);});}
+
+function setMode(m){_dm=m==='demo';document.getElementById('btnReal').classList.toggle('on',!_dm);document.getElementById('btnDemo').classList.toggle('on',_dm);document.getElementById('btnDemo').classList.toggle('dm-on',_dm);document.getElementById('demoTag').classList.toggle('show',_dm);document.getElementById('hdrBal').classList.toggle('dm',_dm);if(_dm&&!sessionStorage.getItem('ph_demo_bal'))sessionStorage.setItem('ph_demo_bal','10000');updateBal();}
+function updateBal(){const b=document.getElementById('hdrBal'),bal=getbal();b.textContent='KSh '+bal.toLocaleString('en-KE',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function updateStats(){document.getElementById('stGames').textContent=_games;document.getElementById('stWins').textContent=_wins;const p=document.getElementById('stPnl');p.textContent=(_pnl>=0?'+':'')+_pnl.toFixed(0);p.style.color=_pnl>0?'var(--green)':_pnl<0?'var(--red)':'var(--text2)';}
+function confetti(n){const cols=['#f43f5e','#fbbf24','#34d399','#a78bfa','#22d3ee'];const w=document.getElementById('cfWrap');for(let i=0;i<n;i++)setTimeout(()=>{const p=document.createElement('div');p.className='cp';p.style.left=Math.random()*100+'vw';p.style.background=cols[Math.floor(Math.random()*cols.length)];const s=(5+Math.random()*8)+'px';p.style.width=s;p.style.height=s;p.style.borderRadius=Math.random()>.5?'50%':'2px';p.style.animationDuration=(1.4+Math.random()*2)+'s';p.style.animationDelay=(Math.random()*.4)+'s';w.appendChild(p);setTimeout(()=>p.remove(),3500);},i*20);}
+function showToast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500);}
+window.onLaunched=()=>updateBal();
+window.onNavAway=()=>{if(_playing){doCashout();}};
+window.onAuthChange=()=>updateBal();
+// Init
+buildBetGrid();buildMineSel();setBet(30);updateBal();updateMultBadge();renderGrid();updateStreakBar();
+try{if(parent.window.PH?.getMode()==='demo')setMode('demo');}catch(e){}
+</script>
+</body>
+</html>
