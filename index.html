@@ -35,6 +35,9 @@ body{overflow:hidden;margin:0}
   <iframe id="fr-profile"      src="profile.html"></iframe>
   <iframe id="fr-aviator"      src="aviator.html"></iframe>
   <iframe id="fr-fortunespin"  src="fortune-spin.html"></iframe>
+  <iframe id="fr-rocketcrash"  src="rocket-crash.html"></iframe>
+  <iframe id="fr-dice"         src="dice.html"></iframe>
+  <iframe id="fr-mines"        src="mines.html"></iframe>
 </div>
 
 <!-- RELOADING SCREEN -->
@@ -270,8 +273,14 @@ function navTo(tab){
   const G=window.G;
   if(G.inAviator&&tab==='home'){exitAviator();return;}
   if(window._inFortuneSpin&&tab==='home'){exitFortuneSpin();return;}
+  if(window._inRocketCrash&&tab==='home'){exitRocketCrash();return;}
+  if(window._inDice&&tab==='home'){exitDice();return;}
+  if(window._inMines&&tab==='home'){exitMines();return;}
   if(G.inAviator){G.inAviator=false;notify('aviator','onNavAway');hideFr('aviator');}
   if(window._inFortuneSpin){window._inFortuneSpin=false;notify('fortunespin','onNavAway');hideFr('fortunespin');}
+  if(window._inRocketCrash){window._inRocketCrash=false;notify('rocketcrash','onNavAway');hideFr('rocketcrash');}
+  if(window._inDice){window._inDice=false;notify('dice','onNavAway');hideFr('dice');}
+  if(window._inMines){window._inMines=false;notify('mines','onNavAway');hideFr('mines');}
   showOnly(tab);
   FRAMES.forEach(n=>document.getElementById('tb-'+n).classList.toggle('active',n===tab));
   activeTab=tab;
@@ -291,6 +300,9 @@ function navTo(tab){
 function launchAviator(){
   FRAMES.forEach(n=>{hideFr(n);document.getElementById('tb-'+n).classList.remove('active');});
   if(window._inFortuneSpin){window._inFortuneSpin=false;notify('fortunespin','onNavAway');hideFr('fortunespin');}
+  if(window._inRocketCrash){window._inRocketCrash=false;notify('rocketcrash','onNavAway');hideFr('rocketcrash');}
+  if(window._inDice){window._inDice=false;notify('dice','onNavAway');hideFr('dice');}
+  if(window._inMines){window._inMines=false;notify('mines','onNavAway');hideFr('mines');}
   document.getElementById('tb-home').classList.add('active');
   showFr('aviator');
   window.G.inAviator=true; activeTab='home';
@@ -311,6 +323,9 @@ window._inFortuneSpin=false;
 function launchFortuneSpin(){
   FRAMES.forEach(n=>{hideFr(n);document.getElementById('tb-'+n).classList.remove('active');});
   if(window.G.inAviator){window.G.inAviator=false;notify('aviator','onNavAway');hideFr('aviator');}
+  if(window._inRocketCrash){window._inRocketCrash=false;notify('rocketcrash','onNavAway');hideFr('rocketcrash');}
+  if(window._inDice){window._inDice=false;notify('dice','onNavAway');hideFr('dice');}
+  if(window._inMines){window._inMines=false;notify('mines','onNavAway');hideFr('mines');}
   document.getElementById('tb-home').classList.add('active');
   showFr('fortunespin');
   window._inFortuneSpin=true; activeTab='home';
@@ -327,6 +342,75 @@ function exitFortuneSpin(){
   notify('home','onTabVisible');
 }
 
+window._inRocketCrash=false;
+function launchRocketCrash(){
+  FRAMES.forEach(n=>{hideFr(n);document.getElementById('tb-'+n).classList.remove('active');});
+  if(window.G.inAviator){window.G.inAviator=false;notify('aviator','onNavAway');hideFr('aviator');}
+  if(window._inFortuneSpin){window._inFortuneSpin=false;notify('fortunespin','onNavAway');hideFr('fortunespin');}
+  if(window._inDice){window._inDice=false;notify('dice','onNavAway');hideFr('dice');}
+  if(window._inMines){window._inMines=false;notify('mines','onNavAway');hideFr('mines');}
+  document.getElementById('tb-home').classList.add('active');
+  showFr('rocketcrash');
+  window._inRocketCrash=true; activeTab='home';
+  adjustShell();
+  notify('rocketcrash','onLaunched');
+}
+function exitRocketCrash(){
+  window._inRocketCrash=false;
+  notify('rocketcrash','onNavAway');
+  hideFr('rocketcrash');showOnly('home');
+  activeTab='home';
+  FRAMES.forEach(n=>document.getElementById('tb-'+n).classList.toggle('active',n==='home'));
+  renderHistBar();adjustShell();
+  notify('home','onTabVisible');
+}
+
+window._inDice=false;
+function launchDice(){
+  FRAMES.forEach(n=>{hideFr(n);document.getElementById('tb-'+n).classList.remove('active');});
+  if(window.G.inAviator){window.G.inAviator=false;notify('aviator','onNavAway');hideFr('aviator');}
+  if(window._inFortuneSpin){window._inFortuneSpin=false;notify('fortunespin','onNavAway');hideFr('fortunespin');}
+  if(window._inRocketCrash){window._inRocketCrash=false;notify('rocketcrash','onNavAway');hideFr('rocketcrash');}
+  if(window._inMines){window._inMines=false;notify('mines','onNavAway');hideFr('mines');}
+  document.getElementById('tb-home').classList.add('active');
+  showFr('dice');
+  window._inDice=true; activeTab='home';
+  adjustShell();
+  notify('dice','onLaunched');
+}
+function exitDice(){
+  window._inDice=false;
+  notify('dice','onNavAway');
+  hideFr('dice');showOnly('home');
+  activeTab='home';
+  FRAMES.forEach(n=>document.getElementById('tb-'+n).classList.toggle('active',n==='home'));
+  renderHistBar();adjustShell();
+  notify('home','onTabVisible');
+}
+
+window._inMines=false;
+function launchMines(){
+  FRAMES.forEach(n=>{hideFr(n);document.getElementById('tb-'+n).classList.remove('active');});
+  if(window.G.inAviator){window.G.inAviator=false;notify('aviator','onNavAway');hideFr('aviator');}
+  if(window._inFortuneSpin){window._inFortuneSpin=false;notify('fortunespin','onNavAway');hideFr('fortunespin');}
+  if(window._inRocketCrash){window._inRocketCrash=false;notify('rocketcrash','onNavAway');hideFr('rocketcrash');}
+  if(window._inDice){window._inDice=false;notify('dice','onNavAway');hideFr('dice');}
+  document.getElementById('tb-home').classList.add('active');
+  showFr('mines');
+  window._inMines=true; activeTab='home';
+  adjustShell();
+  notify('mines','onLaunched');
+}
+function exitMines(){
+  window._inMines=false;
+  notify('mines','onNavAway');
+  hideFr('mines');showOnly('home');
+  activeTab='home';
+  FRAMES.forEach(n=>document.getElementById('tb-'+n).classList.toggle('active',n==='home'));
+  renderHistBar();adjustShell();
+  notify('home','onTabVisible');
+}
+
 function openFortuneSpinModal(){
   _pendingGame='fortunespin';
   const user=PH.getUser();
@@ -336,9 +420,8 @@ function openFortuneSpinModal(){
     :'Real Play requires login';
   openModal('game-mode-modal');
 }
-
 function openRocketCrashModal(){
-  _pendingGame='rocket';
+  _pendingGame='rocketcrash';
   const user=PH.getUser();
   document.getElementById('gm-title').textContent='🚀 Rocket Crash';
   document.getElementById('gm-sub').textContent=user
@@ -346,7 +429,6 @@ function openRocketCrashModal(){
     :'Real Play requires login';
   openModal('game-mode-modal');
 }
-
 function openDiceModal(){
   _pendingGame='dice';
   const user=PH.getUser();
@@ -356,7 +438,6 @@ function openDiceModal(){
     :'Real Play requires login';
   openModal('game-mode-modal');
 }
-
 function openMinesModal(){
   _pendingGame='mines';
   const user=PH.getUser();
@@ -370,33 +451,10 @@ function pickGameMode(m){
   if(m==='play'&&!PH.getUser()){closeModal('game-mode-modal');openModal('login-modal');return;}
   PH.setMode(m); if(m==='demo') PH.resetDemo();
   closeModal('game-mode-modal'); updateNavBal(); renderNav();
-  if(_pendingGame==='fortunespin') launchFortuneSpin();
-  _pendingGame=null;
-}
-
-function pickGameMode(m){
-  if(m==='play'&&!PH.getUser()){closeModal('game-mode-modal');openModal('login-modal');return;}
-  PH.setMode(m); if(m==='demo') PH.resetDemo();
-  closeModal('game-mode-modal'); updateNavBal(); renderNav();
-  if(_pendingGame==='fortunespin'){
-    launchFortuneSpin();
-  } else if(_pendingGame==='rocket'||_pendingGame==='dice'||_pendingGame==='mines'){
-    // Navigate to Bets tab and pre-select the correct game pill
-    const game=_pendingGame;
-    navTo('bets');
-    setTimeout(()=>{
-      try{
-        const fr=document.getElementById('fr-bets');
-        if(fr&&fr.contentWindow&&fr.contentWindow.setGame){
-          fr.contentWindow.setGame(game);
-        } else {
-          // fallback: click the pill directly
-          const pill=fr&&fr.contentWindow&&fr.contentWindow.document.getElementById('gp-'+game);
-          if(pill) pill.click();
-        }
-      }catch(e){}
-    },150);
-  }
+  if(_pendingGame==='fortunespin')      launchFortuneSpin();
+  else if(_pendingGame==='rocketcrash') launchRocketCrash();
+  else if(_pendingGame==='dice')        launchDice();
+  else if(_pendingGame==='mines')       launchMines();
   _pendingGame=null;
 }
 function pickMode(m){
@@ -481,7 +539,7 @@ function renderHistBar(){
 function openModal(id){document.getElementById(id)?.classList.remove('hidden');}
 function closeModal(id){document.getElementById(id)?.classList.add('hidden');}
 function _setBtn(id,txt,dis){const b=document.getElementById(id);if(!b)return;b.textContent=txt;b.disabled=dis;}
-function _notifyAll(){FRAMES.forEach(n=>notify(n,'onAuthChange'));notify('aviator','onAuthChange');notify('fortunespin','onAuthChange');notify('rocketcrash','onAuthChange');}
+function _notifyAll(){FRAMES.forEach(n=>notify(n,'onAuthChange'));notify('aviator','onAuthChange');notify('fortunespin','onAuthChange');notify('rocketcrash','onAuthChange');notify('dice','onAuthChange');notify('mines','onAuthChange');}
 
 // ── LOGIN ─────────────────────────────────────────────────────────────
 async function doLogin(){
@@ -541,7 +599,6 @@ async function doRegister(){
     const data=await res.json();
     if(!res.ok) throw new Error(data.error||'Registration failed');
 
-    // Auto-login immediately — no OTP needed
     sessionStorage.setItem('ph_jwt',data.token);
     PH.setUser({username:data.user.username,phone:data.user.phone,id:data.user.id});
     PH.setWallet(data.user.wallet||0);
@@ -562,6 +619,9 @@ async function doRegister(){
 function doLogout(){
   window.G.inAviator=false;notify('aviator','onNavAway');hideFr('aviator');
   window._inFortuneSpin=false;notify('fortunespin','onNavAway');hideFr('fortunespin');
+  window._inRocketCrash=false;notify('rocketcrash','onNavAway');hideFr('rocketcrash');
+  window._inDice=false;notify('dice','onNavAway');hideFr('dice');
+  window._inMines=false;notify('mines','onNavAway');hideFr('mines');
   showOnly('home');activeTab='home';
   sessionStorage.removeItem('ph_jwt');
   PH.clearUser();
