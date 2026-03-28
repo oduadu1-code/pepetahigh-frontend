@@ -152,7 +152,7 @@ body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bott
 
 <div class="sticky" id="sticky-top">
 
-  <!-- ═══ CTA BANNERS — FIRST, immediately under the page header ═══ -->
+  <!-- ═══ CTA BANNERS — one per game, toggled by pill selection ═══ -->
   <button class="cta-banner" id="cta-aviator">
     <div class="cta-icon">🏆</div>
     <div class="cta-text">
@@ -210,7 +210,7 @@ body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bott
     <div class="bh" style="text-align:right"><div class="bh-lbl">Total Stakes</div><div class="bh-val" id="bh-stakes">-</div></div>
   </div>
 
-  <!-- Activity ticker: shows live bet placements during wait phase -->
+  <!-- Activity ticker -->
   <div class="activity-ticker hidden" id="activity-ticker">
     <span class="at-dot"></span>
     <span id="at-msg" class="at-msg">Waiting for players…</span>
@@ -301,23 +301,27 @@ var _rkBets=[], _rkState='wait', _rkMult=1, _rkHist=[], _rkMultInt=null, _rkRunn
 var _feedRunning=false, _feedInt=null;
 
 /* ── CTA wiring ── */
+// ✅ FIX: map each game to its open function
 var CTA_GAMES=['aviator','rocket','dice','fortunespin','mines'];
 var CTA_FN={
   aviator:    function(){try{parent.openGameModal();}catch(e){}},
   rocket:     function(){try{parent.openRocketCrashModal();}catch(e){}},
   dice:       function(){try{parent.openDiceModal();}catch(e){}},
   fortunespin:function(){try{parent.openFortuneSpinModal();}catch(e){}},
-  mines:      function(){try{parent.openDiceModal();}catch(e){}} // placeholder
+  mines:      function(){try{ if(typeof parent.openMinesModal==='function'){parent.openMinesModal();}else{parent.openDiceModal();} }catch(e){}}
 };
 CTA_GAMES.forEach(function(g){
   var btn=el('cta-'+g);
   if(btn)btn.addEventListener('click',function(){ CTA_FN[g]&&CTA_FN[g](); });
 });
+
+// ✅ FIX: showCTA hides all banners and shows only the active game's banner
 function showCTA(activeGame){
   CTA_GAMES.forEach(function(g){
     var b=el('cta-'+g);
-    if(b) b.classList.toggle('hidden',g!==activeGame);
+    if(b) b.classList.toggle('hidden', g!==activeGame);
   });
+  // Keep Aviator jackpot value fresh
   try{
     var jmax=(parent.window.JACKPOT_MAX||5000).toLocaleString()+'×';
     setText('cta-av-val',jmax);
@@ -329,7 +333,7 @@ el('sticky-top').addEventListener('click', function(e){
   var btn=e.target.closest('button');
   if(!btn)return;
   var id=btn.id||'';
-  if(id==='tab-all')   setTab('all');
+  if(id==='tab-all')        setTab('all');
   else if(id==='tab-mine')  setTab('mine');
   else if(id==='btn-switchreal'){ try{parent.pickMode('play');}catch(ex){} }
   else if(id==='gp-aviator')    setGame('aviator');
@@ -345,9 +349,14 @@ function setTab(t){
   setCls('tab-mine',t==='mine','active');
   render();
 }
+
 function setGame(g){
   game=g;
   ['aviator','rocket','dice','fortunespin','mines'].forEach(function(n){ setCls('gp-'+n,n===g,'on'); });
+
+  // ✅ FIX: swap the CTA banner to match the active game pill
+  showCTA(g);
+
   try{ parent.onBetsGameChange&&parent.onBetsGameChange(g); }catch(ex){}
   stopFeed();
   if(g==='rocket') { if(!_rkRunning) startRocket(); else render(); }
@@ -489,13 +498,11 @@ function rocketWait(){
   var waitSecs=3+(Math.random()*4|0);
   setText('rocket-status-txt','🕒 Next launch in '+waitSecs+'s...');
   if(game==='rocket') renderRocket();
-  // Trickle new bets in during the wait window
   if(_rkWaitInt){clearInterval(_rkWaitInt);_rkWaitInt=null;}
   var trickleTick=0, trickleMax=Math.floor(waitSecs*1000/600);
   _rkWaitInt=setInterval(function(){
     trickleTick++;
     if(_rkState!=='wait'||trickleTick>=trickleMax){clearInterval(_rkWaitInt);_rkWaitInt=null;return;}
-    // Add 1-3 new bets to the list
     var add=1+(Math.random()*2|0);
     for(var j=0;j<add;j++){
       var nm=rkFake(), bet=rkRandBet(), target=RK_T[RK_T.length*Math.random()|0];
@@ -695,8 +702,10 @@ setInterval(function(){ sync(); if(game==='aviator'){ upHeader(); if(tab==='all'
 
 /* ── boot ── */
 sync();
+// ✅ Show the correct CTA on initial load (aviator is default)
+showCTA('aviator');
 render();
-// Auto-start rocket simulation immediately so history builds up before user clicks
+// Auto-start rocket simulation
 startRocket();
 
 })();
