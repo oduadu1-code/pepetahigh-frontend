@@ -708,6 +708,9 @@ render();
 // Auto-start rocket simulation
 startRocket();
 
+// ✅ Expose setGame globally so parent window can pre-select a game pill
+window.setGame=setGame;
+
 })();
 </script>
 </body>

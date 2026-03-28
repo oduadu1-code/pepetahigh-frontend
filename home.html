@@ -173,8 +173,7 @@ body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bott
     </div>
   </div>
 
-  <!-- ✅ FIXED: Mines is now unlocked and fully clickable -->
-  <div class="gc" onclick="typeof parent.openMinesModal==='function' ? parent.openMinesModal() : parent.openDiceModal()">
+  <div class="gc" onclick="parent.openMinesModal()">
     <div class="gc-thumb" style="background:linear-gradient(145deg,#0a1a0a,#0d200d)">
       <span style="font-size:2.4rem;display:inline-block">💣</span>
     </div>
