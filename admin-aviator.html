@@ -26,7 +26,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 .nav-title span{color:var(--primary)}
 .admin-badge{margin-left:auto;background:rgba(242,78,78,.1);border:1px solid rgba(242,78,78,.3);color:var(--red);font-size:.6rem;font-weight:700;letter-spacing:.15em;padding:4px 10px;border-radius:20px}
 
-/* ── CONNECTION STATUS ── */
+/* CONNECTION STATUS */
 .conn-bar{
   display:flex;align-items:center;gap:10px;
   background:var(--surface);border:1px solid var(--border);
@@ -47,11 +47,23 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 .mode-real{background:rgba(41,217,128,.12);color:var(--green);border:1px solid rgba(41,217,128,.2)}
 .mode-demo{background:rgba(245,197,66,.12);color:var(--gold);border:1px solid rgba(245,197,66,.2)}
 
+/* Debug panel — shown only when disconnected */
+.debug-panel{
+  background:rgba(245,197,66,.04);border:1px solid rgba(245,197,66,.15);
+  border-radius:10px;padding:14px 16px;margin-bottom:18px;
+  font-size:.7rem;line-height:1.8;color:var(--text2);
+  display:none;
+}
+.debug-panel.visible{display:block}
+.debug-panel strong{color:var(--gold)}
+.debug-panel code{background:rgba(255,255,255,.06);padding:1px 6px;border-radius:4px;font-size:.65rem;color:var(--text)}
+
 /* Phase badge */
 .phase-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;font-size:.7rem;font-weight:700;margin-bottom:16px}
 .phase-badge.wait{background:rgba(245,197,66,.1);border:1px solid rgba(245,197,66,.25);color:var(--gold)}
 .phase-badge.fly{background:rgba(41,217,128,.1);border:1px solid rgba(41,217,128,.25);color:var(--green)}
 .phase-badge.crash{background:rgba(242,78,78,.1);border:1px solid rgba(242,78,78,.25);color:var(--red)}
+.phase-badge.offline{background:rgba(120,128,170,.08);border:1px solid var(--border);color:var(--text3)}
 .phase-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:blink 1.2s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
@@ -62,6 +74,19 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 .ring-fill{fill:none;stroke:var(--gold);stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .1s linear}
 .countdown-num{font-family:'Orbitron',monospace;font-size:1.2rem;font-weight:700;color:var(--gold);position:relative;z-index:1}
 
+/* ─── NEXT PREDICTION BANNER (shown during fly/crash for NEXT round) ─── */
+.next-pred-banner{
+  background:linear-gradient(135deg,rgba(79,110,247,.08),rgba(162,89,255,.08));
+  border:1px solid rgba(79,110,247,.25);
+  border-radius:12px;padding:12px 18px;margin-bottom:16px;
+  display:flex;align-items:center;justify-content:space-between;
+  display:none; /* shown only when we have a queued prediction */
+}
+.next-pred-banner.visible{display:flex}
+.npb-label{font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3)}
+.npb-val{font-family:'Orbitron',monospace;font-size:1.3rem;font-weight:900;background:linear-gradient(135deg,#6c88ff,#a259ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.npb-badge{font-size:.6rem;font-weight:700;background:rgba(79,110,247,.15);border:1px solid rgba(79,110,247,.3);color:var(--primary);padding:3px 10px;border-radius:20px;letter-spacing:.08em}
+
 /* Prediction box */
 .pred-box{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:28px 24px;margin-bottom:20px;text-align:center;position:relative;overflow:hidden}
 .pred-box::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(79,110,247,.08) 0%,transparent 65%);pointer-events:none}
@@ -70,6 +95,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 .pred-val.green{background:linear-gradient(135deg,#29d980,#00c9a7);-webkit-background-clip:text;background-clip:text}
 .pred-val.red{background:linear-gradient(135deg,#f24e4e,#ff8c42);-webkit-background-clip:text;background-clip:text}
 .pred-val.gold{background:linear-gradient(135deg,#f5c542,#ff9500);-webkit-background-clip:text;background-clip:text}
+.pred-val.dim{background:none;-webkit-text-fill-color:var(--text3);font-size:3rem}
 .pred-sub{font-size:.72rem;color:var(--text2)}
 .conf-wrap{margin-top:18px}
 .conf-label{display:flex;justify-content:space-between;font-size:.66rem;color:var(--text3);margin-bottom:6px}
@@ -126,16 +152,29 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
     <span class="conn-sub" id="connSub">Waiting for bridge signal</span>
   </div>
 
+  <!-- Debug help panel — visible only when disconnected -->
+  <div class="debug-panel" id="debugPanel">
+    <strong>⚠ Not receiving data from the game page.</strong><br>
+    Checklist:
+    <ul style="margin:.5em 0 0 1.2em;list-style:disc">
+      <li>Both pages must be on the <strong>same origin</strong> (same domain + port)</li>
+      <li>Add <code>&lt;script src="bridge-aviator.js"&gt;&lt;/script&gt;</code> to <code>aviator.html</code>, after <code>engine.js</code></li>
+      <li>Open the game page in another tab — keep this admin tab open</li>
+      <li>Open DevTools on the game page → Console; you should see: <code>[PH Bridge] Aviator bridge v5 active</code></li>
+      <li>If testing locally with <code>file://</code>, BroadcastChannel will fail — use a local server (<code>npx serve .</code>)</li>
+    </ul>
+  </div>
+
   <!-- Phase badge -->
   <div style="text-align:center;margin-bottom:16px">
-    <span class="phase-badge wait" id="phaseBadge">
+    <span class="phase-badge offline" id="phaseBadge">
       <span class="phase-dot"></span>
-      <span id="phaseText">Waiting…</span>
+      <span id="phaseText">Offline</span>
     </span>
   </div>
 
-  <!-- Countdown ring -->
-  <div class="countdown-ring" id="countdownRing">
+  <!-- Countdown ring (wait phase) -->
+  <div class="countdown-ring" id="countdownRing" style="display:none">
     <svg viewBox="0 0 70 70" xmlns="http://www.w3.org/2000/svg">
       <circle class="ring-track" cx="35" cy="35" r="30"/>
       <circle class="ring-fill" id="ringFill" cx="35" cy="35" r="30"
@@ -144,10 +183,19 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
     <div class="countdown-num" id="countdownNum">—</div>
   </div>
 
-  <!-- Prediction box -->
+  <!-- NEXT ROUND prediction banner (shown during fly/crash) -->
+  <div class="next-pred-banner" id="nextPredBanner">
+    <div>
+      <div class="npb-label">⚡ Next Round Prediction</div>
+      <div class="npb-val" id="nextPredVal">—</div>
+    </div>
+    <div class="npb-badge" id="nextPredConf">—% confidence</div>
+  </div>
+
+  <!-- Main prediction box -->
   <div class="pred-box" id="predBox">
     <div class="state-lbl" id="predLabel">NEXT ROUND PREDICTION</div>
-    <div class="pred-val" id="predVal">—</div>
+    <div class="pred-val dim" id="predVal">—</div>
     <div class="pred-sub" id="predSub">Waiting for live game connection…</div>
     <div class="conf-wrap">
       <div class="conf-label"><span>Confidence</span><span id="confPct">—</span></div>
@@ -155,7 +203,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
     </div>
   </div>
 
-  <!-- Live multiplier -->
+  <!-- Live multiplier (fly/crash phases) -->
   <div class="live-mult" id="liveMultWrap" style="display:none">
     <div>
       <div class="lm-label">Live Multiplier</div>
@@ -163,7 +211,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
     </div>
     <div class="plane-anim" id="planeIcon">✈</div>
     <div style="text-align:right">
-      <div class="lm-label">Predicted Crash</div>
+      <div class="lm-label">Target Crash</div>
       <div style="font-family:'Orbitron',monospace;font-size:1rem;font-weight:700;color:var(--secondary)" id="liveTarget">—</div>
     </div>
   </div>
@@ -187,67 +235,94 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 <script>
 'use strict';
 
-// ── Bridge listener ────────────────────────────────────────────────────
-const CHANNEL  = 'ph_av_bridge';
-const LS_KEY   = 'ph_av_sync';
-const STALE_MS = 2000; // mark disconnected if no message for 2 s
+// ── Config ─────────────────────────────────────────────────────────────
+const CHANNEL   = 'ph_av_bridge';
+const LS_KEY    = 'ph_av_sync';
+const STALE_MS  = 3000;   // mark disconnected after 3 s of silence
+const LS_MAX_MS = 3000;   // accept localStorage data up to 3 s old (FIXED: was 500ms)
 
-let _data      = null;   // latest data from bridge
-let _lastMsg   = 0;      // timestamp of last received message
-let _connected = false;
-let _history   = [];
+// ── State ──────────────────────────────────────────────────────────────
+let _data        = null;
+let _lastMsg     = 0;
+let _connected   = false;
+let _prevState   = null;
+let _history     = [];
 let _sessionHigh = 0;
 
-// Load history from localStorage
-try { _history = JSON.parse(localStorage.getItem('ph_admin_av_hist') || '[]'); } catch(e) {}
+// ── Next-round prediction: stored at start of each fly/crash so the
+//    banner can show "what's coming" even while the current round plays.
+//    It's set when we first get a 'wait' packet (crashAt is already
+//    determined by engine.js in doWait() before fly starts).
+let _nextCrashAt = 0;  // prediction for the NEXT round (set during current wait phase)
+let _curCrashAt  = 0;  // prediction for the CURRENT round (set when fly starts)
 
-// ── Listen via BroadcastChannel (fast, same-origin) ────────────────────
+// Load local history
+try { _history = JSON.parse(localStorage.getItem('ph_admin_av_hist') || '[]'); } catch(e) {}
+_sessionHigh = _history.length ? Math.max(..._history) : 0;
+
+// ── Listen: BroadcastChannel ───────────────────────────────────────────
 let bc = null;
 try {
   bc = new BroadcastChannel(CHANNEL);
-  bc.onmessage = (e) => handleData(e.data);
+  bc.onmessage = (e) => { if (e.data) handleData(e.data); };
 } catch(e) {}
 
-// ── Listen via localStorage events (cross-tab fallback) ───────────────
+// ── Listen: localStorage storage event (cross-tab) ────────────────────
 window.addEventListener('storage', (e) => {
   if (e.key === LS_KEY && e.newValue) {
     try { handleData(JSON.parse(e.newValue)); } catch(err) {}
   }
 });
 
-// ── Poll localStorage every 100 ms as secondary fallback ──────────────
+// ── Poll localStorage every 80 ms (secondary fallback) ────────────────
+// This is needed when both tabs are the same window or BC is unavailable.
 setInterval(() => {
   try {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return;
     const d = JSON.parse(raw);
-    // Only accept if fresh (within last 500 ms)
-    if (d && d.ts && Date.now() - d.ts < 500) handleData(d);
+    // FIXED: accept data up to LS_MAX_MS old, not just 500ms
+    if (d && d.ts && (Date.now() - d.ts) < LS_MAX_MS) handleData(d);
   } catch(e) {}
-}, 100);
+}, 80);
 
 // ── Handle incoming data ───────────────────────────────────────────────
-let _prevState = null;
-
 function handleData(d) {
   if (!d || d.game !== 'aviator') return;
+
   _data    = d;
   _lastMsg = Date.now();
 
-  // Record round when transitioning out of fly → crash
-  if (_prevState === 'fly' && d.state === 'crash') {
-    const v = parseFloat((d.crashAt || 0).toFixed(2));
-    if (v > 0) {
-      _history.unshift(v);
-      if (_history.length > 40) _history.pop();
-      if (v > _sessionHigh) _sessionHigh = v;
-      try { localStorage.setItem('ph_admin_av_hist', JSON.stringify(_history)); } catch(e) {}
-    }
+  const state   = d.state;
+  const crashAt = parseFloat((d.crashAt || 0).toFixed(2));
+
+  // ── Track predictions across phases ──
+  // engine.js generates crashAt at the START of 'wait' — that's the
+  // prediction for the round about to begin.
+  //
+  // Admin logic:
+  //   wait  → _curCrashAt = crashAt  (this round's prediction, show big)
+  //   fly   → still show _curCrashAt in the main box; banner is empty
+  //   crash → store _nextCrashAt for the NEXT round (not yet known, clear banner)
+  //   next wait → _curCrashAt = new crashAt (new prediction), repeat
+
+  if (state === 'wait' && crashAt > 0) {
+    _curCrashAt = crashAt;
+    _nextCrashAt = 0; // reset: we're now in the new round's wait, no "next" yet
   }
-  _prevState = d.state;
+
+  // Record round result when fly→crash transition happens
+  if (_prevState === 'fly' && state === 'crash' && crashAt > 0) {
+    _history.unshift(parseFloat(crashAt.toFixed(2)));
+    if (_history.length > 40) _history.pop();
+    if (crashAt > _sessionHigh) _sessionHigh = crashAt;
+    try { localStorage.setItem('ph_admin_av_hist', JSON.stringify(_history)); } catch(e) {}
+  }
+
+  _prevState = state;
 }
 
-// ── Confidence ─────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────
 function getConf(v) {
   if (v <= 1.50) return {pct:92, label:'Very High — likely sub-2×'};
   if (v <= 2.00) return {pct:80, label:'High'};
@@ -275,16 +350,17 @@ function chipClass(v) {
 
 function fmt(v) { return parseFloat(v).toFixed(2) + '×'; }
 
-// ── Render loop (runs every 100 ms) ────────────────────────────────────
+// ── Render (100 ms) ────────────────────────────────────────────────────
 function render() {
-  const now     = Date.now();
-  _connected    = _lastMsg > 0 && (now - _lastMsg) < STALE_MS;
+  const now  = Date.now();
+  _connected = _lastMsg > 0 && (now - _lastMsg) < STALE_MS;
 
   // ── Connection bar ──
   const dot   = document.getElementById('connDot');
   const lbl   = document.getElementById('connLabel');
   const sub   = document.getElementById('connSub');
   const mTag  = document.getElementById('modeTag');
+  const dbg   = document.getElementById('debugPanel');
 
   if (_connected && _data) {
     dot.className  = 'conn-dot live';
@@ -294,56 +370,63 @@ function render() {
     mTag.style.display = 'inline-block';
     mTag.className = _data.mode === 'demo' ? 'mode-tag mode-demo' : 'mode-tag mode-real';
     mTag.textContent = _data.mode === 'demo' ? 'DEMO' : 'REAL';
+    dbg.classList.remove('visible');
   } else if (_lastMsg === 0) {
     dot.className  = 'conn-dot searching';
     lbl.className  = 'conn-label searching';
     lbl.textContent = '⏳ Connecting to live game…';
-    sub.textContent = 'Add bridge-aviator.js to your game page';
+    sub.textContent = 'Waiting for bridge signal';
     mTag.style.display = 'none';
+    dbg.classList.add('visible');
   } else {
     dot.className  = 'conn-dot dead';
     lbl.className  = 'conn-label dead';
     lbl.textContent = '🔴 Disconnected — signal lost';
     sub.textContent = 'Last seen ' + Math.round((now - _lastMsg) / 1000) + 's ago';
     mTag.style.display = 'none';
+    dbg.classList.add('visible');
   }
 
-  if (!_connected || !_data) {
-    document.getElementById('syncTime').textContent = new Date().toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    return;
-  }
+  document.getElementById('syncTime').textContent =
+    new Date().toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 
-  // ── Phase badge ──
-  const badge = document.getElementById('phaseBadge');
-  const phase = document.getElementById('phaseText');
-  const cRing  = document.getElementById('countdownRing');
-  const lmWrap = document.getElementById('liveMultWrap');
-  const predBox = document.getElementById('predBox');
-  const predVal = document.getElementById('predVal');
-  const predLbl = document.getElementById('predLabel');
-  const predSub = document.getElementById('predSub');
-  const confFill= document.getElementById('confFill');
-  const confPct = document.getElementById('confPct');
-  const ringFill= document.getElementById('ringFill');
-  const countNum= document.getElementById('countdownNum');
-  const liveMult= document.getElementById('liveMult');
-  const liveTgt = document.getElementById('liveTarget');
-  const plane   = document.getElementById('planeIcon');
-  const CIRC    = 188.5;
+  if (!_connected || !_data) return;
 
-  const state   = _data.state;
-  const crashAt = _data.crashAt || 0;
-  const mult    = _data.mult    || 1;
-  const wTimer  = _data.waitTimer || 0;
-  const WAIT_DUR = 5000; // must match your engine
+  // ── Grab refs ──
+  const badge    = document.getElementById('phaseBadge');
+  const phase    = document.getElementById('phaseText');
+  const cRing    = document.getElementById('countdownRing');
+  const lmWrap   = document.getElementById('liveMultWrap');
+  const predBox  = document.getElementById('predBox');
+  const predVal  = document.getElementById('predVal');
+  const predLbl  = document.getElementById('predLabel');
+  const predSub  = document.getElementById('predSub');
+  const confFill = document.getElementById('confFill');
+  const confPct  = document.getElementById('confPct');
+  const ringFill = document.getElementById('ringFill');
+  const countNum = document.getElementById('countdownNum');
+  const liveMult = document.getElementById('liveMult');
+  const liveTgt  = document.getElementById('liveTarget');
+  const plane    = document.getElementById('planeIcon');
+  const banner   = document.getElementById('nextPredBanner');
+  const bannerVal= document.getElementById('nextPredVal');
+  const bannerConf=document.getElementById('nextPredConf');
+  const CIRC     = 188.5;
+  const WAIT_DUR = 5000;
 
-  // ── WAIT ──
+  const state    = _data.state;
+  const crashAt  = _curCrashAt || parseFloat((_data.crashAt || 0).toFixed(2));
+  const mult     = _data.mult    || 1;
+  const wTimer   = _data.waitTimer || 0;
+
+  // ── WAIT phase ─────────────────────────────────────────────────────
   if (state === 'wait') {
-    badge.className = 'phase-badge wait';
+    badge.className   = 'phase-badge wait';
     phase.textContent = 'Countdown — Next Round';
     predBox.className = 'pred-box';
     cRing.style.display  = 'flex';
     lmWrap.style.display = 'none';
+    banner.classList.remove('visible'); // no "next" banner during wait — THIS is the next round
 
     const secs = Math.max(0, Math.ceil(wTimer / 1000));
     countNum.textContent = secs;
@@ -355,65 +438,83 @@ function render() {
       predLbl.textContent  = '⚡ NEXT ROUND PREDICTION';
       predVal.textContent  = fmt(crashAt);
       predVal.className    = 'pred-val ' + multColor(crashAt);
-      predSub.textContent  = 'Crash will happen at this multiplier';
+      predSub.textContent  = 'Round starts in ' + secs + 's — crash target pre-determined';
       confFill.style.width = conf.pct + '%';
       confPct.textContent  = conf.pct + '% · ' + conf.label;
+    } else {
+      predLbl.textContent  = 'NEXT ROUND PREDICTION';
+      predVal.textContent  = '—';
+      predVal.className    = 'pred-val dim';
+      predSub.textContent  = 'Fetching from engine…';
+      confFill.style.width = '0%';
+      confPct.textContent  = '—';
     }
   }
 
-  // ── FLY ──
+  // ── FLY phase ──────────────────────────────────────────────────────
   else if (state === 'fly') {
-    badge.className = 'phase-badge fly';
+    badge.className   = 'phase-badge fly';
     phase.textContent = 'In Flight ✈';
     predBox.className = 'pred-box flying';
     cRing.style.display  = 'none';
     lmWrap.style.display = 'flex';
 
-    liveMult.textContent  = fmt(mult);
-    liveMult.className    = 'lm-val';
-    liveTgt.textContent   = fmt(crashAt);
-    plane.textContent     = '✈';
+    liveMult.textContent = fmt(mult);
+    liveMult.className   = 'lm-val';
+    liveTgt.textContent  = fmt(crashAt);
+    plane.textContent    = '✈';
 
-    predLbl.textContent   = 'TARGET CRASH';
-    predVal.textContent   = fmt(crashAt);
-    predVal.className     = 'pred-val ' + multColor(crashAt);
-    predSub.textContent   = 'Round in progress — cash out below this value';
+    // Main box: show current round's crash target
+    predLbl.textContent  = 'TARGET CRASH — THIS ROUND';
+    predVal.textContent  = fmt(crashAt);
+    predVal.className    = 'pred-val ' + multColor(crashAt);
+    predSub.textContent  = 'Round in progress — cash out below this value';
     const conf = getConf(crashAt);
-    confFill.style.width  = conf.pct + '%';
-    confPct.textContent   = conf.pct + '% confidence';
+    confFill.style.width = conf.pct + '%';
+    confPct.textContent  = conf.pct + '% confidence';
+
+    // Next-round banner: not yet known (generated at next doWait)
+    banner.classList.remove('visible');
   }
 
-  // ── CRASH ──
+  // ── CRASH phase ─────────────────────────────────────────────────────
   else if (state === 'crash') {
-    badge.className = 'phase-badge crash';
+    badge.className   = 'phase-badge crash';
     phase.textContent = 'Crashed! 💥';
     predBox.className = 'pred-box crashed';
     cRing.style.display  = 'none';
     lmWrap.style.display = 'flex';
 
-    liveMult.textContent  = fmt(crashAt);
-    liveMult.className    = 'lm-val crash-color';
-    liveTgt.textContent   = '—';
-    plane.textContent     = '💥';
+    liveMult.textContent = fmt(crashAt);
+    liveMult.className   = 'lm-val crash-color';
+    liveTgt.textContent  = '—';
+    plane.textContent    = '💥';
 
-    predLbl.textContent   = 'CRASHED AT';
-    predVal.textContent   = fmt(crashAt);
-    predVal.className     = 'pred-val red';
-    predSub.textContent   = 'Round complete — next prediction incoming…';
-    confFill.style.width  = '100%';
-    confPct.textContent   = 'Round closed';
+    predLbl.textContent  = 'CRASHED AT';
+    predVal.textContent  = fmt(crashAt);
+    predVal.className    = 'pred-val red';
+    predSub.textContent  = 'Round complete — next prediction loads in ~3 s…';
+    confFill.style.width = '100%';
+    confPct.textContent  = 'Round closed';
+
+    // Banner: hide (next crashAt not yet generated; will appear on next wait)
+    banner.classList.remove('visible');
   }
 
-  // ── Stats ──
-  if (_history.length) {
-    const avg = _history.reduce((s, v) => s + v, 0) / _history.length;
-    document.getElementById('statRounds').textContent = _history.length;
+  // ── Stats ──────────────────────────────────────────────────────────
+  // Prefer live roundHist from engine; fall back to locally tracked history
+  const hist = (_data.roundHist && _data.roundHist.length) ? _data.roundHist : _history;
+
+  if (hist.length) {
+    const avg = hist.reduce((s, v) => s + v, 0) / hist.length;
+    const high = Math.max(...hist);
+    if (high > _sessionHigh) _sessionHigh = high;
+    document.getElementById('statRounds').textContent = hist.length;
     document.getElementById('statAvg').textContent    = avg.toFixed(2) + '×';
     document.getElementById('statHigh').textContent   = _sessionHigh.toFixed(2) + '×';
   }
 
-  // ── History chips (prefer live roundHist from game) ──
-  const hist = (_data.roundHist && _data.roundHist.length) ? _data.roundHist : _history;
+  // ── History chips ──────────────────────────────────────────────────
   const hc = document.getElementById('histChips');
   if (hist.length) {
     hc.innerHTML = hist.slice(0, 30).map(v =>
@@ -422,8 +523,6 @@ function render() {
   } else {
     hc.innerHTML = '<span style="font-size:.72rem;color:var(--text3)">No rounds yet…</span>';
   }
-
-  document.getElementById('syncTime').textContent = new Date().toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 }
 
 setInterval(render, 100);
