@@ -65,10 +65,19 @@ canvas#rc{display:block;width:100%;height:100%}
 .mult-val.bust{color:#f24e4e;text-shadow:0 0 40px rgba(242,78,78,.9);animation:bustShake .4s ease}
 .mult-lbl{font-size:.6rem;color:rgba(255,255,255,.4);letter-spacing:.12em;text-transform:uppercase;margin-top:5px;font-family:var(--font-d)}
 @keyframes bustShake{0%,100%{transform:scale(1)}20%{transform:scale(1.15) rotate(-2deg)}60%{transform:scale(.95) rotate(1deg)}}
+
+/* ── State badge with countdown ── */
 .state-badge{position:absolute;top:10px;left:50%;transform:translateX(-50%);font-family:var(--font-d);font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 14px;border-radius:20px;z-index:10;white-space:nowrap}
 .state-badge.wait{background:rgba(245,197,66,.12);border:1px solid rgba(245,197,66,.3);color:var(--gold)}
 .state-badge.fly{background:rgba(41,217,128,.1);border:1px solid rgba(41,217,128,.25);color:var(--green)}
 .state-badge.bust{background:rgba(242,78,78,.12);border:1px solid rgba(242,78,78,.3);color:var(--red)}
+
+/* ── Countdown bar (like Aviator) ── */
+.countdown-wrap{position:absolute;top:38px;left:50%;transform:translateX(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:5px;pointer-events:none}
+.countdown-wrap.hidden{display:none}
+.countdown-bar-bg{width:130px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+.countdown-bar-fill{height:100%;background:linear-gradient(90deg,#f97316,#ef4444);border-radius:2px;transition:width .1s linear}
+
 .cashout-wrap{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:20;pointer-events:none;opacity:0;transition:opacity .2s}
 .cashout-wrap.show{opacity:1;pointer-events:auto}
 .cashout-btn{padding:12px 32px;border-radius:12px;border:none;font-family:var(--font-d);font-size:.85rem;font-weight:900;letter-spacing:.1em;cursor:pointer;background:linear-gradient(135deg,#ea580c,#f97316,#fdba74,#f97316,#ea580c);color:#fff;box-shadow:0 4px 20px rgba(249,115,22,.5);animation:cashPulse 1s ease-in-out infinite}
@@ -188,7 +197,17 @@ body:not(.desktop) .chat-toggle{display:flex}
   <div id="center-panel">
     <div class="canvas-wrap" id="canvasWrap">
       <canvas id="rc"></canvas>
-      <div class="state-badge wait" id="stateBadge">Next round…</div>
+
+      <!-- State badge -->
+      <div class="state-badge wait" id="stateBadge">Next round in 5s…</div>
+
+      <!-- Countdown bar (shown during wait only) -->
+      <div class="countdown-wrap" id="countdownWrap">
+        <div class="countdown-bar-bg">
+          <div class="countdown-bar-fill" id="countdownFill" style="width:0%"></div>
+        </div>
+      </div>
+
       <div class="mult-ov">
         <div class="mult-val" id="multVal">1.00×</div>
         <div class="mult-lbl" id="multLbl">Place your bet</div>
@@ -260,6 +279,7 @@ body:not(.desktop) .chat-toggle{display:flex}
 <script src="utils.js"></script>
 <script>
 'use strict';
+
 // ── PARENT BRIDGE ─────────────────────────────────────────────────────
 function ph(){try{return parent.window.PH;}catch(e){return null;}}
 function getbal(){const p=ph();if(!p)return parseFloat(sessionStorage.getItem(_dm?'rc_db_d':'rc_db')||(_dm?'5000':'1000'));try{return _dm?p.getDemoBal():p.getWallet();}catch(e){return 0;}}
@@ -278,22 +298,32 @@ new ResizeObserver(resizeCanvas).observe(document.getElementById('canvasWrap'));
 const STARS=Array.from({length:100},()=>({x:Math.random(),y:Math.random(),r:Math.random()*1.6+.3,tw:Math.random()*3+.5,off:Math.random()*100}));
 const trail=[];let _rx=0.08,_ry=0.9;
 
+// Track whether canvas loop is already scheduled to avoid double-rAF
+let _canvasLoopRunning=false;
+
 function drawCanvas(){
   ctx.clearRect(0,0,W,H);
-  // Space background
   const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#01010c');bg.addColorStop(1,'#040820');
   ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-  // Nebula glow
   const ng=ctx.createRadialGradient(W*.7,H*.3,0,W*.7,H*.3,W*.4);ng.addColorStop(0,'rgba(249,115,22,.03)');ng.addColorStop(1,'transparent');ctx.fillStyle=ng;ctx.fillRect(0,0,W,H);
-  // Stars
   const now=Date.now();
   STARS.forEach(s=>{const tw=0.3+0.7*Math.abs(Math.sin((now/900+s.off)*s.tw));ctx.beginPath();ctx.arc(s.x*W,s.y*H,s.r,0,2*Math.PI);ctx.fillStyle=`rgba(255,255,255,${tw*.75})`;ctx.fill();});
-  // Faint grid
   ctx.strokeStyle='rgba(249,115,22,.03)';ctx.lineWidth=1;
   for(let x=0;x<W;x+=W/10){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
   for(let y=0;y<H;y+=H/6){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-  if(_state==='wait'){requestAnimationFrame(drawCanvas);return;}
-  // Trail
+
+  if(_state==='wait'){
+    // Update countdown fill bar
+    const elapsed=5000-_waitRemaining;
+    const pct=Math.min(100,Math.max(0,(elapsed/5000)*100));
+    const fill=document.getElementById('countdownFill');
+    if(fill)fill.style.width=pct+'%';
+    _canvasLoopRunning=false;
+    requestAnimationFrame(drawCanvas);
+    _canvasLoopRunning=true;
+    return;
+  }
+
   if(trail.length>1){
     for(let i=1;i<trail.length;i++){
       const a=(i/trail.length)*.9,w=.8+3.5*(i/trail.length);
@@ -301,7 +331,6 @@ function drawCanvas(){
       ctx.strokeStyle=_state==='bust'?`rgba(242,78,78,${a})`:`rgba(249,115,22,${a})`;
       ctx.lineWidth=w;ctx.lineCap='round';ctx.stroke();
     }
-    // Bright center line
     for(let i=Math.max(1,trail.length-12);i<trail.length;i++){
       ctx.beginPath();ctx.moveTo(trail[i-1].x,trail[i-1].y);ctx.lineTo(trail[i].x,trail[i].y);
       ctx.strokeStyle='rgba(255,220,180,.9)';ctx.lineWidth=1;ctx.stroke();
@@ -311,29 +340,20 @@ function drawCanvas(){
   if(_state!=='bust'){
     const ang=-Math.atan2(.8,.78);
     ctx.save();ctx.translate(rx,ry);ctx.rotate(ang);
-    // Engine glow
     const eg=ctx.createRadialGradient(-18,0,0,-18,0,26);eg.addColorStop(0,'rgba(255,160,50,.9)');eg.addColorStop(1,'transparent');
     ctx.beginPath();ctx.arc(-18,0,26,0,2*Math.PI);ctx.fillStyle=eg;ctx.fill();
-    // Flames (orange and yellow)
     ctx.beginPath();ctx.moveTo(-8,-5);ctx.quadraticCurveTo(-30,0,-8,5);ctx.fillStyle='rgba(255,130,40,.8)';ctx.fill();
     ctx.beginPath();ctx.moveTo(-8,-2.5);ctx.quadraticCurveTo(-22,0,-8,2.5);ctx.fillStyle='rgba(255,220,100,.95)';ctx.fill();
-    // Body
     ctx.beginPath();ctx.moveTo(20,0);ctx.lineTo(-10,-7);ctx.lineTo(-10,7);ctx.closePath();ctx.fillStyle='#f0f2f8';ctx.fill();
-    // Nose cone
     ctx.beginPath();ctx.arc(16,0,5,0,2*Math.PI);ctx.fillStyle='#f97316';ctx.fill();
-    // Window
     ctx.beginPath();ctx.arc(8,0,2.5,0,2*Math.PI);ctx.fillStyle='rgba(140,200,255,.8)';ctx.fill();
-    // Wings
     ctx.beginPath();ctx.moveTo(-5,6);ctx.lineTo(-15,15);ctx.lineTo(-4,7);ctx.closePath();ctx.fillStyle='#ea580c';ctx.fill();
     ctx.beginPath();ctx.moveTo(-5,-6);ctx.lineTo(-15,-15);ctx.lineTo(-4,-7);ctx.closePath();ctx.fillStyle='#ea580c';ctx.fill();
-    // Halo
-    const h=ctx.createRadialGradient(rx-rx+rx,ry-ry+ry,0,rx-rx+rx,ry-ry+ry,36);
     const hx=0,hy=0;const h2=ctx.createRadialGradient(hx,hy,0,hx,hy,36);
     h2.addColorStop(0,'rgba(249,115,22,.18)');h2.addColorStop(1,'transparent');
     ctx.beginPath();ctx.arc(0,0,36,0,2*Math.PI);ctx.fillStyle=h2;ctx.fill();
     ctx.restore();
   } else {
-    // Explosion
     for(let i=0;i<12;i++){
       const a=(i/12)*2*Math.PI,r=12+Math.random()*24;
       const ex=rx+Math.cos(a)*r,ey=ry+Math.sin(a)*r;
@@ -345,14 +365,26 @@ function drawCanvas(){
     mg.addColorStop(0,'rgba(255,255,200,1)');mg.addColorStop(.3,'rgba(255,100,20,.9)');mg.addColorStop(1,'transparent');
     ctx.beginPath();ctx.arc(rx,ry,42,0,2*Math.PI);ctx.fillStyle=mg;ctx.fill();
   }
-  if(_state!=='wait')requestAnimationFrame(drawCanvas);
+
+  // Keep looping during fly and bust (bust shows explosion for ~2.8s then wait takes over)
+  if(_state==='fly'||_state==='bust'){
+    requestAnimationFrame(drawCanvas);
+  }
 }
 
 // ── GAME LOGIC ────────────────────────────────────────────────────────
 let _state='wait',_mult=1,_elapsed=0,_targetCrash=2,_betPlaced=false,_cashedOut=false;
-let _animId=null,_waitTimer=null,_lastT=null,_autoCo=0;
+let _animId=null,_waitTimer=null,_countdownInt=null,_waitTrickleInt=null;
+let _lastT=null,_autoCo=0,_waitRemaining=5000;
 let _dm=false,_bet=100,sndOn=true;
-const PRESETS=[50,100,200,500,1000,2000],HIST=[];
+const PRESETS=[50,100,200,500,1000,2000];
+
+// ── Load history from localStorage (persists across refreshes) ────────
+const _RC_HIST_KEY = () => {
+  try{ return parent.window.PH?.getMode()==='demo' ? 'ph_hist_rocket_demo' : 'ph_hist_rocket_real'; }catch(e){ return _dm ? 'ph_hist_rocket_demo' : 'ph_hist_rocket_real'; }
+};
+const HIST=(()=>{try{return JSON.parse(localStorage.getItem('ph_hist_rocket_real')||'[]');}catch(e){return[];}})();
+
 const _RC_BRANGE=[[50,199,.22],[200,499,.22],[500,999,.20],[1000,2999,.17],[3000,7999,.10],[8000,14999,.06],[15000,20000,.03]];
 function _rcRandBet(){
   const r=Math.random();let cum=0;
@@ -360,7 +392,6 @@ function _rcRandBet(){
   return 100;
 }
 
-// Fake players for bets panel
 const FakePlayers=[];let _lpTabState='all';
 function genFakePlayers(){
   FakePlayers.length=0;
@@ -374,29 +405,44 @@ function genFakePlayers(){
 }
 
 function generateCrash(){
-  // Real mode: house edge ~5%. Short crashes (1–2×) happen ~40% of time
   if(!_dm){
+    // REAL — tough house edge, ~52% crash under 2×
     const r=Math.random();
-    if(r<0.40)return parseFloat((1.00+Math.random()*0.95).toFixed(2));
-    if(r<0.70)return parseFloat((1.95+Math.random()*3).toFixed(2));
-    if(r<0.88)return parseFloat((4.95+Math.random()*15).toFixed(2));
-    if(r<0.97)return parseFloat((19.95+Math.random()*80).toFixed(2));
-    return parseFloat((99.95+Math.random()*400).toFixed(2));
+    if(r<0.18) return 1.00;
+    if(r<0.52) return parseFloat((1.01+Math.random()*0.97).toFixed(2));
+    if(r<0.72) return parseFloat((1.99+Math.random()*2.00).toFixed(2));
+    if(r<0.85) return parseFloat((4.00+Math.random()*5.99).toFixed(2));
+    if(r<0.93) return parseFloat((10.0+Math.random()*14.99).toFixed(2));
+    if(r<0.97) return parseFloat((25.0+Math.random()*24.99).toFixed(2));
+    if(r<0.99) return parseFloat((50.0+Math.random()*149).toFixed(2));
+    return parseFloat((200.0+Math.random()*300).toFixed(2));
   } else {
-    // Demo: more generous — players can feel success
+    // DEMO — generous, more highs to showcase the game
     const r=Math.random();
-    if(r<0.25)return parseFloat((1.00+Math.random()*0.85).toFixed(2));
-    if(r<0.55)return parseFloat((1.85+Math.random()*4).toFixed(2));
-    if(r<0.78)return parseFloat((5.85+Math.random()*20).toFixed(2));
-    if(r<0.94)return parseFloat((25.85+Math.random()*74).toFixed(2));
-    return parseFloat((99.85+Math.random()*400).toFixed(2));
+    if(r<0.04) return 1.00;
+    if(r<0.14) return parseFloat((1.01+Math.random()*0.84).toFixed(2));
+    if(r<0.30) return parseFloat((1.86+Math.random()*2.13).toFixed(2));
+    if(r<0.50) return parseFloat((4.00+Math.random()*5.99).toFixed(2));
+    if(r<0.68) return parseFloat((10.0+Math.random()*14.99).toFixed(2));
+    if(r<0.82) return parseFloat((25.0+Math.random()*24.99).toFixed(2));
+    if(r<0.93) return parseFloat((50.0+Math.random()*149).toFixed(2));
+    return parseFloat((200.0+Math.random()*300).toFixed(2));
   }
 }
 
-let _waitTrickleInt=null;
+// ── WAIT with countdown timer ─────────────────────────────────────────
 function startWait(){
-  _state='wait';_mult=1;_betPlaced=false;_cashedOut=false;_rx=0.08;_ry=0.9;trail.length=0;_elapsed=0;
-  genFakePlayers();lpRender();updateStateUI();
+  _state='wait';_mult=1;_betPlaced=false;_cashedOut=false;
+  _rx=0.08;_ry=0.9;trail.length=0;_elapsed=0;_waitRemaining=5000;
+
+  // Clear all previous timers
+  if(_waitTimer){clearTimeout(_waitTimer);_waitTimer=null;}
+  if(_countdownInt){clearInterval(_countdownInt);_countdownInt=null;}
+  if(_waitTrickleInt){clearInterval(_waitTrickleInt);_waitTrickleInt=null;}
+
+  genFakePlayers();lpRender();
+
+  // Reset UI
   document.getElementById('cashoutWrap').classList.remove('show');
   document.getElementById('multVal').classList.remove('bust');
   document.getElementById('multVal').textContent='1.00×';
@@ -404,10 +450,30 @@ function startWait(){
   document.getElementById('betBtn').textContent='PLACE BET';
   document.getElementById('betBtn').classList.remove('active');
   document.getElementById('betBtn').disabled=false;
-  requestAnimationFrame(drawCanvas);
-  const waitMs=4000+Math.random()*3000;
-  // Trickle new players into the bets panel during wait
-  if(_waitTrickleInt){clearInterval(_waitTrickleInt);_waitTrickleInt=null;}
+
+  // Show countdown elements
+  document.getElementById('countdownWrap').classList.remove('hidden');
+  document.getElementById('countdownFill').style.width='0%';
+
+  // State badge countdown
+  let _countdown=5;
+  const badge=document.getElementById('stateBadge');
+  badge.className='state-badge wait';
+  badge.textContent='Next round in '+_countdown+'s…';
+
+  _countdownInt=setInterval(()=>{
+    if(_state!=='wait'){clearInterval(_countdownInt);_countdownInt=null;return;}
+    _countdown--;
+    _waitRemaining=_countdown*1000;
+    if(_countdown>0){
+      badge.textContent='Next round in '+_countdown+'s…';
+    } else {
+      badge.textContent='Starting…';
+      clearInterval(_countdownInt);_countdownInt=null;
+    }
+  },1000);
+
+  // Trickle players during wait
   _waitTrickleInt=setInterval(()=>{
     if(_state!=='wait'){clearInterval(_waitTrickleInt);_waitTrickleInt=null;return;}
     const add=1+(Math.random()*2|0);
@@ -419,30 +485,49 @@ function startWait(){
     }
     lpRender();
   },500);
-  _waitTimer=setTimeout(startFlight,waitMs);
+
+  // Schedule flight after exactly 5 seconds
+  _waitTimer=setTimeout(startFlight,5000);
+
+  // Restart canvas loop
+  requestAnimationFrame(drawCanvas);
 }
 
 function startFlight(){
-  _state='fly';_mult=1;_elapsed=0;_lastT=null;
+  if(_waitTimer){clearTimeout(_waitTimer);_waitTimer=null;}
+  if(_countdownInt){clearInterval(_countdownInt);_countdownInt=null;}
   if(_waitTrickleInt){clearInterval(_waitTrickleInt);_waitTrickleInt=null;}
+
+  // Re-read mode fresh every round — parent is always ready by flight time
+  try{ _dm = ph()?.getMode()==='demo'; }catch(e){}
+
+  _state='fly';_mult=1;_elapsed=0;_lastT=null;
   _targetCrash=generateCrash();
   _autoCo=parseFloat(document.getElementById('autoCo').value)||0;
+
+  // Hide countdown bar
+  document.getElementById('countdownWrap').classList.add('hidden');
+  document.getElementById('countdownFill').style.width='100%';
+
   updateStateUI();
-  if(_betPlaced){document.getElementById('cashoutWrap').classList.add('show');document.getElementById('multLbl').textContent='Cash out now!';}
+  if(_betPlaced){
+    document.getElementById('cashoutWrap').classList.add('show');
+    document.getElementById('multLbl').textContent='Cash out now!';
+  }
   document.getElementById('betBtn').disabled=true;
-  requestAnimationFrame(drawCanvas);
-  _animId=requestAnimationFrame(flyLoop);
+
+  // Canvas loop is self-sustaining during fly via drawCanvas rAF
+  _lastT=null;
+  requestAnimationFrame(flyLoop);
 }
 
 function flyLoop(ts){
+  if(_state!=='fly')return; // safety guard — stop if state changed
   if(_lastT===null)_lastT=ts;
   const dt=(ts-_lastT)/1000;_lastT=ts;_elapsed+=dt;
-  // Slower curve: starts gentle, accelerates more naturally
   _mult=Math.max(1,parseFloat((Math.pow(1.06,_elapsed*5.5)).toFixed(2)));
   document.getElementById('multVal').textContent=_mult.toFixed(2)+'×';
-  // Auto cashout
   if(_betPlaced&&!_cashedOut&&_autoCo>1&&_mult>=_autoCo)doCashout();
-  // Fake players cash out
   FakePlayers.forEach(fp=>{
     if(!fp.cashedAt&&fp.autoCo&&_mult>=fp.autoCo){
       fp.cashedAt=_mult;fp.won=parseFloat((fp.bet*_mult).toFixed(2));
@@ -452,20 +537,29 @@ function flyLoop(ts){
   const prog=Math.min(_elapsed/9,1);
   _rx=0.08+prog*0.78;_ry=0.9-Math.pow(prog,1.2)*0.8;
   trail.push({x:_rx*W,y:_ry*H});if(trail.length>90)trail.shift();
-  _animId=requestAnimationFrame(flyLoop);
-  // Update LP every 10 frames
+  requestAnimationFrame(flyLoop);
   if(Math.floor(_elapsed*60)%10===0)lpRender();
 }
 
 function doBust(){
-  cancelAnimationFrame(_animId);_state='bust';
+  _state='bust';
   document.getElementById('cashoutWrap').classList.remove('show');
   document.getElementById('multVal').textContent=_mult.toFixed(2)+'×';
   document.getElementById('multVal').classList.add('bust');
   document.getElementById('multLbl').textContent='💥 CRASHED!';
   updateStateUI();
-  HIST.unshift({mult:_mult});if(HIST.length>24)HIST.pop();
-  renderHist();lpRender();requestAnimationFrame(drawCanvas);
+
+  // Save to history and localStorage
+  HIST.unshift(parseFloat(_mult.toFixed(2)));
+  if(HIST.length>50)HIST.pop();
+  try{localStorage.setItem(_RC_HIST_KEY(),JSON.stringify(HIST));}catch(e){}
+
+  renderHist();
+  lpRender();
+
+  // Canvas bust animation runs via drawCanvas rAF
+  requestAnimationFrame(drawCanvas);
+
   if(_betPlaced&&!_cashedOut){toast('💥 Crashed at '+_mult.toFixed(2)+'×  −'+_bet+' KES');}
   if(sndOn)playBustSound();
   setTimeout(startWait,2800);
@@ -473,7 +567,8 @@ function doBust(){
 
 function doCashout(){
   if(!_betPlaced||_cashedOut||_state!=='fly')return;
-  _cashedOut=true;document.getElementById('cashoutWrap').classList.remove('show');
+  _cashedOut=true;
+  document.getElementById('cashoutWrap').classList.remove('show');
   const win=parseFloat((_bet*_mult).toFixed(2));
   credit(win);notifyNav();updateBal();
   document.getElementById('multLbl').textContent='✓ +'+win.toFixed(2)+' KES';
@@ -485,7 +580,6 @@ function doCashout(){
 function toggleBet(){
   if(_state==='fly'){if(_betPlaced&&!_cashedOut)doCashout();return;}
   if(_betPlaced){
-    // Cancel
     _betPlaced=false;
     credit(_bet);notifyNav();updateBal();
     document.getElementById('betBtn').textContent='PLACE BET';
@@ -501,24 +595,45 @@ function toggleBet(){
 
 function updateStateUI(){
   const b=document.getElementById('stateBadge');
-  if(_state==='wait'){b.className='state-badge wait';b.textContent=_dm?'🎮 Demo — next round soon…':'Next round soon…';}
-  else if(_state==='fly'){b.className='state-badge fly';b.textContent='🚀 In flight';}
-  else{b.className='state-badge bust';b.textContent='💥 Crashed!';}
+  if(_state==='wait'){
+    b.className='state-badge wait';
+    b.textContent='Next round in 5s…';
+  } else if(_state==='fly'){
+    b.className='state-badge fly';
+    b.textContent='🚀 In flight';
+    document.getElementById('countdownWrap').classList.add('hidden');
+  } else {
+    b.className='state-badge bust';
+    b.textContent='💥 Crashed!';
+    document.getElementById('countdownWrap').classList.add('hidden');
+  }
 }
 
 function renderHist(){
-  const bar=document.getElementById('rcHist');bar.innerHTML='';
-  HIST.forEach(h=>{const c=document.createElement('span');const m=h.mult;c.className='rch '+(m<1.5?'rch-bust':m<3?'rch-safe':m<10?'rch-mid':'rch-high');c.textContent=m.toFixed(2)+'×';bar.appendChild(c);});
+  const bar=document.getElementById('rcHist');
+  if(!bar)return;
+  if(!HIST.length){bar.innerHTML='<span style="font-size:.6rem;color:var(--text3)">Round history…</span>';return;}
+  bar.innerHTML=HIST.map(h=>{
+    const m=+h;
+    const c=m<1.5?'rch-bust':m<3?'rch-safe':m<10?'rch-mid':'rch-high';
+    return`<span class="rch ${c}">${m.toFixed(2)}×</span>`;
+  }).join('');
 }
 
 // ── LEFT BETS PANEL ───────────────────────────────────────────────────
 let _lpTab='all';
-function lpTab(t){_lpTab=t;document.getElementById('lpt-all').classList.toggle('active',t==='all');document.getElementById('lpt-my').classList.toggle('active',t==='my');lpRender();}
+function lpTab(t){
+  _lpTab=t;
+  document.getElementById('lpt-all').classList.toggle('active',t==='all');
+  document.getElementById('lpt-my').classList.toggle('active',t==='my');
+  lpRender();
+}
 
 function lpRender(){
   const el=document.getElementById('lpRows');if(!el)return;
-  let rows=_lpTab==='my'?(_betPlaced?[{nm:'You',masked:'You',bet:_bet,cashedAt:_cashedOut?_mult:null,won:_cashedOut?_bet*_mult:0,isUser:true}]:[]):
-    [...(_betPlaced?[{nm:'You',masked:'You',bet:_bet,cashedAt:_cashedOut?_mult:null,won:_cashedOut?_bet*_mult:0,isUser:true}]:[]),...FakePlayers].sort((a,b)=>b.bet-a.bet);
+  let rows=_lpTab==='my'
+    ?(_betPlaced?[{nm:'You',masked:'You',bet:_bet,cashedAt:_cashedOut?_mult:null,won:_cashedOut?_bet*_mult:0,isUser:true}]:[])
+    :[...(_betPlaced?[{nm:'You',masked:'You',bet:_bet,cashedAt:_cashedOut?_mult:null,won:_cashedOut?_bet*_mult:0,isUser:true}]:[]),...FakePlayers].sort((a,b)=>b.bet-a.bet);
   document.getElementById('lpCt').textContent=rows.length+' players';
   if(!rows.length){el.innerHTML='<div style="padding:16px;text-align:center;font-size:.72rem;color:var(--text3)">No bets yet</div>';return;}
   const fmt=v=>parseFloat(v).toLocaleString('en-KE',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -527,7 +642,10 @@ function lpRender(){
     const letter=r.isUser?(ph()?.getUser()?.username?.[0]||'Y').toUpperCase():fakeInitial(r.nm);
     const bg=r.isUser?'linear-gradient(135deg,#4f6ef7,#a259ff)':'var(--bg5)';
     return`<div class="lp-row${has?' cashed':''}">
-      <div style="display:flex;align-items:center;gap:5px"><div class="lp-av" style="background:${bg};color:${r.isUser?'#fff':'#8e94c0'}">${letter}</div><span style="font-size:.68rem;color:${has?'#29d980':r.isUser?'#6c88ff':'var(--text)'};font-weight:${r.isUser?700:400}">${r.masked}</span></div>
+      <div style="display:flex;align-items:center;gap:5px">
+        <div class="lp-av" style="background:${bg};color:${r.isUser?'#fff':'#8e94c0'}">${letter}</div>
+        <span style="font-size:.68rem;color:${has?'#29d980':r.isUser?'#6c88ff':'var(--text)'};font-weight:${r.isUser?700:400}">${r.masked}</span>
+      </div>
       <span style="font-size:.68rem;color:${has?'#29d980':'var(--text2)'}">${fmt(r.bet)}</span>
       <span style="text-align:right;font-size:.68rem;font-weight:700;color:${has?'#29d980':'var(--text3)'}">${has?r.cashedAt.toFixed(2)+'×':'—'}</span>
     </div>`;
@@ -537,12 +655,25 @@ function lpRender(){
 // ── BET AMOUNT CONTROLS ───────────────────────────────────────────────
 function buildChips(){
   const g=document.getElementById('bpChips');g.innerHTML='';
-  PRESETS.forEach(a=>{const b=document.createElement('span');b.className='bp-chip'+(a===_bet?' on':'');b.textContent=a>=1000?(a/1000)+'K':a;b.onclick=()=>setBet(a);g.appendChild(b);});
+  PRESETS.forEach(a=>{
+    const b=document.createElement('span');
+    b.className='bp-chip'+(a===_bet?' on':'');
+    b.textContent=a>=1000?(a/1000)+'K':a;
+    b.onclick=()=>setBet(a);
+    g.appendChild(b);
+  });
 }
-function setBet(a){_bet=a;document.getElementById('betDisp').textContent=a;document.querySelectorAll('.bp-chip').forEach((c,i)=>c.classList.toggle('on',PRESETS[i]===a));}
-function adjBet(d){const i=PRESETS.indexOf(_bet);setBet(i===-1?PRESETS[d>0?0:PRESETS.length-1]:PRESETS[Math.max(0,Math.min(PRESETS.length-1,i+d))]);}
+function setBet(a){
+  _bet=a;
+  document.getElementById('betDisp').textContent=a;
+  document.querySelectorAll('.bp-chip').forEach((c,i)=>c.classList.toggle('on',PRESETS[i]===a));
+}
+function adjBet(d){
+  const i=PRESETS.indexOf(_bet);
+  setBet(i===-1?PRESETS[d>0?0:PRESETS.length-1]:PRESETS[Math.max(0,Math.min(PRESETS.length-1,i+d))]);
+}
 function updateBal(){
-  const p=ph(),bal=getbal();
+  const bal=getbal();
   document.getElementById('hdrBal').textContent='KSh '+bal.toLocaleString('en-KE',{minimumFractionDigits:2,maximumFractionDigits:2});
   if(_dm){document.getElementById('demoBal').textContent='KSh '+bal.toLocaleString('en-KE',{minimumFractionDigits:2,maximumFractionDigits:2});}
 }
@@ -563,7 +694,10 @@ const _fakeMsgs=['Lets go 🚀','Cash out at 2x!','Crashed again 😭','Hold hol
 let _chatInt=null;
 function _seedChat(){
   const seeds=['Rocket so fast today!','Who cashed out early?','5x minimum strategy','got burned at 1.1x 😭','Pole pole friends'];
-  seeds.forEach((msg,i)=>{const nm=_chatNames[Math.floor(Math.random()*_chatNames.length)];_chatLog.push({nm,msg,mine:false,ts:Date.now()-((seeds.length-i)*25000)});});
+  seeds.forEach((msg,i)=>{
+    const nm=_chatNames[Math.floor(Math.random()*_chatNames.length)];
+    _chatLog.push({nm,msg,mine:false,ts:Date.now()-((seeds.length-i)*25000)});
+  });
 }
 function renderChat(){
   ['chatMsgs','chatMsgsMobile'].forEach(id=>{
@@ -601,16 +735,43 @@ document.addEventListener('click',()=>{if(!_ac)_ac=new AudioContext();},{once:tr
 // ── MENU ──────────────────────────────────────────────────────────────
 let _menuOpen=false;
 function toggleMenu(){_menuOpen=!_menuOpen;document.getElementById('menuPanel').classList.toggle('open',_menuOpen);}
-document.addEventListener('click',e=>{if(_menuOpen&&!e.target.closest('#menuPanel')&&!e.target.closest('#menuBtn')){_menuOpen=false;document.getElementById('menuPanel').classList.remove('open');}});
+document.addEventListener('click',e=>{
+  if(_menuOpen&&!e.target.closest('#menuPanel')&&!e.target.closest('#menuBtn')){
+    _menuOpen=false;document.getElementById('menuPanel').classList.remove('open');
+  }
+});
 const INFO={
   howto:{title:'How To Play — Rocket Crash',body:'<p style="margin-bottom:8px"><strong style="color:#eef0ff">1. Place your bet</strong> before the rocket launches. Set an Auto Cash Out multiplier to auto-exit.</p><p style="margin-bottom:8px"><strong style="color:#eef0ff">2. Watch the multiplier climb.</strong> Cash out anytime before the rocket crashes.</p><p style="margin-bottom:8px"><strong style="color:#eef0ff">3. If you miss the crash</strong>, you lose your bet. Cash out early to lock in profit.</p><p style="color:#f24e4e">⚠ The house has an edge. Short crashes (under 2×) happen often.</p>'},
   limits:{title:'Game Limits — Rocket Crash',body:'<table style="width:100%;border-collapse:collapse;font-size:.8rem"><tr><td style="padding:6px 0;color:#8e94c0;border-bottom:1px solid #252740">Min Bet</td><td style="text-align:right;color:#eef0ff;border-bottom:1px solid #252740"><strong>KSh 50</strong></td></tr><tr><td style="padding:6px 0;color:#8e94c0;border-bottom:1px solid #252740">Max Bet</td><td style="text-align:right;color:#eef0ff;border-bottom:1px solid #252740"><strong>KSh 10,000</strong></td></tr><tr><td style="padding:6px 0;color:#8e94c0;border-bottom:1px solid #252740">Max Win</td><td style="text-align:right;color:#eef0ff;border-bottom:1px solid #252740"><strong>500× bet</strong></td></tr><tr><td style="padding:6px 0;color:#8e94c0">RTP</td><td style="text-align:right;color:#eef0ff"><strong>~95%</strong></td></tr></table>'},
   rules:{title:'Game Rules — Rocket Crash',body:'<p style="margin-bottom:8px">• Each round is independent with a randomly generated crash point.</p><p style="margin-bottom:8px">• The multiplier starts at 1× and climbs.</p><p style="margin-bottom:8px">• Auto Cash Out fires automatically at your set multiplier.</p><p style="margin-bottom:8px">• Demo mode uses virtual credits only.</p><p style="color:#f5c542">• Play responsibly.</p>'}
 };
-function showInfo(k){document.getElementById('infoTitle').textContent=INFO[k].title;document.getElementById('infoBody').innerHTML=INFO[k].body;document.getElementById('infoOverlay').classList.add('open');_menuOpen=false;document.getElementById('menuPanel').classList.remove('open');}
+function showInfo(k){
+  document.getElementById('infoTitle').textContent=INFO[k].title;
+  document.getElementById('infoBody').innerHTML=INFO[k].body;
+  document.getElementById('infoOverlay').classList.add('open');
+  _menuOpen=false;
+  document.getElementById('menuPanel').classList.remove('open');
+}
 
-function confetti(n){const cols=['#f97316','#fbbf24','#34d399','#a78bfa','#f472b6'],w=document.getElementById('cfWrap');for(let i=0;i<n;i++)setTimeout(()=>{const p=document.createElement('div');p.className='cp';p.style.left=Math.random()*100+'vw';p.style.background=cols[Math.floor(Math.random()*cols.length)];const s=(5+Math.random()*8)+'px';p.style.width=s;p.style.height=s;p.style.borderRadius=Math.random()>.5?'50%':'2px';p.style.animationDuration=(1.4+Math.random()*2)+'s';w.appendChild(p);setTimeout(()=>p.remove(),3600);},i*22);}
-function toast(msg){const t=document.createElement('div');t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#141520;border:1px solid #252740;color:#eef0ff;padding:9px 18px;border-radius:10px;font-size:.78rem;font-weight:600;z-index:400;white-space:nowrap;pointer-events:none;animation:fadeIn .2s ease';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500);}
+// ── CONFETTI & TOAST ──────────────────────────────────────────────────
+function confetti(n){
+  const cols=['#f97316','#fbbf24','#34d399','#a78bfa','#f472b6'];
+  const w=document.getElementById('cfWrap');
+  for(let i=0;i<n;i++)setTimeout(()=>{
+    const p=document.createElement('div');p.className='cp';
+    p.style.left=Math.random()*100+'vw';
+    p.style.background=cols[Math.floor(Math.random()*cols.length)];
+    const s=(5+Math.random()*8)+'px';p.style.width=s;p.style.height=s;
+    p.style.borderRadius=Math.random()>.5?'50%':'2px';
+    p.style.animationDuration=(1.4+Math.random()*2)+'s';
+    w.appendChild(p);setTimeout(()=>p.remove(),3600);
+  },i*22);
+}
+function toast(msg){
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#141520;border:1px solid #252740;color:#eef0ff;padding:9px 18px;border-radius:10px;font-size:.78rem;font-weight:600;z-index:400;white-space:nowrap;pointer-events:none;animation:fadeIn .2s ease';
+  t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2500);
+}
 
 // ── RESPONSIVE ────────────────────────────────────────────────────────
 function checkDesktop(){document.body.classList.toggle('desktop',window.innerWidth>=800);}
@@ -621,16 +782,38 @@ window.onLaunched=()=>{
   updateBal();
   try{if(ph()?.getMode()==='demo')setMode('demo');}catch(e){}
   if(!_chatLog.length){_seedChat();}
-  renderChat();startFakeChat();
+  renderChat();
+  startFakeChat();
+  // Restart canvas draw loop when returning to the game
+  requestAnimationFrame(drawCanvas);
+  // If mid-flight, restart flyLoop too
+  if(_state==='fly'){
+    _lastT=null;
+    requestAnimationFrame(flyLoop);
+  }
 };
-window.onNavAway=()=>{cancelAnimationFrame(_animId);if(_waitTimer)clearTimeout(_waitTimer);if(_chatInt){clearInterval(_chatInt);_chatInt=null;}};
+
+window.onNavAway=()=>{
+  // Do NOT stop game timers — let the game keep running in background
+  // Only stop chat to save resources
+  if(_chatInt){clearInterval(_chatInt);_chatInt=null;}
+};
+
 window.onAuthChange=()=>updateBal();
 
 // ── INIT ──────────────────────────────────────────────────────────────
-buildChips();setBet(100);updateBal();
+buildChips();
+setBet(100);
+// ✅ Read mode BEFORE startWait so generateCrash uses correct odds from round 1
+try{ _dm = ph()?.getMode()==='demo'; }catch(e){ _dm=false; }
+updateBal();
 try{if(ph()?.getMode()==='demo')setMode('demo');}catch(e){}
-_seedChat();renderChat();startFakeChat();
+_seedChat();
+renderChat();
+startFakeChat();
+renderHist();
 startWait();
 </script>
+<script src="bridge-rocket.js"></script>
 </body>
 </html>

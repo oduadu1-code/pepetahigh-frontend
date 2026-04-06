@@ -410,6 +410,15 @@ function exitMines(){
   renderHistBar();adjustShell();
   notify('home','onTabVisible');
 }
+function openGameModal() {
+  _pendingGame = 'aviator';
+  const user = PH.getUser();
+  document.getElementById('gm-title').textContent = '✈ Aviator';
+  document.getElementById('gm-sub').textContent = user
+    ? 'Balance: ' + PH.fmt(PH.getWallet()) + '  ·  Demo: ' + PH.fmt(PH.getDemoBal())
+    : 'Real Play requires login';
+  openModal('game-mode-modal');
+}
 
 function openFortuneSpinModal(){
   _pendingGame='fortunespin';
@@ -451,7 +460,8 @@ function pickGameMode(m){
   if(m==='play'&&!PH.getUser()){closeModal('game-mode-modal');openModal('login-modal');return;}
   PH.setMode(m); if(m==='demo') PH.resetDemo();
   closeModal('game-mode-modal'); updateNavBal(); renderNav();
-  if(_pendingGame==='fortunespin')      launchFortuneSpin();
+  if (_pendingGame === 'aviator')          launchAviator();
+  else if (_pendingGame === 'fortunespin') launchFortuneSpin();
   else if(_pendingGame==='rocketcrash') launchRocketCrash();
   else if(_pendingGame==='dice')        launchDice();
   else if(_pendingGame==='mines')       launchMines();

@@ -404,11 +404,25 @@ function onMusicToggle(){
 // ─────────────────────────────────────────────────────────────────────
 // HISTORY BAR
 // ─────────────────────────────────────────────────────────────────────
+const _AV_HIST = (()=>{ try{ return JSON.parse(localStorage.getItem('ph_hist_aviator')||'[]'); } catch(e){ return []; } })();
 function renderHist(){
   const bar = document.getElementById('local-hist'); if(!bar) return;
   const isDemo = PH.getMode()==='demo';
+  const storageKey = isDemo ? 'ph_av_hist_demo' : 'ph_av_hist_real';
+
+  // Pull live history from parent if available
+  let live = [];
+  try{ live = (isDemo ? parent.window.G_demo : parent.window.G_real)?.roundHist || []; }catch(e){}
+
+  // If live data exists, save it; otherwise fall back to localStorage
+  if(live.length){
+    try{ localStorage.setItem(storageKey, JSON.stringify(live.slice(0,50))); }catch(e){}
+  }
+
+  // Always read from localStorage so history survives refresh
   let hist = [];
-  try{ hist = (isDemo ? parent.window.G_demo : parent.window.G_real)?.roundHist || []; }catch(e){}
+  try{ hist = JSON.parse(localStorage.getItem(storageKey)||'[]'); }catch(e){}
+
   const lbl = isDemo
     ? '<span style="font-size:.6rem;color:#a259ff;font-weight:700;flex-shrink:0;margin-right:3px">🎮</span>'
     : '<span class="online-dot" style="flex-shrink:0;margin-right:4px"></span>';
@@ -417,7 +431,6 @@ function renderHist(){
     const c=m<2?'hc-safe':m<5?'hc-mid':m<20?'hc-high':'hc-mega';
     return `<span class="hchip ${c}">${m.toFixed(2)}×</span>`;
   }).join('');
-  // Also refresh parent histbar (for bets tab)
   try{ parent.renderHistBar && parent.renderHistBar(); }catch(e){}
 }
 
@@ -747,7 +760,7 @@ function gameLoop(){
 // CALLBACKS FROM PARENT (belt-and-suspenders — loop handles it anyway)
 // ─────────────────────────────────────────────────────────────────────
 function onGameFly()         { /* loop handles it */ }
-function onGameCrash(rec)    { /* loop handles it */ }
+function onGameCrash(rec)    { renderHist(); }
 function onGameWait()        { /* loop handles it */ }
 function onAutoCashout(i,won){
   // Auto-cashout needs to trigger sound + UI since loop won't know
@@ -1227,5 +1240,6 @@ renderBet();
 renderHist();
 requestAnimationFrame(gameLoop);
 </script>
+<script src="bridge-aviator.js"></script>
 </body>
 </html>

@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PepetaHigh</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Exo+2:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#09090f;--bg2:#0f1018;--bg3:#141520;--bg4:#1b1d2e;--bg5:#212338;
+  --border:#252740;--border2:#30335a;
+  --primary:#4f6ef7;--secondary:#a259ff;
+  --gold:#f5c542;--green:#29d980;--green2:#1db865;--red:#f24e4e;
+  --text:#eef0ff;--text2:#8e94c0;--text3:#4a4f7a;
+  --font-d:'Orbitron',monospace;--font-b:'Exo 2',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);min-height:100vh;display:flex;flex-direction:column}
+
+/* ── LOCK SCREEN ── */
+#lock{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
+#lock.gone{display:none}
+.lock-card{background:var(--bg3);border:1px solid var(--border2);border-radius:18px;padding:32px 28px;width:100%;max-width:340px;text-align:center}
+.lock-logo{font-family:var(--font-d);font-size:1rem;font-weight:900;margin-bottom:5px}
+.lock-logo span{color:var(--gold)}
+.lock-sub{font-size:.66rem;color:var(--text3);margin-bottom:26px;letter-spacing:.05em}
+.lock-icon{font-size:2.4rem;margin-bottom:18px;display:block}
+.lock-inp{width:100%;background:var(--bg4);border:1.5px solid var(--border);border-radius:10px;padding:13px 16px;color:var(--text);font-family:var(--font-b);font-size:.95rem;text-align:center;letter-spacing:.2em;outline:none;transition:border-color .2s;margin-bottom:13px}
+.lock-inp:focus{border-color:var(--primary)}
+.lock-inp.err{border-color:var(--red);animation:shake .3s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.lock-btn{width:100%;background:linear-gradient(135deg,var(--primary),var(--secondary));border:none;border-radius:10px;padding:13px;font-family:var(--font-b);font-size:.88rem;font-weight:700;color:#fff;cursor:pointer;transition:opacity .2s}
+.lock-btn:hover{opacity:.88}
+.lock-err{font-size:.72rem;color:var(--red);margin-top:10px;min-height:18px}
+.lock-att{font-size:.62rem;color:var(--text3);margin-top:6px}
+
+/* ── NAV ── */
+.nav{display:none;align-items:center;justify-content:space-between;padding:0 16px;height:52px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.nav.show{display:flex}
+.nav-logo{font-family:var(--font-d);font-size:.92rem;font-weight:900}
+.nav-logo span{color:var(--gold)}
+.nav-r{display:flex;align-items:center;gap:9px}
+.mode-pill{font-size:.6rem;font-weight:700;padding:3px 10px;border-radius:20px}
+.pill-real{background:rgba(41,217,128,.1);border:1px solid rgba(41,217,128,.2);color:var(--green)}
+.pill-demo{background:rgba(245,197,66,.1);border:1px solid rgba(245,197,66,.2);color:var(--gold)}
+.lock-btn-sm{background:transparent;border:1px solid var(--border2);color:var(--text3);font-family:var(--font-b);font-size:.66rem;padding:5px 11px;border-radius:7px;cursor:pointer;transition:all .2s}
+.lock-btn-sm:hover{border-color:var(--red);color:var(--red)}
+
+/* ── BODY ── */
+.wrap{display:none;max-width:520px;margin:0 auto;padding:16px 14px 60px}
+.wrap.show{display:block}
+
+/* STATUS */
+.status-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px}
+.sp{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 8px;text-align:center}
+.sp-v{font-family:var(--font-d);font-size:.82rem;font-weight:700}
+.sp-l{font-size:.52rem;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-top:3px}
+
+/* SECTION */
+.gsec{margin-bottom:18px}
+.ghdr{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.g-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.g-title{font-family:var(--font-d);font-size:.82rem;font-weight:700}
+.g-sub{font-size:.6rem;color:var(--text3);margin-top:1px}
+.rbadge{margin-left:auto;display:inline-flex;align-items:center;background:rgba(79,110,247,.08);border:1px solid rgba(79,110,247,.2);border-radius:6px;padding:3px 9px;font-size:.58rem;color:var(--primary);font-weight:700;letter-spacing:.06em}
+
+/* PRED BOX */
+.pbox{border-radius:14px;padding:18px 16px;position:relative;overflow:hidden;border:1px solid;transition:all .3s}
+.pbox.av{background:linear-gradient(135deg,rgba(13,20,96,.95),rgba(8,8,22,.98));border-color:rgba(79,110,247,.3)}
+.pbox.rk{background:linear-gradient(135deg,rgba(42,8,0,.95),rgba(14,8,5,.98));border-color:rgba(249,115,22,.3)}
+.pbox.bust{border-color:rgba(242,78,78,.5)!important;background:linear-gradient(135deg,rgba(36,5,5,.95),rgba(12,3,3,.98))!important}
+.pbox::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.04),transparent);animation:sh 3.5s ease-in-out infinite;pointer-events:none}
+@keyframes sh{0%{left:-100%}60%,100%{left:160%}}
+
+.pstate{display:flex;align-items:center;gap:7px;margin-bottom:14px}
+.sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sdot.wait{background:var(--gold);animation:dp 1.2s ease infinite}
+.sdot.fly{background:var(--green);animation:dp .7s ease infinite}
+.sdot.crash{background:var(--red)}
+@keyframes dp{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.6)}}
+.slbl{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text3)}
+.stmr{margin-left:auto;font-size:.58rem;color:var(--text3)}
+
+.cmain{text-align:center;padding:8px 0 14px}
+.clbl{font-size:.56rem;color:var(--text3);text-transform:uppercase;letter-spacing:.13em;margin-bottom:6px}
+.cval{font-family:var(--font-d);font-size:3.8rem;font-weight:900;line-height:1;transition:color .25s}
+.cv-safe{color:var(--green);text-shadow:0 0 32px rgba(41,217,128,.45)}
+.cv-mid {color:var(--gold);text-shadow:0 0 32px rgba(245,197,66,.45)}
+.cv-high{color:var(--secondary);text-shadow:0 0 32px rgba(162,89,255,.45)}
+.cv-mega{color:var(--red);text-shadow:0 0 32px rgba(242,78,78,.45)}
+.cv-idle{color:var(--text3);text-shadow:none}
+.cv-bust{color:var(--red);text-shadow:0 0 32px rgba(242,78,78,.6);animation:bsh .4s ease}
+@keyframes bsh{0%,100%{transform:scale(1)}25%{transform:scale(1.12) rotate(-1.5deg)}75%{transform:scale(.92) rotate(1.5deg)}}
+.chint{font-size:.64rem;font-weight:600;margin-top:6px}
+
+.lrow{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:rgba(0,0,0,.25);border-radius:8px;margin-bottom:10px}
+.lr-l{font-size:.58rem;color:var(--text3);text-transform:uppercase;letter-spacing:.07em}
+.lr-v{font-family:var(--font-d);font-size:1.1rem;font-weight:700;transition:color .2s}
+.lv-av{color:var(--primary)}
+.lv-rk{color:#f97316}
+.lv-crash{color:var(--red)}
+.lv-idle{color:var(--text3)}
+
+.adv{border-radius:8px;padding:9px 12px;display:flex;align-items:center;gap:8px;margin-top:8px;font-size:.73rem;font-weight:600}
+.a-safe{background:rgba(41,217,128,.08);border:1px solid rgba(41,217,128,.2);color:var(--green)}
+.a-warn{background:rgba(245,197,66,.08);border:1px solid rgba(245,197,66,.2);color:var(--gold)}
+.a-danger{background:rgba(242,78,78,.08);border:1px solid rgba(242,78,78,.2);color:var(--red)}
+
+/* HISTORY */
+.hwrap{margin-bottom:18px}
+.hlbl{font-size:.56rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:7px;display:flex;align-items:center;gap:6px}
+.hlbl::after{content:'';flex:1;height:1px;background:var(--border)}
+.hchips{display:flex;gap:5px;flex-wrap:wrap}
+.hc{padding:4px 10px;border-radius:6px;font-family:var(--font-d);font-size:.66rem;font-weight:700}
+.hc-s{background:rgba(41,217,128,.12);color:var(--green)}
+.hc-m{background:rgba(245,197,66,.12);color:var(--gold)}
+.hc-h{background:rgba(162,89,255,.12);color:var(--secondary)}
+.hc-x{background:rgba(242,78,78,.12);color:var(--red)}
+
+/* ACC */
+.acc-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:18px}
+.acc-title{font-size:.58rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:10px}
+.acc-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.acc-g{font-size:.7rem;font-weight:600;color:var(--text2);min-width:76px}
+.acc-bg{flex:1;height:6px;background:var(--bg5);border-radius:3px;overflow:hidden}
+.acc-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--primary),var(--green));transition:width .5s ease}
+.acc-pct{font-family:var(--font-d);font-size:.68rem;font-weight:700;color:var(--green);min-width:56px;text-align:right}
+
+/* PLANE */
+.plane-spin{display:inline-block;animation:pf 2.6s ease-in-out infinite}
+@keyframes pf{0%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-7px) rotate(3deg)}100%{transform:translateY(0) rotate(-3deg)}}
+
+/* NO PARENT */
+.no-par{background:rgba(245,197,66,.06);border:1px solid rgba(245,197,66,.2);border-radius:10px;padding:16px;text-align:center;font-size:.78rem;color:var(--gold);line-height:1.8;margin-bottom:16px;display:none}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ LOCK SCREEN ═══════════════ -->
+<div id="lock">
+  <div class="lock-card">
+    <div class="lock-logo">✈ Pepeta<span>High</span></div>
+    <div class="lock-sub">Admin Access Only</div>
+    <span class="lock-icon">🔐</span>
+    <input class="lock-inp" type="password" id="pw" placeholder="••••••••"
+      maxlength="32" autocomplete="off"
+      onkeydown="if(event.key==='Enter')tryUnlock()">
+    <button class="lock-btn" onclick="tryUnlock()">Enter Admin</button>
+    <div class="lock-err" id="lerr"></div>
+    <div class="lock-att" id="latt"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ ADMIN UI ═══════════════ -->
+<nav class="nav" id="nav">
+  <div class="nav-logo">✈ Pepeta<span>High</span>
+    <span style="font-family:var(--font-b);font-size:.5rem;color:var(--text3);font-weight:400;margin-left:4px">Admin</span>
+  </div>
+  <div class="nav-r">
+    <span class="mode-pill pill-real" id="mpill">Real</span>
+    <button class="lock-btn-sm" onclick="doLock()">🔒 Lock</button>
+  </div>
+</nav>
+
+<div class="wrap" id="wrap">
+
+  <div class="no-par" id="nopar">
+    ⚠ Add this page as an iframe inside PepetaHigh<br>
+    so it can read the live Aviator engine.<br>
+    Rocket Crash runs independently and works standalone.
+  </div>
+
+  <!-- STATUS -->
+  <div class="status-row">
+    <div class="sp"><div class="sp-v" id="s-online" style="color:var(--green)">—</div><div class="sp-l">Online</div></div>
+    <div class="sp"><div class="sp-v" id="s-av" style="color:var(--primary)">—</div><div class="sp-l">AV Round</div></div>
+    <div class="sp"><div class="sp-v" id="s-rk" style="color:#f97316">—</div><div class="sp-l">RK Round</div></div>
+  </div>
+
+  <!-- ══ AVIATOR ══ -->
+  <div class="gsec">
+    <div class="ghdr">
+      <div class="g-icon" style="background:rgba(79,110,247,.1)"><span class="plane-spin">✈</span></div>
+      <div><div class="g-title">Aviator</div><div class="g-sub">Reads crash point directly from engine.js</div></div>
+      <span class="rbadge" id="av-badge">Round #—</span>
+    </div>
+    <div class="pbox av" id="av-box">
+      <div class="pstate">
+        <div class="sdot wait" id="av-dot"></div>
+        <span class="slbl" id="av-sl">Waiting…</span>
+        <span class="stmr" id="av-tmr"></span>
+      </div>
+      <div class="cmain">
+        <div class="clbl">Crash Point</div>
+        <div class="cval cv-idle" id="av-cv">—</div>
+        <div class="chint" id="av-hint" style="color:var(--text3)"></div>
+      </div>
+      <div class="lrow">
+        <span class="lr-l">Live Multiplier</span>
+        <span class="lr-v lv-idle" id="av-lm">—</span>
+      </div>
+      <div class="adv" id="av-adv" style="display:none"></div>
+    </div>
+  </div>
+  <div class="hwrap"><div class="hlbl">Aviator History</div><div class="hchips" id="av-hist"></div></div>
+
+  <!-- ══ ROCKET CRASH ══ -->
+  <div class="gsec">
+    <div class="ghdr">
+      <div class="g-icon" style="background:rgba(249,115,22,.1)">🚀</div>
+      <div><div class="g-title" style="color:#f97316">Rocket Crash</div><div class="g-sub">Mirrored engine — same algorithm</div></div>
+      <span class="rbadge" style="color:#f97316;border-color:rgba(249,115,22,.2);background:rgba(249,115,22,.06)" id="rk-badge">Round #—</span>
+    </div>
+    <div class="pbox rk" id="rk-box">
+      <div class="pstate">
+        <div class="sdot wait" id="rk-dot"></div>
+        <span class="slbl" id="rk-sl">Waiting…</span>
+        <span class="stmr" id="rk-tmr"></span>
+      </div>
+      <div class="cmain">
+        <div class="clbl">Crash Point</div>
+        <div class="cval cv-idle" id="rk-cv">—</div>
+        <div class="chint" id="rk-hint" style="color:var(--text3)"></div>
+      </div>
+      <div class="lrow">
+        <span class="lr-l">Live Multiplier</span>
+        <span class="lr-v lv-idle" id="rk-lm">—</span>
+      </div>
+      <div class="adv" id="rk-adv" style="display:none"></div>
+    </div>
+  </div>
+  <div class="hwrap"><div class="hlbl">Rocket History</div><div class="hchips" id="rk-hist"></div></div>
+
+  <!-- ACCURACY -->
+  <div class="acc-card">
+    <div class="acc-title">Rounds Predicted This Session</div>
+    <div class="acc-row">
+      <span class="acc-g">✈ Aviator</span>
+      <div class="acc-bg"><div class="acc-fill" id="av-bar" style="width:0%"></div></div>
+      <span class="acc-pct" id="av-acc">—</span>
+    </div>
+    <div class="acc-row">
+      <span class="acc-g">🚀 Rocket</span>
+      <div class="acc-bg"><div class="acc-fill" id="rk-bar" style="width:0%"></div></div>
+      <span class="acc-pct" id="rk-acc">—</span>
+    </div>
+    <div style="font-size:.6rem;color:var(--text3);margin-top:6px">
+      Crash point is always known before the round starts — 100% accurate by design.
+    </div>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+
+// ════════════════════════════════════════════
+//  ✏️  CHANGE YOUR PASSWORD HERE
+const PASS = 'pepeta2025';
+// ════════════════════════════════════════════
+
+const SK = 'ph_adm_ok';
+let attempts = 0, hardLocked = false;
+
+function tryUnlock() {
+  if (hardLocked) return;
+  const v = document.getElementById('pw').value;
+  if (v === PASS) {
+    sessionStorage.setItem(SK, '1');
+    show();
+  } else {
+    attempts++;
+    const inp = document.getElementById('pw');
+    inp.value = '';
+    inp.classList.add('err');
+    setTimeout(() => inp.classList.remove('err'), 380);
+    const left = 5 - attempts;
+    if (left <= 0) {
+      hardLocked = true;
+      document.getElementById('lerr').textContent = '🚫 Too many attempts. Refresh to retry.';
+      document.getElementById('latt').textContent = '';
+      inp.disabled = true;
+      document.querySelector('.lock-btn').disabled = true;
+    } else {
+      document.getElementById('lerr').textContent = 'Incorrect password.';
+      document.getElementById('latt').textContent = left + ' attempt' + (left === 1 ? '' : 's') + ' left';
+    }
+  }
+}
+
+function show() {
+  document.getElementById('lock').classList.add('gone');
+  document.getElementById('nav').classList.add('show');
+  document.getElementById('wrap').classList.add('show');
+  checkParent();
+  rkWait();
+  requestAnimationFrame(tick);
+}
+
+function doLock() {
+  sessionStorage.removeItem(SK);
+  document.getElementById('lock').classList.remove('gone');
+  document.getElementById('nav').classList.remove('show');
+  document.getElementById('wrap').classList.remove('show');
+  document.getElementById('pw').value = '';
+  document.getElementById('lerr').textContent = '';
+  document.getElementById('latt').textContent = '';
+}
+
+// Auto-unlock if session is still active
+if (sessionStorage.getItem(SK) === '1') show();
+
+// ════════════════════════════════════════════
+//  PARENT ENGINE (Aviator)
+// ════════════════════════════════════════════
+function isDemo()  { try { return parent.window.PH.getMode() === 'demo'; } catch(e) { return false; } }
+function getAvG()  { try { return isDemo() ? parent.window.G_demo : parent.window.G_real; } catch(e) { return null; } }
+
+function checkParent() {
+  try {
+    const ok = !!(parent.window.G_real || parent.window.G_demo);
+    document.getElementById('nopar').style.display = ok ? 'none' : 'block';
+  } catch(e) {
+    document.getElementById('nopar').style.display = 'block';
+  }
+}
+
+// ════════════════════════════════════════════
+//  ROCKET CRASH — exact mirror engine
+// ════════════════════════════════════════════
+const RK = { state:'wait', crashAt:1, mult:1, roundNum:1, hist:[], _t:null, _fs:null };
+let rkRounds = 0;
+
+function rkGen() {
+  if (!isDemo()) {
+    const r = Math.random();
+    if (r < 0.40) return parseFloat((1.00 + Math.random() * 0.95).toFixed(2));
+    if (r < 0.70) return parseFloat((1.95 + Math.random() * 3.00).toFixed(2));
+    if (r < 0.88) return parseFloat((4.95 + Math.random() * 15.0).toFixed(2));
+    if (r < 0.97) return parseFloat((19.95 + Math.random() * 80.0).toFixed(2));
+    return parseFloat((99.95 + Math.random() * 400).toFixed(2));
+  } else {
+    const r = Math.random();
+    if (r < 0.25) return parseFloat((1.00 + Math.random() * 0.85).toFixed(2));
+    if (r < 0.55) return parseFloat((1.85 + Math.random() * 4.00).toFixed(2));
+    if (r < 0.78) return parseFloat((5.85 + Math.random() * 20.0).toFixed(2));
+    if (r < 0.94) return parseFloat((25.85 + Math.random() * 74.0).toFixed(2));
+    return parseFloat((99.85 + Math.random() * 400).toFixed(2));
+  }
+}
+
+function rkWait() {
+  RK.state = 'wait'; RK.mult = 1;
+  RK.crashAt = rkGen(); // generated HERE → shown to admin immediately
+  if (RK._t) clearTimeout(RK._t);
+  RK._t = setTimeout(rkFly, 4000 + Math.random() * 3000);
+}
+function rkFly() {
+  RK.state = 'fly'; RK.mult = 1;
+  RK._fs = performance.now();
+  rkRounds++;
+  rkLoop();
+}
+function rkLoop() {
+  if (RK.state !== 'fly') return;
+  const el = performance.now() - RK._fs;
+  RK.mult = parseFloat(Math.max(1, Math.pow(1.06, (el / 1000) * 5.5)).toFixed(2));
+  if (RK.mult >= RK.crashAt) { RK.mult = RK.crashAt; rkCrash(); return; }
+  requestAnimationFrame(rkLoop);
+}
+function rkCrash() {
+  RK.state = 'crash';
+  RK.hist.unshift(parseFloat(RK.crashAt.toFixed(2)));
+  if (RK.hist.length > 20) RK.hist.pop();
+  RK.roundNum++;
+  setTimeout(rkWait, 2800);
+}
+
+// ════════════════════════════════════════════
+//  HELPERS
+// ════════════════════════════════════════════
+let avRounds = 0, avLastState = '';
+
+function cvCls(m) { return m < 2 ? 'cv-safe' : m < 5 ? 'cv-mid' : m < 20 ? 'cv-high' : 'cv-mega'; }
+function hcCls(m)  { return m < 2 ? 'hc-s' : m < 5 ? 'hc-m' : m < 20 ? 'hc-h' : 'hc-x'; }
+function hint(m) {
+  if (m <= 1.00) return '💥 Instant bust';
+  if (m < 1.5)   return '🔴 Very low — warn players';
+  if (m < 2)     return '🟡 Low round';
+  if (m < 5)     return '🟢 Decent — cash out early';
+  if (m < 20)    return '🔵 Mid-high round';
+  if (m < 100)   return '🟣 Big round — ride carefully';
+  return '🔥 MEGA round!';
+}
+function getAdv(cur, crash) {
+  if (!cur || !crash) return null;
+  const p = (cur / crash) * 100;
+  if (p < 45) return { cls:'a-safe',   txt: p < 22 ? '✅ Very early — safe zone' : '✅ Safe — watch closely' };
+  if (p < 78) return { cls:'a-warn',   txt: '⚠️ Approaching crash — consider cashing out' };
+  return           { cls:'a-danger', txt: '🚨 CRASH IMMINENT — cash out NOW' };
+}
+
+// ════════════════════════════════════════════
+//  RENDER AVIATOR
+// ════════════════════════════════════════════
+function renderAv() {
+  const G = getAvG();
+  const cv = document.getElementById('av-cv');
+  const dot= document.getElementById('av-dot');
+  const sl = document.getElementById('av-sl');
+  const hi = document.getElementById('av-hint');
+  const lm = document.getElementById('av-lm');
+  const adv= document.getElementById('av-adv');
+  const tmr= document.getElementById('av-tmr');
+  const box= document.getElementById('av-box');
+  document.getElementById('av-badge').textContent = G ? 'Round #' + (G.roundNum || 1) : 'Round #—';
+
+  if (!G) {
+    cv.textContent = '?'; cv.className = 'cval cv-idle';
+    sl.textContent = 'Engine not connected'; return;
+  }
+
+  const state = G.state, mult = G.mult || 1, crash = G.crashAt || 0;
+
+  if (state === 'fly' && avLastState === 'wait') avRounds++;
+  avLastState = state;
+
+  if (state === 'wait') {
+    dot.className = 'sdot wait'; sl.textContent = 'Waiting for next round…';
+    box.className = 'pbox av';
+    if (crash > 0) {
+      cv.textContent = crash.toFixed(2) + '×'; cv.className = 'cval ' + cvCls(crash);
+      hi.textContent = hint(crash); hi.style.color = '';
+    } else {
+      cv.textContent = '—'; cv.className = 'cval cv-idle'; hi.textContent = '';
+    }
+    lm.textContent = '—'; lm.className = 'lr-v lv-idle'; adv.style.display = 'none';
+    const secs = Math.max(0, Math.ceil((G.waitTimer || 0) / 1000));
+    tmr.textContent = secs > 0 ? 'in ' + secs + 's' : '';
+  }
+  if (state === 'fly') {
+    dot.className = 'sdot fly'; sl.textContent = '🛫 In flight'; box.className = 'pbox av';
+    if (crash > 0) { cv.textContent = crash.toFixed(2) + '×'; cv.className = 'cval ' + cvCls(crash); hi.textContent = hint(crash); }
+    lm.textContent = mult.toFixed(2) + '×'; lm.className = 'lr-v lv-av'; tmr.textContent = '';
+    const a = getAdv(mult, crash);
+    if (a) { adv.style.display = 'flex'; adv.className = 'adv ' + a.cls; adv.textContent = a.txt; }
+    else adv.style.display = 'none';
+  }
+  if (state === 'crash') {
+    dot.className = 'sdot crash'; sl.textContent = '💥 Crashed!'; box.className = 'pbox av bust';
+    const rec = G.crashAt || mult;
+    cv.textContent = rec.toFixed(2) + '×'; cv.className = 'cval cv-bust';
+    hi.textContent = '↑ Actual crash point'; hi.style.color = 'var(--red)';
+    lm.textContent = rec.toFixed(2) + '×'; lm.className = 'lr-v lv-crash';
+    adv.style.display = 'none'; tmr.textContent = '';
+  }
+
+  const hist = G.roundHist || [];
+  document.getElementById('av-hist').innerHTML = hist.length
+    ? hist.slice(0, 18).map(m => `<span class="hc ${hcCls(m)}">${parseFloat(m).toFixed(2)}×</span>`).join('')
+    : '<span style="font-size:.66rem;color:var(--text3)">No rounds yet…</span>';
+}
+
+// ════════════════════════════════════════════
+//  RENDER ROCKET
+// ════════════════════════════════════════════
+function renderRk() {
+  const cv = document.getElementById('rk-cv');
+  const dot= document.getElementById('rk-dot');
+  const sl = document.getElementById('rk-sl');
+  const hi = document.getElementById('rk-hint');
+  const lm = document.getElementById('rk-lm');
+  const adv= document.getElementById('rk-adv');
+  const box= document.getElementById('rk-box');
+  document.getElementById('rk-badge').textContent = 'Round #' + RK.roundNum;
+
+  const crash = RK.crashAt, mult = RK.mult;
+
+  if (RK.state === 'wait') {
+    dot.className = 'sdot wait'; sl.textContent = 'Waiting for next round…'; box.className = 'pbox rk';
+    cv.textContent = crash.toFixed(2) + '×'; cv.className = 'cval ' + cvCls(crash);
+    hi.textContent = hint(crash); hi.style.color = '';
+    lm.textContent = '—'; lm.className = 'lr-v lv-idle'; adv.style.display = 'none';
+  }
+  if (RK.state === 'fly') {
+    dot.className = 'sdot fly'; sl.textContent = '🚀 In flight'; box.className = 'pbox rk';
+    cv.textContent = crash.toFixed(2) + '×'; cv.className = 'cval ' + cvCls(crash);
+    hi.textContent = hint(crash);
+    lm.textContent = mult.toFixed(2) + '×'; lm.className = 'lr-v lv-rk';
+    const a = getAdv(mult, crash);
+    if (a) { adv.style.display = 'flex'; adv.className = 'adv ' + a.cls; adv.textContent = a.txt; }
+    else adv.style.display = 'none';
+  }
+  if (RK.state === 'crash') {
+    dot.className = 'sdot crash'; sl.textContent = '💥 Crashed!'; box.className = 'pbox rk bust';
+    cv.textContent = crash.toFixed(2) + '×'; cv.className = 'cval cv-bust';
+    hi.textContent = '↑ Actual crash point'; hi.style.color = 'var(--red)';
+    lm.textContent = crash.toFixed(2) + '×'; lm.className = 'lr-v lv-crash';
+    adv.style.display = 'none';
+  }
+
+  document.getElementById('rk-hist').innerHTML = RK.hist.length
+    ? RK.hist.slice(0, 18).map(m => `<span class="hc ${hcCls(m)}">${parseFloat(m).toFixed(2)}×</span>`).join('')
+    : '<span style="font-size:.66rem;color:var(--text3)">No rounds yet…</span>';
+}
+
+// ════════════════════════════════════════════
+//  STATUS + ACCURACY
+// ════════════════════════════════════════════
+function renderStatus() {
+  try {
+    const ct = parent.window.PlayerCount ? parent.window.PlayerCount.get() : 0;
+    document.getElementById('s-online').textContent = ct.toLocaleString();
+  } catch(e) { document.getElementById('s-online').textContent = '—'; }
+
+  const G = getAvG();
+  document.getElementById('s-av').textContent = G ? '#' + (G.roundNum || 1) : '—';
+  document.getElementById('s-rk').textContent = '#' + RK.roundNum;
+
+  const dm = isDemo();
+  const p = document.getElementById('mpill');
+  p.textContent = dm ? '🎮 Demo' : '💰 Real';
+  p.className = 'mode-pill ' + (dm ? 'pill-demo' : 'pill-real');
+
+  // Accuracy (always 100% — we generate/read before flight)
+  document.getElementById('av-bar').style.width  = avRounds > 0 ? '100%' : '0%';
+  document.getElementById('av-acc').textContent  = avRounds > 0 ? avRounds + ' rounds · 100%' : '—';
+  document.getElementById('rk-bar').style.width  = rkRounds > 0 ? '100%' : '0%';
+  document.getElementById('rk-acc').textContent  = rkRounds > 0 ? rkRounds + ' rounds · 100%' : '—';
+}
+
+// ════════════════════════════════════════════
+//  MAIN LOOP
+// ════════════════════════════════════════════
+function tick() {
+  if (sessionStorage.getItem(SK) !== '1') return;
+  renderAv();
+  renderRk();
+  renderStatus();
+  requestAnimationFrame(tick);
+}
+</script>
+</body>
+</html>

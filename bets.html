@@ -408,7 +408,11 @@ function renderHistBar(){
   if(demo||(!isAv&&!isRk)){hc.innerHTML='';return;}
   var hist=[];
   if(isAv){ try{hist=parent.window.G_real?parent.window.G_real.roundHist:[];}catch(e){} }
-  else { hist=_rkHist; }
+  else {
+  // Always show real-money rocket history from localStorage, not demo
+  try{ hist=JSON.parse(localStorage.getItem('ph_hist_rocket_real')||'[]'); }catch(e){ hist=_rkHist; }
+  if(!hist.length) hist=_rkHist; // fallback to in-memory if nothing saved yet
+  }
   if(!hist||!hist.length){hc.innerHTML='<span style="font-size:.62rem;color:var(--text3)">No rounds yet...</span>';return;}
   hc.innerHTML=hist.slice(0,26).map(function(m){
     var v=+m, c=v<2?'hc-safe':v<5?'hc-mid':v<10?'hc-high':'hc-mega';

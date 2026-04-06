@@ -68,13 +68,13 @@ body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bott
 .badge-new{background:rgba(162,89,255,.1);color:var(--secondary);border:1px solid rgba(162,89,255,.2)}
 .badge-soon{background:var(--bg4);color:var(--text3);border:1px solid var(--border)}
 @keyframes planeFly{0%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-12px) rotate(4deg)}100%{transform:translateY(0) rotate(-4deg)}}
+@keyframes rotateSun{to{transform:rotate(360deg)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes diceBounce{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-8px) rotate(20deg)}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body>
-
 
 <div class="stats-row">
   <div class="stat-cell">
@@ -102,13 +102,13 @@ body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bott
     <div class="jp-val" id="jp-banner-val">5,000×</div>
     <div class="jp-sub">Up for grabs · Resets daily</div>
   </div>
-  <button class="jp-play" onclick="parent.openGameModal()">Play →</button>
+  <button class="jp-play" onclick="safeOpen('openGameModal')">Play →</button>
 </div>
 
 <div class="sec-hdr" style="padding-top:4px">
   <span class="sec-title">Featured</span>
 </div>
-<div class="feat-card" onclick="parent.openGameModal()">
+<div class="feat-card" onclick="safeOpen('openGameModal')">
   <div class="feat-bg">
     <div class="feat-rays"></div>
     <div class="feat-plane">✈</div>
@@ -123,7 +123,7 @@ body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bott
       <div class="feat-stat"><div class="feat-stat-val" id="feat-max">5,000×</div><div class="feat-stat-lbl">Max Win</div></div>
       <div class="feat-stat"><div class="feat-stat-val">97%</div><div class="feat-stat-lbl">RTP</div></div>
       <div class="feat-stat"><div class="feat-stat-val">KSh 20</div><div class="feat-stat-lbl">Min Bet</div></div>
-      <button class="feat-play">▶ Play</button>
+      <button class="feat-play" onclick="event.stopPropagation();safeOpen('openGameModal')">▶ Play</button>
     </div>
   </div>
 </div>
@@ -139,7 +139,7 @@ body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bott
 </div>
 <div class="game-grid">
 
-  <div class="gc" onclick="parent.openFortuneSpinModal()">
+  <div class="gc" onclick="safeOpen('openFortuneSpinModal')">
     <div class="gc-thumb" style="background:linear-gradient(145deg,#1a0e00,#2d1a00)">
       <span style="animation:spin 4s linear infinite;display:inline-block">🎡</span>
       <span style="position:absolute;top:6px;right:6px;background:var(--secondary);color:#fff;font-size:.52rem;font-weight:700;padding:2px 6px;border-radius:3px">NEW</span>
@@ -151,7 +151,7 @@ body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bott
     </div>
   </div>
 
-  <div class="gc" onclick="parent.openRocketCrashModal()">
+  <div class="gc" onclick="safeOpen('openRocketCrashModal')">
     <div class="gc-thumb" style="background:linear-gradient(145deg,#051020,#0a2010)">
       <span style="font-size:2.4rem;animation:planeFly 2.5s ease-in-out infinite;display:inline-block">🚀</span>
     </div>
@@ -162,7 +162,7 @@ body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bott
     </div>
   </div>
 
-  <div class="gc" onclick="parent.openDiceModal()">
+  <div class="gc" onclick="safeOpen('openDiceModal')">
     <div class="gc-thumb" style="background:linear-gradient(145deg,#120824,#1e0a36)">
       <span style="font-size:2.4rem;animation:diceBounce 2s ease-in-out infinite;display:inline-block">🎲</span>
     </div>
@@ -173,7 +173,7 @@ body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bott
     </div>
   </div>
 
-  <div class="gc" onclick="parent.openMinesModal()">
+  <div class="gc" onclick="safeOpen('openMinesModal')">
     <div class="gc-thumb" style="background:linear-gradient(145deg,#0a1a0a,#0d200d)">
       <span style="font-size:2.4rem;display:inline-block">💣</span>
     </div>
@@ -190,27 +190,65 @@ body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bott
 <script src="utils.js"></script>
 <script>
 'use strict';
-if(sessionStorage.getItem('ph_theme')==='light') document.body.classList.add('theme-light');
 
-const WIN_GAMES=['✈ Aviator','🚀 Rocket','🎡 Fortune','🎲 Dice'];
-const WIN_MULTS=[1.5,2.1,3.4,5.8,10.2,15.6,24.8,50.3,100,200];
-const WIN_BETS=[50,100,200,500,1000,2000,5000];
+/* ── Theme ── */
+if (sessionStorage.getItem('ph_theme') === 'light') document.body.classList.add('theme-light');
 
-function genWins(){
-  const wins=[];
-  for(let i=0;i<12;i++){
-    const bet=WIN_BETS[Math.floor(Math.random()*WIN_BETS.length)];
-    const mult=WIN_MULTS[Math.floor(Math.random()*WIN_MULTS.length)];
-    const nm=fakeName();
-    wins.push({game:WIN_GAMES[Math.floor(Math.random()*WIN_GAMES.length)],player:maskName(nm),bet,mult,won:Math.round(bet*mult)});
+/* ── Safe modal opener ──────────────────────────────────────────────────────
+   Tries parent.fn() first (same-origin iframe).
+   Falls back to postMessage for cross-origin or when fn not yet defined.
+   Always logs a warning in dev so you know what fired.
+────────────────────────────────────────────────────────────────────────── */
+function safeOpen(fnName) {
+  try {
+    if (window.parent && typeof window.parent[fnName] === 'function') {
+      window.parent[fnName]();
+      return;
+    }
+  } catch (e) {
+    // cross-origin parent — fall through to postMessage
+  }
+  // postMessage fallback (parent must listen for { action: 'openModal', modal: fnName })
+  try {
+    window.parent.postMessage({ action: 'openModal', modal: fnName }, '*');
+  } catch (e) {
+    console.warn('[PepetaHigh] Could not call', fnName, '— no parent handler found.', e);
+  }
+}
+
+/* ── Fake win data ── */
+const WIN_GAMES = ['✈ Aviator', '🚀 Rocket', '🎡 Fortune', '🎲 Dice'];
+const WIN_MULTS = [1.5, 2.1, 3.4, 5.8, 10.2, 15.6, 24.8, 50.3, 100, 200];
+const WIN_BETS  = [50, 100, 200, 500, 1000, 2000, 5000];
+
+function fakeName() {
+  /* pulls from parent util if available, else returns a placeholder */
+  try { return window.parent.fakeName ? window.parent.fakeName() : 'Player'; } catch(e) { return 'Player'; }
+}
+function maskName(n) {
+  try { return window.parent.maskName ? window.parent.maskName(n) : n.slice(0,3) + '***'; } catch(e) { return n; }
+}
+
+function genWins() {
+  const wins = [];
+  for (let i = 0; i < 12; i++) {
+    const bet  = WIN_BETS[Math.floor(Math.random() * WIN_BETS.length)];
+    const mult = WIN_MULTS[Math.floor(Math.random() * WIN_MULTS.length)];
+    const nm   = fakeName();
+    wins.push({
+      game:   WIN_GAMES[Math.floor(Math.random() * WIN_GAMES.length)],
+      player: maskName(nm),
+      bet, mult,
+      won: Math.round(bet * mult)
+    });
   }
   return wins;
 }
 
-function renderWins(){
-  const el=document.getElementById('winsScroll');
-  if(!el)return;
-  el.innerHTML=genWins().map(w=>`
+function renderWins() {
+  const el = document.getElementById('winsScroll');
+  if (!el) return;
+  el.innerHTML = genWins().map(w => `
     <div class="win-card">
       <div class="win-card-game">${w.game}</div>
       <div class="win-card-player">${w.player}</div>
@@ -220,23 +258,36 @@ function renderWins(){
   `).join('');
 }
 
-function upLive(){
-  try{
-    const jmax=(parent.window.JACKPOT_MAX||5000).toLocaleString()+'×';
-    ['jp-max','jp-banner-val','feat-max'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=jmax;});
-  }catch(e){}
+/* ── Live stat syncs ── */
+function upLive() {
+  try {
+    const jmax = (window.parent.JACKPOT_MAX || 5000).toLocaleString() + '×';
+    ['jp-max', 'jp-banner-val', 'feat-max'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = jmax;
+    });
+  } catch (e) { /* cross-origin — silently skip */ }
 }
-function upOnline(){
-  try{
-    const ct=parent.PlayerCount.get().toLocaleString();
-    ['online-ct','stat-online'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=ct;});
-  }catch(e){}
+
+function upOnline() {
+  try {
+    const ct = window.parent.PlayerCount && window.parent.PlayerCount.get
+      ? window.parent.PlayerCount.get().toLocaleString()
+      : '—';
+    ['online-ct', 'stat-online'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = ct;
+    });
+  } catch (e) { /* cross-origin — silently skip */ }
 }
-function onTabVisible(){upLive();upOnline();renderWins();}
-function onAuthChange(){upLive();}
-setInterval(renderWins,12000);
-setInterval(()=>{upLive();upOnline();},4000);
-upLive();upOnline();renderWins();
+
+/* ── Init & intervals ── */
+upLive();
+upOnline();
+renderWins();
+
+setInterval(renderWins, 12000);
+setInterval(() => { upLive(); upOnline(); }, 4000);
 </script>
 </body>
 </html>

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Rocket Crash Predictor — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#02040e;--surface:#04060f;--surface2:#06091a;--border:#0f1530;
+  --text:#e8ecff;--text2:#6b7299;--text3:#2e3455;
+  --orange:#f97316;--red:#f24e4e;--green:#29d980;--gold:#f5c542;
+  --blue:#4f6ef7;--purple:#a259ff;
+}
+body{background:var(--bg);font-family:'Space Grotesk',sans-serif;color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(249,115,22,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(249,115,22,.025) 1px,transparent 1px);background-size:36px 36px;pointer-events:none}
+body::after{content:'';position:fixed;z-index:0;width:500px;height:500px;bottom:-200px;right:-100px;background:radial-gradient(circle,rgba(249,115,22,.05) 0%,transparent 70%);pointer-events:none}
+.wrap{position:relative;z-index:1;max-width:700px;margin:0 auto;padding:24px 16px 60px}
+
+/* Nav */
+.nav{display:flex;align-items:center;gap:12px;margin-bottom:28px;padding-bottom:18px;border-bottom:1px solid var(--border)}
+.back-btn{background:none;border:1px solid var(--border);color:var(--text2);font-family:'Space Grotesk',sans-serif;font-size:.78rem;padding:6px 12px;border-radius:8px;cursor:pointer;transition:all .15s}
+.back-btn:hover{border-color:var(--orange);color:var(--orange)}
+.nav-title{font-family:'Orbitron',monospace;font-size:.9rem;font-weight:700;letter-spacing:.06em}
+.nav-title span{color:var(--orange)}
+.admin-badge{margin-left:auto;background:rgba(242,78,78,.1);border:1px solid rgba(242,78,78,.3);color:var(--red);font-size:.6rem;font-weight:700;letter-spacing:.15em;padding:4px 10px;border-radius:20px}
+
+/* ── CONNECTION STATUS ── */
+.conn-bar{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:18px;font-size:.72rem}
+.conn-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:background .3s}
+.conn-dot.live{background:var(--green);box-shadow:0 0 8px var(--green);animation:connPulse 1.4s ease infinite}
+.conn-dot.dead{background:var(--red)}
+.conn-dot.searching{background:var(--gold);animation:connPulse .8s ease infinite}
+@keyframes connPulse{0%,100%{opacity:1}50%{opacity:.3}}
+.conn-label{font-weight:700;transition:color .3s}
+.conn-label.live{color:var(--green)}
+.conn-label.dead{color:var(--red)}
+.conn-label.searching{color:var(--gold)}
+.conn-sub{color:var(--text3);margin-left:auto;font-size:.64rem}
+
+/* Phase badge */
+.phase-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;font-size:.7rem;font-weight:700;margin-bottom:16px}
+.phase-badge.wait{background:rgba(245,197,66,.1);border:1px solid rgba(245,197,66,.25);color:var(--gold)}
+.phase-badge.fly{background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25);color:var(--orange)}
+.phase-badge.crash{background:rgba(242,78,78,.1);border:1px solid rgba(242,78,78,.25);color:var(--red)}
+.phase-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:blink 1.2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* Countdown ring */
+.countdown-ring{width:70px;height:70px;margin:0 auto 16px;position:relative;display:flex;align-items:center;justify-content:center}
+.countdown-ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.ring-track{fill:none;stroke:rgba(255,255,255,.05);stroke-width:4}
+.ring-fill{fill:none;stroke:var(--gold);stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .1s linear}
+.countdown-num{font-family:'Orbitron',monospace;font-size:1.2rem;font-weight:700;color:var(--gold);position:relative;z-index:1}
+
+/* Prediction box */
+.pred-box{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:28px 24px;margin-bottom:20px;text-align:center;position:relative;overflow:hidden}
+.pred-box::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(249,115,22,.07) 0%,transparent 65%);pointer-events:none}
+.state-lbl{font-size:.6rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+.pred-val{font-family:'Orbitron',monospace;font-size:5rem;font-weight:900;line-height:1;background:linear-gradient(135deg,#f97316,#ef4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;transition:all .3s ease;margin-bottom:6px}
+.pred-val.green{background:linear-gradient(135deg,#29d980,#00c9a7);-webkit-background-clip:text;background-clip:text}
+.pred-val.red{background:linear-gradient(135deg,#f24e4e,#ff8c42);-webkit-background-clip:text;background-clip:text}
+.pred-val.gold{background:linear-gradient(135deg,#f5c542,#ff9500);-webkit-background-clip:text;background-clip:text}
+.pred-val.orange{background:linear-gradient(135deg,#f97316,#fdba74);-webkit-background-clip:text;background-clip:text}
+.pred-sub{font-size:.72rem;color:var(--text2)}
+.conf-wrap{margin-top:18px}
+.conf-label{display:flex;justify-content:space-between;font-size:.66rem;color:var(--text3);margin-bottom:6px}
+.conf-bar-bg{height:4px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden}
+.conf-bar-fill{height:100%;border-radius:2px;transition:width .6s ease;background:linear-gradient(90deg,#f97316,#ef4444)}
+
+/* Live mult */
+.live-mult{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
+.lm-label{font-size:.66rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em}
+.lm-val{font-family:'Orbitron',monospace;font-size:1.6rem;font-weight:900;color:var(--orange)}
+.lm-val.crash-color{color:var(--red)}
+.rocket-anim{font-size:1.8rem;animation:rocketFly 2s ease-in-out infinite}
+@keyframes rocketFly{0%,100%{transform:translateY(0) rotate(45deg)}50%{transform:translateY(-7px) rotate(40deg)}}
+
+/* Stats */
+.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.stat-val{font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:3px}
+.stat-lbl{font-size:.6rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em}
+
+/* History */
+.hist-section{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:20px}
+.hist-title{font-size:.62rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+.hist-chips{display:flex;flex-wrap:wrap;gap:6px}
+.hchip{padding:4px 10px;border-radius:6px;font-family:'Orbitron',monospace;font-size:.68rem;font-weight:700}
+.hc-bust{background:rgba(242,78,78,.1);color:var(--red)}
+.hc-safe{background:rgba(41,217,128,.1);color:var(--green)}
+.hc-mid{background:rgba(245,197,66,.1);color:var(--gold)}
+.hc-high{background:rgba(162,89,255,.12);color:var(--purple)}
+
+.refresh-info{font-size:.68rem;color:var(--text3);text-align:center;margin-top:8px}
+
+@keyframes glowOrange{0%,100%{box-shadow:0 0 0 rgba(249,115,22,0)}50%{box-shadow:0 0 40px rgba(249,115,22,.2)}}
+.pred-box.flying{animation:glowOrange 2s ease infinite}
+@keyframes glowRed{0%,100%{box-shadow:0 0 0 rgba(242,78,78,0)}50%{box-shadow:0 0 40px rgba(242,78,78,.25)}}
+.pred-box.crashed{animation:glowRed 1s ease infinite}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav class="nav">
+    <button class="back-btn" onclick="location.href='admin-index.html'">← Back</button>
+    <div class="nav-title">🚀 Rocket <span>Predictor</span></div>
+    <div class="admin-badge">ADMIN</div>
+  </nav>
+
+  <!-- CONNECTION STATUS BAR -->
+  <div class="conn-bar">
+    <div class="conn-dot searching" id="connDot"></div>
+    <span class="conn-label searching" id="connLabel">Connecting to live game…</span>
+    <span class="conn-sub" id="connSub">Waiting for bridge signal</span>
+  </div>
+
+  <!-- Phase badge -->
+  <div style="text-align:center;margin-bottom:16px">
+    <span class="phase-badge wait" id="phaseBadge">
+      <span class="phase-dot"></span>
+      <span id="phaseText">Waiting…</span>
+    </span>
+  </div>
+
+  <!-- Countdown ring -->
+  <div class="countdown-ring" id="countdownRing">
+    <svg viewBox="0 0 70 70" xmlns="http://www.w3.org/2000/svg">
+      <circle class="ring-track" cx="35" cy="35" r="30"/>
+      <circle class="ring-fill" id="ringFill" cx="35" cy="35" r="30"
+        stroke-dasharray="188.5" stroke-dashoffset="0"/>
+    </svg>
+    <div class="countdown-num" id="countdownNum">—</div>
+  </div>
+
+  <!-- Prediction box -->
+  <div class="pred-box" id="predBox">
+    <div class="state-lbl" id="predLabel">NEXT ROUND PREDICTION</div>
+    <div class="pred-val orange" id="predVal">—</div>
+    <div class="pred-sub" id="predSub">Waiting for live game connection…</div>
+    <div class="conf-wrap">
+      <div class="conf-label"><span>Confidence</span><span id="confPct">—</span></div>
+      <div class="conf-bar-bg"><div class="conf-bar-fill" id="confFill" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <!-- Live multiplier -->
+  <div class="live-mult" id="liveMultWrap" style="display:none">
+    <div>
+      <div class="lm-label">Live Multiplier</div>
+      <div class="lm-val" id="liveMult">1.00×</div>
+    </div>
+    <div class="rocket-anim" id="rocketIcon">🚀</div>
+    <div style="text-align:right">
+      <div class="lm-label">Predicted Crash</div>
+      <div style="font-family:'Orbitron',monospace;font-size:1rem;font-weight:700;color:var(--orange)" id="liveTarget">—</div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card"><div class="stat-val" id="statRounds">0</div><div class="stat-lbl">Rounds Tracked</div></div>
+    <div class="stat-card"><div class="stat-val" id="statAvg" style="color:var(--orange)">—</div><div class="stat-lbl">Avg Multiplier</div></div>
+    <div class="stat-card"><div class="stat-val" id="statHigh" style="color:var(--gold)">—</div><div class="stat-lbl">Session High</div></div>
+  </div>
+
+  <!-- History -->
+  <div class="hist-section">
+    <div class="hist-title">Round History</div>
+    <div class="hist-chips" id="histChips"><span style="font-size:.72rem;color:var(--text3)">No rounds yet…</span></div>
+  </div>
+
+  <div class="refresh-info">🔄 Auto-synced · <span id="syncTime">—</span></div>
+
+</div>
+<script>
+'use strict';
+
+const CHANNEL  = 'ph_rk_bridge';
+const LS_KEY   = 'ph_rk_sync';
+const STALE_MS = 2000;
+const WAIT_DUR = 5000; // must match your rocket game's wait duration
+
+let _data      = null;
+let _lastMsg   = 0;
+let _history   = [];
+let _sessionHigh = 0;
+
+try { _history = JSON.parse(localStorage.getItem('ph_admin_rk_hist') || '[]'); } catch(e) {}
+
+// BroadcastChannel listener
+let bc = null;
+try {
+  bc = new BroadcastChannel(CHANNEL);
+  bc.onmessage = (e) => handleData(e.data);
+} catch(e) {}
+
+// localStorage cross-tab listener
+window.addEventListener('storage', (e) => {
+  if (e.key === LS_KEY && e.newValue) {
+    try { handleData(JSON.parse(e.newValue)); } catch(err) {}
+  }
+});
+
+// Poll fallback
+setInterval(() => {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (d && d.ts && Date.now() - d.ts < 500) handleData(d);
+  } catch(e) {}
+}, 100);
+
+let _prevState = null;
+
+function handleData(d) {
+  if (!d || d.game !== 'rocket') return;
+  _data    = d;
+  _lastMsg = Date.now();
+
+  if (_prevState === 'fly' && d.state === 'crash') {
+    const v = parseFloat((d.crashAt || 0).toFixed(2));
+    if (v > 0) {
+      _history.unshift(v);
+      if (_history.length > 40) _history.pop();
+      if (v > _sessionHigh) _sessionHigh = v;
+      try { localStorage.setItem('ph_admin_rk_hist', JSON.stringify(_history)); } catch(e) {}
+    }
+  }
+  _prevState = d.state;
+}
+
+// Confidence
+function getConf(v) {
+  if (v <= 1.00) return {pct:95, label:'Instant crash — very common'};
+  if (v <= 1.98) return {pct:88, label:'Very High — sub-2× likely'};
+  if (v <= 3.99) return {pct:70, label:'High'};
+  if (v <= 9.99) return {pct:55, label:'Moderate'};
+  if (v <= 24.9) return {pct:38, label:'Low'};
+  if (v <= 49.9) return {pct:25, label:'Low — rare'};
+  return {pct:10, label:'Very Low — exceptional'};
+}
+
+function multColor(v) {
+  if (v <= 1.98) return 'red';
+  if (v <= 3.99) return 'orange';
+  if (v <= 9.99) return 'green';
+  return 'gold';
+}
+
+function chipClass(v) {
+  if (v < 1.5) return 'hc-bust';
+  if (v < 3)   return 'hc-safe';
+  if (v < 10)  return 'hc-mid';
+  return 'hc-high';
+}
+
+function fmt(v) { return parseFloat(v).toFixed(2) + '×'; }
+
+function render() {
+  const now  = Date.now();
+  const connected = _lastMsg > 0 && (now - _lastMsg) < STALE_MS;
+
+  // Connection bar
+  const dot = document.getElementById('connDot');
+  const lbl = document.getElementById('connLabel');
+  const sub = document.getElementById('connSub');
+
+  if (connected && _data) {
+    dot.className  = 'conn-dot live';
+    lbl.className  = 'conn-label live';
+    lbl.textContent = '🟢 Live — synced with game engine';
+    sub.textContent = 'Round #' + (_data.roundNum || '—');
+  } else if (_lastMsg === 0) {
+    dot.className  = 'conn-dot searching';
+    lbl.className  = 'conn-label searching';
+    lbl.textContent = '⏳ Connecting to live game…';
+    sub.textContent = 'Add bridge-rocket.js to your game page';
+  } else {
+    dot.className  = 'conn-dot dead';
+    lbl.className  = 'conn-label dead';
+    lbl.textContent = '🔴 Disconnected — signal lost';
+    sub.textContent = 'Last seen ' + Math.round((now - _lastMsg) / 1000) + 's ago';
+  }
+
+  if (!connected || !_data) {
+    document.getElementById('syncTime').textContent = new Date().toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    return;
+  }
+
+  const state   = _data.state;
+  const crashAt = _data.crashAt || 0;
+  const mult    = _data.mult    || 1;
+  const wTimer  = _data.waitTimer || 0;
+
+  const badge   = document.getElementById('phaseBadge');
+  const phase   = document.getElementById('phaseText');
+  const cRing   = document.getElementById('countdownRing');
+  const lmWrap  = document.getElementById('liveMultWrap');
+  const predBox = document.getElementById('predBox');
+  const predVal = document.getElementById('predVal');
+  const predLbl = document.getElementById('predLabel');
+  const predSub = document.getElementById('predSub');
+  const confFill= document.getElementById('confFill');
+  const confPct = document.getElementById('confPct');
+  const ringFill= document.getElementById('ringFill');
+  const countNum= document.getElementById('countdownNum');
+  const liveMult= document.getElementById('liveMult');
+  const liveTgt = document.getElementById('liveTarget');
+  const rocket  = document.getElementById('rocketIcon');
+  const CIRC    = 188.5;
+
+  // WAIT
+  if (state === 'wait') {
+    badge.className = 'phase-badge wait';
+    phase.textContent = 'Countdown — Next Round';
+    predBox.className = 'pred-box';
+    cRing.style.display  = 'flex';
+    lmWrap.style.display = 'none';
+
+    const secs = Math.max(0, Math.ceil(wTimer / 1000));
+    countNum.textContent = secs;
+    const pct = Math.min(1, wTimer / WAIT_DUR);
+    ringFill.setAttribute('stroke-dashoffset', (CIRC * pct).toFixed(1));
+
+    if (crashAt > 0) {
+      const conf = getConf(crashAt);
+      predLbl.textContent  = '⚡ NEXT ROUND PREDICTION';
+      predVal.textContent  = fmt(crashAt);
+      predVal.className    = 'pred-val ' + multColor(crashAt);
+      predSub.textContent  = 'Crash will happen at this multiplier';
+      confFill.style.width = conf.pct + '%';
+      confPct.textContent  = conf.pct + '% · ' + conf.label;
+    }
+  }
+
+  // FLY
+  else if (state === 'fly') {
+    badge.className = 'phase-badge fly';
+    phase.textContent = '🚀 In Flight';
+    predBox.className = 'pred-box flying';
+    cRing.style.display  = 'none';
+    lmWrap.style.display = 'flex';
+
+    liveMult.textContent  = fmt(mult);
+    liveMult.className    = 'lm-val';
+    liveTgt.textContent   = fmt(crashAt);
+    rocket.textContent    = '🚀';
+
+    predLbl.textContent   = 'TARGET CRASH';
+    predVal.textContent   = fmt(crashAt);
+    predVal.className     = 'pred-val ' + multColor(crashAt);
+    predSub.textContent   = 'Round in progress — cash out before this multiplier';
+    const conf = getConf(crashAt);
+    confFill.style.width  = conf.pct + '%';
+    confPct.textContent   = conf.pct + '% confidence';
+  }
+
+  // CRASH
+  else if (state === 'crash') {
+    badge.className = 'phase-badge crash';
+    phase.textContent = '💥 Crashed!';
+    predBox.className = 'pred-box crashed';
+    cRing.style.display  = 'none';
+    lmWrap.style.display = 'flex';
+
+    liveMult.textContent  = fmt(crashAt);
+    liveMult.className    = 'lm-val crash-color';
+    liveTgt.textContent   = '—';
+    rocket.textContent    = '💥';
+
+    predLbl.textContent   = 'CRASHED AT';
+    predVal.textContent   = fmt(crashAt);
+    predVal.className     = 'pred-val red';
+    predSub.textContent   = 'Round complete — next prediction incoming…';
+    confFill.style.width  = '100%';
+    confPct.textContent   = 'Round closed';
+  }
+
+  // Stats
+  const hist = (_data.hist && _data.hist.length) ? _data.hist : _history;
+  if (hist.length) {
+    const src = _history.length ? _history : hist;
+    const avg = src.reduce((s, v) => s + v, 0) / src.length;
+    document.getElementById('statRounds').textContent = src.length;
+    document.getElementById('statAvg').textContent    = avg.toFixed(2) + '×';
+    document.getElementById('statHigh').textContent   = _sessionHigh > 0 ? _sessionHigh.toFixed(2) + '×' : (Math.max(...src)).toFixed(2) + '×';
+  }
+
+  // History chips
+  const hc = document.getElementById('histChips');
+  if (hist.length) {
+    hc.innerHTML = hist.slice(0, 30).map(v =>
+      `<span class="hchip ${chipClass(v)}">${parseFloat(v).toFixed(2)}×</span>`
+    ).join('');
+  } else {
+    hc.innerHTML = '<span style="font-size:.72rem;color:var(--text3)">No rounds yet…</span>';
+  }
+
+  document.getElementById('syncTime').textContent = new Date().toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+setInterval(render, 100);
+render();
+</script>
+</body>
+</html>

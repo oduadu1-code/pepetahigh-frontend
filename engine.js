@@ -83,9 +83,12 @@ function randomCashoutTarget() {
 
 // ── World factory ─────────────────────────────────────────────────────
 function makeWorld(mode) {
+  const savedHist = (() => {
+    try { return JSON.parse(localStorage.getItem('ph_hist_' + mode) || '[]'); } catch(e) { return []; }
+  })();
   return {
     mode, state:'idle', mult:1.00, crashAt:1.00, elapsed:0, lastTs:0,
-    waitTimer:0, fillPct:0, roundNum:1, roundHist:[],
+    waitTimer:0, fillPct:0, roundNum:1, roundHist:savedHist,
     roundBets:[], pendingBets:[], placementInt:null,
     myBets:[
       {amt:100,auto:'',autoOn:false,autoBet:false,placed:false,active:false,cashedOut:false,won:0},
@@ -213,6 +216,7 @@ function doCrash(G) {
   const recorded = parseFloat(G.crashAt.toFixed(2));
   G.roundHist.unshift(recorded);
   if (G.roundHist.length > 30) G.roundHist.pop();
+  try { localStorage.setItem('ph_hist_' + G.mode, JSON.stringify(G.roundHist)); } catch(e) {}
   if (G.onCrash) G.onCrash(recorded);
   setTimeout(() => { G.roundNum++; doWait(G, 5000); }, 3200);
 }
