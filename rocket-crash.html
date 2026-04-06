@@ -814,6 +814,40 @@ startFakeChat();
 renderHist();
 startWait();
 </script>
+<script>
+// ── PH Admin Bridge: expose live game state to bridge-rocket.js ──────
+// This runs every 80ms and writes the current round state into
+// window.PH_ROCKET so the bridge can pick it up and relay it to
+// the admin predictor panel via BroadcastChannel + localStorage.
+(function () {
+  'use strict';
+
+  // These variable names must match exactly what's in your game closure.
+  // In your rocket-crash.html they are: _state, _mult, _targetCrash,
+  // _waitRemaining, HIST  — all declared with `let` / `const` at top scope.
+  //
+  // Because they live inside a <script> tag on the same page (not a module),
+  // they ARE accessible via window in most browsers when referenced directly.
+  // If your build tool wraps them in a module, you'll need to assign them
+  // to window manually inside startWait / startFlight / doBust.
+
+  setInterval(function () {
+    try {
+      window.PH_ROCKET = {
+        state:     _state,           // 'wait' | 'fly' | 'bust'
+        mult:      _mult,            // current live multiplier (during fly)
+        crashAt:   _targetCrash,     // predicted/actual crash multiplier
+        waitTimer: _waitRemaining,   // ms remaining in wait countdown
+        hist:      (typeof HIST !== 'undefined' ? HIST : []).slice(0, 30),
+      };
+    } catch (e) {
+      // Variables not yet in scope — safe to ignore, bridge waits
+    }
+  }, 80);
+
+  console.info('[PH Bridge] PH_ROCKET sync active');
+})();
+</script>
 <script src="bridge-rocket.js"></script>
 </body>
 </html>
