@@ -1,95 +1,57 @@
-/**
- * PepetaHigh — Aviator Admin Bridge  v5 (FIXED)
- * ─────────────────────────────────────────────
- * Drop this at the bottom of aviator.html:
- *   <script src="bridge-aviator.js"></script>
- *
- * Broadcasts every 80 ms via BroadcastChannel + localStorage.
- * The admin page listens on both channels simultaneously.
- *
- * KEY FIX: crashAt is always broadcast — including during 'wait'
- * so the admin can show the NEXT round prediction before it starts.
- */
+// ═══════════════════════════════════════════════════════════════════
+//  bridge-aviator.js  — runs inside the aviator iframe
+//  Reads G (the active world) every 80ms and publishes state to:
+//    1. BroadcastChannel('ph_av_bridge')  — same-browser tabs
+//    2. localStorage('ph_av_sync')        — fallback / cross-tab
+//  The admin page (admin-aviator.html) listens on both channels.
+// ═══════════════════════════════════════════════════════════════════
+'use strict';
 
 (function () {
-  'use strict';
+  const CHANNEL  = 'ph_av_bridge';
+  const LS_KEY   = 'ph_av_sync';
+  const TICK_MS  = 80;
 
-  const CHANNEL = 'ph_av_bridge';
-  const LS_KEY  = 'ph_av_sync';
-  const TICK_MS = 80;
-
-  // ── BroadcastChannel setup ────────────────────────────────────────
+  // BroadcastChannel — works when both pages are open in same browser
   let bc = null;
-  try { bc = new BroadcastChannel(CHANNEL); } catch (e) {
-    console.warn('[PH Bridge] BroadcastChannel unavailable, using localStorage only.');
+  try { bc = new BroadcastChannel(CHANNEL); } catch (e) {}
+
+  let _lastPayload = '';   // stringify cache — only publish when changed
+
+  function publish(data) {
+    const json = JSON.stringify(data);
+    if (json === _lastPayload) return;   // nothing changed — skip
+    _lastPayload = json;
+
+    // 1. BroadcastChannel
+    if (bc) { try { bc.postMessage(data); } catch (e) {} }
+
+    // 2. localStorage  (storage event fires in OTHER tabs; same tab polls)
+    try { localStorage.setItem(LS_KEY, json); } catch (e) {}
   }
 
-  let _lastState  = null;
-  let _ownRound   = 0;
-  let _lastCrashAt = 0;  // remember last valid crashAt across phase transitions
-
-  // ── Read engine state ─────────────────────────────────────────────
-  function readEngine() {
-    const G = window.G || window.G_real || window.G_demo;
-    if (!G || typeof G !== 'object') return null;
-
-    const state = G.state;
-    if (!state || state === 'idle') return null;
-
-    // crashAt is set in doWait() and stays valid through fly & crash.
-    // Cache it so we never send 0 to the admin.
-    const rawCrash = parseFloat((G.crashAt || 0).toFixed(2));
-    if (rawCrash > 0) _lastCrashAt = rawCrash;
-
-    return {
-      game:      'aviator',
-      state:     state,
-      crashAt:   _lastCrashAt,          // always the upcoming/current crash point
-      mult:      parseFloat((G.mult    || 1.00).toFixed(2)),
-      waitTimer: G.waitTimer || 0,
-      fillPct:   G.fillPct   || 0,
-      mode:      G.mode      || 'real',
-      roundNum:  G.roundNum  || _ownRound,
-      roundHist: Array.isArray(G.roundHist) ? G.roundHist.slice(0, 30) : [],
-    };
-  }
-
-  // ── Broadcast ─────────────────────────────────────────────────────
-  function broadcast() {
-    const raw = readEngine();
-    if (!raw) return;
-
-    // Track round transitions
-    if (_lastState !== 'wait' && raw.state === 'wait') _ownRound++;
-    _lastState = raw.state;
+  function tick() {
+    // G lives on the parent window (engine.js sets window.G)
+    let G;
+    try { G = parent.window.G; } catch (e) { return; }
+    if (!G) return;
 
     const payload = {
-      ...raw,
-      roundNum: raw.roundNum || _ownRound,
-      ts: Date.now(),
+      game:      'aviator',
+      ts:        Date.now(),
+      mode:      G.mode      || 'real',
+      state:     G.state     || 'idle',
+      mult:      G.mult      || 1,
+      crashAt:   G.crashAt   || 0,
+      waitTimer: G.waitTimer || 0,
+      fillPct:   G.fillPct   || 0,
+      roundNum:  G.roundNum  || 1,
+      roundHist: (G.roundHist || []).slice(0, 40),
     };
 
-    // 1. BroadcastChannel (fastest, same-origin tabs)
-    try { if (bc) bc.postMessage(payload); } catch (e) {}
-
-    // 2. localStorage (cross-tab fallback, works even if BC fails)
-    try { localStorage.setItem(LS_KEY, JSON.stringify(payload)); } catch (e) {}
+    publish(payload);
   }
 
-  setInterval(broadcast, TICK_MS);
-
-  // ── Sanity check after 3 s ────────────────────────────────────────
-  setTimeout(() => {
-    const G = window.G || window.G_real || window.G_demo;
-    if (!G) {
-      console.error(
-        '[PH Bridge] window.G / G_real / G_demo not found.\n' +
-        'Ensure engine.js loads BEFORE bridge-aviator.js.'
-      );
-    } else {
-      console.info('[PH Bridge] Engine found. State:', G.state, '| CrashAt:', G.crashAt);
-    }
-  }, 3000);
-
-  console.info('[PH Bridge] Aviator bridge v5 active → channel: "' + CHANNEL + '"');
+  setInterval(tick, TICK_MS);
+  tick(); // immediate first publish
 })();

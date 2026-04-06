@@ -79,8 +79,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
   background:linear-gradient(135deg,rgba(79,110,247,.08),rgba(162,89,255,.08));
   border:1px solid rgba(79,110,247,.25);
   border-radius:12px;padding:12px 18px;margin-bottom:16px;
-  display:flex;align-items:center;justify-content:space-between;
-  display:none; /* shown only when we have a queued prediction */
+  align-items:center;justify-content:space-between;
+  display:none;
 }
 .next-pred-banner.visible{display:flex}
 .npb-label{font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3)}
@@ -152,17 +152,18 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
     <span class="conn-sub" id="connSub">Waiting for bridge signal</span>
   </div>
 
-  <!-- Debug help panel — visible only when disconnected -->
+  <!-- Debug panel — shown when disconnected (has id="debugPanel") -->
   <div class="debug-panel" id="debugPanel">
-    <strong>⚠ Not receiving data from the game page.</strong><br>
-    Checklist:
-    <ul style="margin:.5em 0 0 1.2em;list-style:disc">
-      <li>Both pages must be on the <strong>same origin</strong> (same domain + port)</li>
-      <li>Add <code>&lt;script src="bridge-aviator.js"&gt;&lt;/script&gt;</code> to <code>aviator.html</code>, after <code>engine.js</code></li>
-      <li>Open the game page in another tab — keep this admin tab open</li>
-      <li>Open DevTools on the game page → Console; you should see: <code>[PH Bridge] Aviator bridge v5 active</code></li>
-      <li>If testing locally with <code>file://</code>, BroadcastChannel will fail — use a local server (<code>npx serve .</code>)</li>
-    </ul>
+    <strong>⚠ Not receiving game data</strong><br>
+    Make sure <code>bridge-aviator.js</code> is loaded on your game page.<br>
+    It should be the last <code>&lt;script&gt;</code> tag in <code>aviator.html</code>.<br>
+    Both pages must be open in the <strong>same browser</strong> for BroadcastChannel to work.<br>
+    <br>
+    <strong>Checklist:</strong><br>
+    1. <code>bridge-aviator.js</code> file exists in your site root<br>
+    2. <code>&lt;script src="bridge-aviator.js"&gt;&lt;/script&gt;</code> added to aviator.html<br>
+    3. The game page is open and running (not just admin)<br>
+    4. Same browser, same origin (not cross-domain)
   </div>
 
   <!-- Phase badge -->
@@ -211,7 +212,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
     </div>
     <div class="plane-anim" id="planeIcon">✈</div>
     <div style="text-align:right">
-      <div class="lm-label">Target Crash</div>
+      <div class="lm-label">Predicted Crash</div>
       <div style="font-family:'Orbitron',monospace;font-size:1rem;font-weight:700;color:var(--secondary)" id="liveTarget">—</div>
     </div>
   </div>
@@ -238,8 +239,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 // ── Config ─────────────────────────────────────────────────────────────
 const CHANNEL   = 'ph_av_bridge';
 const LS_KEY    = 'ph_av_sync';
-const STALE_MS  = 3000;   // mark disconnected after 3 s of silence
-const LS_MAX_MS = 3000;   // accept localStorage data up to 3 s old (FIXED: was 500ms)
+const STALE_MS  = 4000;   // mark disconnected after 4 s of silence
+const LS_MAX_MS = 4000;   // accept localStorage data up to 4 s old
 
 // ── State ──────────────────────────────────────────────────────────────
 let _data        = null;
@@ -248,13 +249,7 @@ let _connected   = false;
 let _prevState   = null;
 let _history     = [];
 let _sessionHigh = 0;
-
-// ── Next-round prediction: stored at start of each fly/crash so the
-//    banner can show "what's coming" even while the current round plays.
-//    It's set when we first get a 'wait' packet (crashAt is already
-//    determined by engine.js in doWait() before fly starts).
-let _nextCrashAt = 0;  // prediction for the NEXT round (set during current wait phase)
-let _curCrashAt  = 0;  // prediction for the CURRENT round (set when fly starts)
+let _curCrashAt  = 0;   // crashAt for the current/upcoming round
 
 // Load local history
 try { _history = JSON.parse(localStorage.getItem('ph_admin_av_hist') || '[]'); } catch(e) {}
@@ -274,14 +269,12 @@ window.addEventListener('storage', (e) => {
   }
 });
 
-// ── Poll localStorage every 80 ms (secondary fallback) ────────────────
-// This is needed when both tabs are the same window or BC is unavailable.
+// ── Poll localStorage every 80 ms (same-window fallback) ──────────────
 setInterval(() => {
   try {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return;
     const d = JSON.parse(raw);
-    // FIXED: accept data up to LS_MAX_MS old, not just 500ms
     if (d && d.ts && (Date.now() - d.ts) < LS_MAX_MS) handleData(d);
   } catch(e) {}
 }, 80);
@@ -296,22 +289,12 @@ function handleData(d) {
   const state   = d.state;
   const crashAt = parseFloat((d.crashAt || 0).toFixed(2));
 
-  // ── Track predictions across phases ──
-  // engine.js generates crashAt at the START of 'wait' — that's the
-  // prediction for the round about to begin.
-  //
-  // Admin logic:
-  //   wait  → _curCrashAt = crashAt  (this round's prediction, show big)
-  //   fly   → still show _curCrashAt in the main box; banner is empty
-  //   crash → store _nextCrashAt for the NEXT round (not yet known, clear banner)
-  //   next wait → _curCrashAt = new crashAt (new prediction), repeat
-
+  // crashAt is pre-generated in doWait() — grab it as soon as we see 'wait'
   if (state === 'wait' && crashAt > 0) {
     _curCrashAt = crashAt;
-    _nextCrashAt = 0; // reset: we're now in the new round's wait, no "next" yet
   }
 
-  // Record round result when fly→crash transition happens
+  // Record round result on fly→crash transition
   if (_prevState === 'fly' && state === 'crash' && crashAt > 0) {
     _history.unshift(parseFloat(crashAt.toFixed(2)));
     if (_history.length > 40) _history.pop();
@@ -370,27 +353,36 @@ function render() {
     mTag.style.display = 'inline-block';
     mTag.className = _data.mode === 'demo' ? 'mode-tag mode-demo' : 'mode-tag mode-real';
     mTag.textContent = _data.mode === 'demo' ? 'DEMO' : 'REAL';
-    dbg.classList.remove('visible');
+    if (dbg) dbg.classList.remove('visible');
   } else if (_lastMsg === 0) {
     dot.className  = 'conn-dot searching';
     lbl.className  = 'conn-label searching';
     lbl.textContent = '⏳ Connecting to live game…';
     sub.textContent = 'Waiting for bridge signal';
     mTag.style.display = 'none';
-    dbg.classList.add('visible');
+    if (dbg) dbg.classList.add('visible');
   } else {
     dot.className  = 'conn-dot dead';
     lbl.className  = 'conn-label dead';
     lbl.textContent = '🔴 Disconnected — signal lost';
     sub.textContent = 'Last seen ' + Math.round((now - _lastMsg) / 1000) + 's ago';
     mTag.style.display = 'none';
-    dbg.classList.add('visible');
+    if (dbg) dbg.classList.add('visible');
   }
 
   document.getElementById('syncTime').textContent =
     new Date().toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 
-  if (!_connected || !_data) return;
+  if (!_connected || !_data) {
+    // Reset phase badge to offline
+    const badge = document.getElementById('phaseBadge');
+    badge.className = 'phase-badge offline';
+    document.getElementById('phaseText').textContent = 'Offline';
+    document.getElementById('countdownRing').style.display = 'none';
+    document.getElementById('liveMultWrap').style.display  = 'none';
+    document.getElementById('nextPredBanner').classList.remove('visible');
+    return;
+  }
 
   // ── Grab refs ──
   const badge    = document.getElementById('phaseBadge');
@@ -409,14 +401,12 @@ function render() {
   const liveTgt  = document.getElementById('liveTarget');
   const plane    = document.getElementById('planeIcon');
   const banner   = document.getElementById('nextPredBanner');
-  const bannerVal= document.getElementById('nextPredVal');
-  const bannerConf=document.getElementById('nextPredConf');
   const CIRC     = 188.5;
   const WAIT_DUR = 5000;
 
   const state    = _data.state;
   const crashAt  = _curCrashAt || parseFloat((_data.crashAt || 0).toFixed(2));
-  const mult     = _data.mult    || 1;
+  const mult     = _data.mult   || 1;
   const wTimer   = _data.waitTimer || 0;
 
   // ── WAIT phase ─────────────────────────────────────────────────────
@@ -426,7 +416,7 @@ function render() {
     predBox.className = 'pred-box';
     cRing.style.display  = 'flex';
     lmWrap.style.display = 'none';
-    banner.classList.remove('visible'); // no "next" banner during wait — THIS is the next round
+    banner.classList.remove('visible');
 
     const secs = Math.max(0, Math.ceil(wTimer / 1000));
     countNum.textContent = secs;
@@ -464,7 +454,6 @@ function render() {
     liveTgt.textContent  = fmt(crashAt);
     plane.textContent    = '✈';
 
-    // Main box: show current round's crash target
     predLbl.textContent  = 'TARGET CRASH — THIS ROUND';
     predVal.textContent  = fmt(crashAt);
     predVal.className    = 'pred-val ' + multColor(crashAt);
@@ -473,7 +462,6 @@ function render() {
     confFill.style.width = conf.pct + '%';
     confPct.textContent  = conf.pct + '% confidence';
 
-    // Next-round banner: not yet known (generated at next doWait)
     banner.classList.remove('visible');
   }
 
@@ -497,16 +485,14 @@ function render() {
     confFill.style.width = '100%';
     confPct.textContent  = 'Round closed';
 
-    // Banner: hide (next crashAt not yet generated; will appear on next wait)
     banner.classList.remove('visible');
   }
 
   // ── Stats ──────────────────────────────────────────────────────────
-  // Prefer live roundHist from engine; fall back to locally tracked history
   const hist = (_data.roundHist && _data.roundHist.length) ? _data.roundHist : _history;
 
   if (hist.length) {
-    const avg = hist.reduce((s, v) => s + v, 0) / hist.length;
+    const avg  = hist.reduce((s, v) => s + v, 0) / hist.length;
     const high = Math.max(...hist);
     if (high > _sessionHigh) _sessionHigh = high;
     document.getElementById('statRounds').textContent = hist.length;

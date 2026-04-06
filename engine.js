@@ -195,7 +195,8 @@ function doWait(G, dur) {
 
 function doFly(G) {
   G.state = 'fly'; G.elapsed = 0; G.lastTs = 0;
-  G.crashAt = Math.min(parseFloat(G.mode === 'demo' ? genCrashDemo() : genCrashReal()), JACKPOT_MAX);
+      // crashAt was pre-generated in doWait — no-op here
+      // (keep this comment so you know it's intentional)
   stopBetPlacement(G);
   const u = PH.getUser();
   G.myBets.forEach((b, i) => {
