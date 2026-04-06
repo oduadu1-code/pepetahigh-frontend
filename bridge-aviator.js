@@ -1,15 +1,27 @@
 /**
- * PepetaHigh — Aviator Admin Bridge
- * ─────────────────────────────────
+ * PepetaHigh — Aviator Admin Bridge  (FIXED)
+ * ─────────────────────────────────────────────
  * HOW TO USE:
- *   Add this ONE line just before </body> in your Aviator game page:
+ *   Already included at the bottom of aviator.html via:
  *   <script src="bridge-aviator.js"></script>
  *
- * It reads your live G_real / G_demo engine globals and broadcasts
- * the state to the admin panel every 50 ms via BroadcastChannel
- * (fast, same-tab-group) AND localStorage (reliable cross-tab fallback).
+ *   NO changes needed to engine.js or aviator.html —
+ *   window.G, window.G_real, and window.G_demo are already exposed
+ *   by engine.js. This bridge reads them directly.
  *
- * Nothing else needs to change in your game.
+ * WHAT IT BROADCASTS:
+ *   - game:       'aviator'
+ *   - state:      'wait' | 'fly' | 'crash'
+ *   - crashAt:    the crash multiplier (generated at start of fly)
+ *   - mult:       current live multiplier
+ *   - waitTimer:  ms remaining in countdown (during wait)
+ *   - mode:       'real' | 'demo'
+ *   - roundNum:   round counter
+ *   - roundHist:  last 30 crash values
+ *   - ts:         timestamp
+ *
+ * CHANNEL:  'ph_av_bridge'
+ * LS_KEY:   'ph_av_sync'
  */
 
 (function () {
@@ -17,56 +29,69 @@
 
   const CHANNEL = 'ph_av_bridge';
   const LS_KEY  = 'ph_av_sync';
-  const TICK_MS = 50;
+  const TICK_MS = 80;
 
-  // Open BroadcastChannel (same origin, all tabs/windows)
+  // ── BroadcastChannel setup ────────────────────────────────────────
   let bc = null;
-  try { bc = new BroadcastChannel(CHANNEL); } catch (e) { /* unsupported */ }
+  try { bc = new BroadcastChannel(CHANNEL); } catch (e) {}
 
-  /**
-   * Read from whichever engine object is active.
-   * Matches the pattern already in your admin (G_real / G_demo).
-   */
+  let _lastState = null;
+  let _roundNum  = 0;
+
+  // ── Main read function ────────────────────────────────────────────
+  // Aviator's engine.js exposes:
+  //   window.G        → active world (switches on mode change)
+  //   window.G_real   → real-money world
+  //   window.G_demo   → demo world
+  //
+  // Each world has: state, mult, crashAt, waitTimer, fillPct,
+  //                 roundNum, roundHist, mode
+
   function readEngine() {
-    try {
-      const isDemo = window.PH && window.PH.getMode
-        ? window.PH.getMode() === 'demo'
-        : false;
+    // Try the active world first, then fall back to real, then demo
+    const G = window.G || window.G_real || window.G_demo;
+    if (!G || typeof G !== 'object' || !G.state) return null;
 
-      const G = isDemo
-        ? (window.G_demo || window.G_real)
-        : (window.G_real || window.G_demo);
-
-      if (!G) return null;
-
-      return {
-        game:      'aviator',
-        state:     G.state      || 'wait',
-        crashAt:   G.crashAt    || 0,
-        mult:      G.mult       || 1,
-        roundNum:  G.roundNum   || 1,
-        waitTimer: G.waitTimer  || 0,
-        roundHist: G.roundHist  || [],
-        mode:      isDemo ? 'demo' : 'real',
-        ts:        Date.now()
-      };
-    } catch (e) {
-      return null;
-    }
+    return {
+      game:      'aviator',
+      state:     G.state,                              // 'wait'|'fly'|'crash'
+      crashAt:   parseFloat((G.crashAt || 0).toFixed(2)),
+      mult:      parseFloat((G.mult    || 1).toFixed(2)),
+      waitTimer: G.waitTimer || 0,                     // ms left in countdown
+      mode:      G.mode      || 'real',                // 'real'|'demo'
+      roundNum:  G.roundNum  || _roundNum,
+      roundHist: Array.isArray(G.roundHist) ? G.roundHist.slice(0, 30) : [],
+    };
   }
 
+  // ── Broadcast ─────────────────────────────────────────────────────
   function broadcast() {
-    const data = readEngine();
-    if (!data) return;
+    const raw = readEngine();
+    if (!raw) return;
 
-    // 1. BroadcastChannel — instant, no storage overhead
+    // Auto-increment our own round counter on each new wait phase
+    if (_lastState !== 'wait' && raw.state === 'wait') {
+      _roundNum++;
+    }
+    _lastState = raw.state;
+
+    const data = { ...raw, roundNum: raw.roundNum || _roundNum, ts: Date.now() };
+
     try { if (bc) bc.postMessage(data); } catch (e) {}
-
-    // 2. localStorage — survives tab switches / reconnects
     try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch (e) {}
   }
 
   setInterval(broadcast, TICK_MS);
 
-  console.info('[PH Bridge] Aviator bridge active — broadcasting on "' + CHANNEL + '"');
+  // ── Health check: warn if G not found after 3 s ───────────────────
+  setTimeout(() => {
+    if (!window.G && !window.G_real && !window.G_demo) {
+      console.warn(
+        '[PH Bridge] Aviator: window.G / G_real / G_demo not found after 3 s.\n' +
+        'Make sure engine.js is loaded BEFORE bridge-aviator.js.'
+      );
+    }
+  }, 3000);
+
+  console.info('[PH Bridge] Aviator bridge active → channel: "' + CHANNEL + '"');
 })();

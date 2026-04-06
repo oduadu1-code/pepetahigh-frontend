@@ -168,6 +168,7 @@ startCashoutTicker(window.G_demo);
 function doWait(G, dur) {
   G.state = 'wait'; G.waitTimer = dur; G.fillPct = 0;
   G.elapsed = 0; G.lastTs = 0; G.mult = 1.00;
+  G.crashAt = Math.min(parseFloat(G.mode === 'demo' ? genCrashDemo() : genCrashReal()), JACKPOT_MAX);
   G.roundBets = []; G.pendingBets = [];
   stopBetPlacement(G);
   const u = PH.getUser();
