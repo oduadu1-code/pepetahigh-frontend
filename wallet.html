@@ -177,7 +177,6 @@ function render(){
           </div>
           <div class="bonus-note">
             Earn <strong>10%</strong> on every deposit. Redeem once you reach <strong>KSh ${DEP_BONUS_MIN}</strong>.
-            <span class="no-wd-tag">🔒 Not withdrawable</span>
           </div>
           ${depReady
             ?`<button class="btn btn-green" style="font-size:.82rem;padding:10px;margin-top:2px" onclick="redeemDepBonus()">Redeem ${PH.fmt(depB)} →</button>`
@@ -214,7 +213,6 @@ function render(){
             • Friend deposits <strong>&lt; KSh 1,000</strong> → you earn <strong>10%</strong><br>
             • Friend deposits <strong>≥ KSh 1,000</strong> → you earn <strong>50%</strong><br>
             Redeem once balance reaches <strong>KSh ${REF_BONUS_MIN}</strong>.
-            <span class="no-wd-tag">🔒 Not withdrawable</span>
           </div>
           <div style="font-size:.72rem;color:var(--text3);margin-bottom:6px;margin-top:4px">Your referral code</div>
           <div class="ref-box">

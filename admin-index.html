@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>PepetaHigh — Admin Predictor</title>
+<title>PepetaHigh — Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Space+Grotesk:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -12,7 +12,9 @@
 :root{
   --bg:#060810;
   --surface:#0d0f1e;
+  --surface2:#111326;
   --border:#1e2240;
+  --border2:#2a2f52;
   --text:#e8ecff;
   --text2:#7880aa;
   --text3:#3a3f62;
@@ -32,7 +34,6 @@ body{
   overflow-x:hidden;
 }
 
-/* BG grid */
 body::before{
   content:'';
   position:fixed;inset:0;
@@ -40,29 +41,154 @@ body::before{
     linear-gradient(rgba(79,110,247,.04) 1px,transparent 1px),
     linear-gradient(90deg,rgba(79,110,247,.04) 1px,transparent 1px);
   background-size:40px 40px;
-  pointer-events:none;
-  z-index:0;
+  pointer-events:none;z-index:0;
 }
-
-/* Glow blobs */
 body::after{
   content:'';
   position:fixed;
   width:600px;height:600px;
   background:radial-gradient(circle,rgba(79,110,247,.07) 0%,transparent 70%);
   top:-200px;left:-200px;
-  pointer-events:none;
-  z-index:0;
+  pointer-events:none;z-index:0;
 }
 
+/* ══ LOCK SCREEN ══ */
+#lock{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;
+  transition:opacity .3s ease;
+}
+#lock.gone{
+  opacity:0;
+  pointer-events:none;
+}
+
+.lock-card{
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:20px;
+  padding:36px 28px 28px;
+  width:100%;max-width:360px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.lock-card::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--primary),var(--secondary),transparent);
+}
+
+.lock-logo{
+  font-family:'Orbitron',monospace;
+  font-size:1.05rem;font-weight:900;
+  letter-spacing:.06em;margin-bottom:4px;
+}
+.lock-logo span{color:var(--primary)}
+.lock-sub{font-size:.65rem;color:var(--text3);letter-spacing:.05em;margin-bottom:28px}
+
+.lock-icon-wrap{
+  width:64px;height:64px;border-radius:16px;
+  background:rgba(79,110,247,.08);
+  border:1px solid rgba(79,110,247,.18);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.8rem;margin:0 auto 24px;
+}
+
+.lock-label{
+  font-size:.62rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--text3);text-align:left;margin-bottom:8px;
+}
+
+.lock-inp{
+  width:100%;
+  background:var(--surface2);
+  border:1.5px solid var(--border2);
+  border-radius:10px;
+  padding:13px 16px;
+  color:var(--text);
+  font-family:'Space Grotesk',sans-serif;
+  font-size:.95rem;
+  text-align:center;
+  letter-spacing:.25em;
+  outline:none;
+  transition:border-color .2s,box-shadow .2s;
+  margin-bottom:14px;
+}
+.lock-inp:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(79,110,247,.12);
+}
+.lock-inp.err{
+  border-color:var(--red);
+  box-shadow:0 0 0 3px rgba(242,78,78,.12);
+  animation:shake .32s ease;
+}
+.lock-inp:disabled{opacity:.45;cursor:not-allowed}
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-9px)}
+  40%{transform:translateX(9px)}
+  60%{transform:translateX(-5px)}
+  80%{transform:translateX(5px)}
+}
+
+.lock-btn{
+  width:100%;
+  background:linear-gradient(135deg,var(--primary),var(--secondary));
+  border:none;
+  border-radius:10px;
+  padding:13px;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:.88rem;font-weight:700;
+  color:#fff;cursor:pointer;
+  transition:opacity .2s,transform .15s;
+  letter-spacing:.04em;
+}
+.lock-btn:hover:not(:disabled){opacity:.88;transform:translateY(-1px)}
+.lock-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+
+.lock-err{
+  font-size:.72rem;color:var(--red);
+  margin-top:10px;min-height:18px;font-weight:600;
+}
+.lock-att{
+  font-size:.62rem;color:var(--text3);
+  margin-top:4px;
+}
+
+/* Attempt dots */
+.att-dots{
+  display:flex;justify-content:center;gap:6px;margin-top:12px;
+}
+.att-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--border2);
+  transition:background .2s;
+}
+.att-dot.used{background:var(--red);}
+
+/* Lockout timer */
+.lockout-bar-wrap{
+  margin-top:14px;display:none;
+}
+.lockout-bar-wrap.show{display:block}
+.lockout-lbl{font-size:.62rem;color:var(--gold);margin-bottom:6px}
+.lockout-track{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.lockout-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .1s linear}
+
+/* ══ ADMIN UI ══ */
+#app{display:none;position:relative;z-index:1}
+#app.show{display:block}
+
 .container{
-  position:relative;z-index:1;
   max-width:900px;
   margin:0 auto;
   padding:40px 20px 60px;
 }
 
-/* Header */
 .header{
   display:flex;align-items:center;justify-content:space-between;
   margin-bottom:48px;
@@ -71,94 +197,72 @@ body::after{
 }
 .logo{
   font-family:'Orbitron',monospace;
-  font-weight:900;
-  font-size:1.1rem;
-  letter-spacing:.08em;
-  color:var(--text);
+  font-weight:900;font-size:1.1rem;letter-spacing:.08em;
 }
 .logo span{color:var(--primary)}
+.header-right{display:flex;align-items:center;gap:10px}
 .admin-badge{
   background:rgba(242,78,78,.1);
   border:1px solid rgba(242,78,78,.3);
   color:var(--red);
-  font-size:.65rem;
-  font-weight:700;
-  letter-spacing:.15em;
-  padding:5px 12px;
-  border-radius:20px;
-  text-transform:uppercase;
+  font-size:.65rem;font-weight:700;letter-spacing:.15em;
+  padding:5px 12px;border-radius:20px;text-transform:uppercase;
 }
-
-/* Section title */
-.section-title{
-  font-size:.65rem;
-  font-weight:700;
-  letter-spacing:.18em;
-  text-transform:uppercase;
+.logout-btn{
+  background:none;
+  border:1px solid var(--border2);
   color:var(--text3);
-  margin-bottom:20px;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:.68rem;padding:5px 12px;border-radius:8px;
+  cursor:pointer;transition:all .18s;
+}
+.logout-btn:hover{border-color:var(--red);color:var(--red)}
+
+.section-title{
+  font-size:.65rem;font-weight:700;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--text3);margin-bottom:20px;
 }
 
-/* Cards grid */
-.cards{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:20px;
-}
-@media(max-width:600px){.cards{grid-template-columns:1fr;}}
+/* Cards */
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:600px){.cards{grid-template-columns:1fr}}
 
-/* Game card */
 .game-card{
   background:var(--surface);
   border:1px solid var(--border);
-  border-radius:16px;
-  overflow:hidden;
-  cursor:pointer;
-  text-decoration:none;
-  display:block;
-  transition:transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+  border-radius:16px;overflow:hidden;
+  cursor:pointer;text-decoration:none;display:block;
+  transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease;
   position:relative;
 }
 .game-card:hover{
   transform:translateY(-4px);
   border-color:rgba(79,110,247,.4);
-  box-shadow:0 16px 48px rgba(0,0,0,.4), 0 0 0 1px rgba(79,110,247,.1);
+  box-shadow:0 16px 48px rgba(0,0,0,.4),0 0 0 1px rgba(79,110,247,.1);
 }
 
-/* Card preview area */
 .card-preview{
-  height:160px;
-  position:relative;
-  overflow:hidden;
+  height:160px;position:relative;overflow:hidden;
   display:flex;align-items:center;justify-content:center;
 }
-
-/* Aviator theme */
 .card-preview.aviator{
   background:radial-gradient(ellipse at 60% 40%,#0d1035 0%,#09090f 70%);
 }
 .card-preview.aviator::before{
-  content:'';
-  position:absolute;inset:0;
+  content:'';position:absolute;inset:0;
   background:repeating-conic-gradient(rgba(79,110,247,.05) 0deg 6deg,transparent 6deg 12deg);
   animation:slowSpin 20s linear infinite;
 }
 @keyframes slowSpin{to{transform:rotate(360deg)}}
-
-/* Rocket theme */
 .card-preview.rocket{
   background:radial-gradient(ellipse at 60% 40%,#100510 0%,#02040e 70%);
 }
 .card-preview.rocket::before{
-  content:'';
-  position:absolute;inset:0;
+  content:'';position:absolute;inset:0;
   background:radial-gradient(circle at 70% 30%,rgba(249,115,22,.08) 0%,transparent 60%);
 }
-
-/* Floating icon */
 .card-icon{
-  font-size:3.5rem;
-  position:relative;z-index:2;
+  font-size:3.5rem;position:relative;z-index:2;
   animation:floatIcon 3s ease-in-out infinite;
   filter:drop-shadow(0 0 20px rgba(79,110,247,.5));
 }
@@ -170,115 +274,100 @@ body::after{
   0%,100%{transform:translateY(0) rotate(-5deg)}
   50%{transform:translateY(-10px) rotate(5deg)}
 }
-
-/* Accent line */
-.card-accent{
-  position:absolute;bottom:0;left:0;right:0;
-  height:2px;
-}
+.card-accent{position:absolute;bottom:0;left:0;right:0;height:2px}
 .card-accent.av{background:linear-gradient(90deg,transparent,#4f6ef7,transparent)}
 .card-accent.rc{background:linear-gradient(90deg,transparent,#f97316,transparent)}
-
-/* HOT badge */
 .hot-badge{
   position:absolute;top:12px;left:12px;z-index:3;
-  background:var(--red);
-  color:#fff;
+  background:var(--red);color:#fff;
   font-size:.58rem;font-weight:700;letter-spacing:.1em;
-  padding:3px 8px;border-radius:4px;
-  text-transform:uppercase;
+  padding:3px 8px;border-radius:4px;text-transform:uppercase;
 }
-
-/* Card body */
-.card-body{
-  padding:16px 18px 18px;
-}
+.card-body{padding:16px 18px 18px}
 .card-name{
   font-family:'Orbitron',monospace;
-  font-size:.9rem;font-weight:700;
-  letter-spacing:.04em;
-  margin-bottom:6px;
+  font-size:.9rem;font-weight:700;letter-spacing:.04em;margin-bottom:6px;
 }
-.card-desc{
-  font-size:.76rem;
-  color:var(--text2);
-  line-height:1.5;
-  margin-bottom:14px;
-}
-.card-stats{
-  display:flex;gap:16px;
-}
-.cs-item{
-  display:flex;flex-direction:column;gap:2px;
-}
-.cs-val{
-  font-family:'Orbitron',monospace;
-  font-size:.82rem;font-weight:700;
-}
-.cs-lbl{
-  font-size:.6rem;color:var(--text3);
-  text-transform:uppercase;letter-spacing:.1em;
-}
+.card-desc{font-size:.76rem;color:var(--text2);line-height:1.5;margin-bottom:14px}
+.card-stats{display:flex;gap:16px}
+.cs-item{display:flex;flex-direction:column;gap:2px}
+.cs-val{font-family:'Orbitron',monospace;font-size:.82rem;font-weight:700}
+.cs-lbl{font-size:.6rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em}
 .cs-val.av{color:var(--primary)}
 .cs-val.rc{color:var(--orange)}
-
-/* Enter button */
 .card-enter{
   position:absolute;bottom:18px;right:18px;
-  background:rgba(79,110,247,.12);
-  border:1px solid rgba(79,110,247,.25);
-  color:var(--primary);
-  font-family:'Space Grotesk',sans-serif;
-  font-size:.72rem;font-weight:700;
-  padding:7px 14px;
-  border-radius:8px;
-  letter-spacing:.06em;
-  transition:all .18s;
+  background:rgba(79,110,247,.12);border:1px solid rgba(79,110,247,.25);
+  color:var(--primary);font-family:'Space Grotesk',sans-serif;
+  font-size:.72rem;font-weight:700;padding:7px 14px;
+  border-radius:8px;letter-spacing:.06em;transition:all .18s;
 }
-.game-card:hover .card-enter{
-  background:rgba(79,110,247,.22);
-  border-color:var(--primary);
-}
-.game-card:hover .card-enter.rc{
-  background:rgba(249,115,22,.22);
-  border-color:var(--orange);
-  color:var(--orange);
-}
-.card-enter.rc{
-  color:var(--orange);
-  background:rgba(249,115,22,.1);
-  border-color:rgba(249,115,22,.25);
-}
+.game-card:hover .card-enter{background:rgba(79,110,247,.22);border-color:var(--primary)}
+.game-card:hover .card-enter.rc{background:rgba(249,115,22,.22);border-color:var(--orange);color:var(--orange)}
+.card-enter.rc{color:var(--orange);background:rgba(249,115,22,.1);border-color:rgba(249,115,22,.25)}
 
-/* Notice */
 .notice{
   margin-top:32px;
-  background:rgba(242,78,78,.05);
-  border:1px solid rgba(242,78,78,.15);
-  border-radius:12px;
-  padding:14px 18px;
-  font-size:.76rem;
-  color:var(--text2);
-  line-height:1.6;
+  background:rgba(242,78,78,.05);border:1px solid rgba(242,78,78,.15);
+  border-radius:12px;padding:14px 18px;
+  font-size:.76rem;color:var(--text2);line-height:1.6;
   display:flex;align-items:flex-start;gap:10px;
 }
-.notice .ni{font-size:1rem;flex-shrink:0;margin-top:1px;}
-
+.notice .ni{font-size:1rem;flex-shrink:0;margin-top:1px}
 </style>
 </head>
 <body>
+
+<!-- ══ LOCK SCREEN ══ -->
+<div id="lock">
+  <div class="lock-card">
+    <div class="lock-logo">✈ Pepeta<span>High</span></div>
+    <div class="lock-sub">Admin Access Only</div>
+
+    <div class="lock-icon-wrap">🔐</div>
+
+    <div class="lock-label">Password</div>
+    <input class="lock-inp" type="password" id="pw"
+      placeholder="••••••••" maxlength="32" autocomplete="off"
+      onkeydown="if(event.key==='Enter')tryUnlock()">
+
+    <button class="lock-btn" id="lockBtn" onclick="tryUnlock()">Enter Admin Panel</button>
+
+    <div class="lock-err" id="lerr"></div>
+    <div class="lock-att" id="latt"></div>
+
+    <!-- Attempt indicator dots -->
+    <div class="att-dots" id="attDots">
+      <div class="att-dot" id="d1"></div>
+      <div class="att-dot" id="d2"></div>
+      <div class="att-dot" id="d3"></div>
+      <div class="att-dot" id="d4"></div>
+      <div class="att-dot" id="d5"></div>
+    </div>
+
+    <!-- Lockout progress bar -->
+    <div class="lockout-bar-wrap" id="lockoutWrap">
+      <div class="lockout-lbl" id="lockoutLbl">Locked — try again in 30s</div>
+      <div class="lockout-track"><div class="lockout-fill" id="lockoutFill" style="width:100%"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN PANEL ══ -->
+<div id="app">
 <div class="container">
 
   <div class="header">
     <div class="logo">✈ Pepeta<span>High</span></div>
-    <div class="admin-badge">🔒 Admin Panel</div>
+    <div class="header-right">
+      <div class="admin-badge">🔒 Admin Panel</div>
+      <button class="logout-btn" onclick="doLock()">Sign Out</button>
+    </div>
   </div>
 
   <div class="section-title">Prediction Dashboard</div>
 
   <div class="cards">
-
-    <!-- AVIATOR -->
     <a class="game-card" href="admin-aviator.html">
       <div class="card-preview aviator">
         <div class="hot-badge">HOT</div>
@@ -297,7 +386,6 @@ body::after{
       <div class="card-enter">Open →</div>
     </a>
 
-    <!-- ROCKET CRASH -->
     <a class="game-card" href="admin-rocket.html">
       <div class="card-preview rocket">
         <div class="card-icon">🚀</div>
@@ -314,7 +402,6 @@ body::after{
       </div>
       <div class="card-enter rc">Open →</div>
     </a>
-
   </div>
 
   <div class="notice">
@@ -323,5 +410,163 @@ body::after{
   </div>
 
 </div>
+</div>
+
+<script>
+'use strict';
+
+// ════════════════════════════════
+//  ✏️  SET YOUR PASSWORD HERE
+const PASS = 'pepeta2025';
+// ════════════════════════════════
+
+const SESSION_KEY  = 'ph_adm_ok';
+const LOCKOUT_KEY  = 'ph_adm_lockout';
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_SECS = 30;
+
+let attempts = 0;
+let lockedOut = false;
+let lockoutTimer = null;
+
+// ── Auto-unlock if session active ──
+if (sessionStorage.getItem(SESSION_KEY) === '1') showAdmin();
+
+// ── Focus input on load ──
+window.addEventListener('DOMContentLoaded', () => {
+  checkLockout();
+  document.getElementById('pw').focus();
+});
+
+// ── Attempt dots ──
+function updateDots() {
+  for (let i = 1; i <= MAX_ATTEMPTS; i++) {
+    document.getElementById('d' + i).classList.toggle('used', i <= attempts);
+  }
+}
+
+// ── Try unlock ──
+function tryUnlock() {
+  if (lockedOut) return;
+
+  const val = document.getElementById('pw').value;
+  const inp = document.getElementById('pw');
+
+  if (val === PASS) {
+    sessionStorage.setItem(SESSION_KEY, '1');
+    showAdmin();
+    return;
+  }
+
+  // Wrong password
+  attempts++;
+  updateDots();
+  inp.value = '';
+  inp.classList.add('err');
+  setTimeout(() => inp.classList.remove('err'), 360);
+
+  const remaining = MAX_ATTEMPTS - attempts;
+
+  if (remaining <= 0) {
+    startLockout();
+  } else {
+    document.getElementById('lerr').textContent = 'Incorrect password.';
+    document.getElementById('latt').textContent = remaining + ' attempt' + (remaining === 1 ? '' : 's') + ' remaining';
+  }
+}
+
+// ── Lockout ──
+function startLockout() {
+  lockedOut = true;
+  const until = Date.now() + LOCKOUT_SECS * 1000;
+  localStorage.setItem(LOCKOUT_KEY, until);
+
+  const inp = document.getElementById('pw');
+  const btn = document.getElementById('lockBtn');
+  inp.disabled = true;
+  btn.disabled = true;
+
+  document.getElementById('lerr').textContent = '';
+  document.getElementById('latt').textContent = '';
+  document.getElementById('lockoutWrap').classList.add('show');
+
+  runLockoutCountdown(until);
+}
+
+function runLockoutCountdown(until) {
+  if (lockoutTimer) clearInterval(lockoutTimer);
+
+  lockoutTimer = setInterval(() => {
+    const remaining = Math.max(0, until - Date.now());
+    const pct = (remaining / (LOCKOUT_SECS * 1000)) * 100;
+
+    document.getElementById('lockoutFill').style.width = pct + '%';
+    document.getElementById('lockoutLbl').textContent =
+      remaining > 0 ? 'Locked — try again in ' + Math.ceil(remaining / 1000) + 's' : 'Unlocked';
+
+    if (remaining <= 0) {
+      clearInterval(lockoutTimer);
+      endLockout();
+    }
+  }, 100);
+}
+
+function endLockout() {
+  lockedOut = false;
+  attempts = 0;
+  updateDots();
+  localStorage.removeItem(LOCKOUT_KEY);
+
+  const inp = document.getElementById('pw');
+  const btn = document.getElementById('lockBtn');
+  inp.disabled = false;
+  btn.disabled = false;
+  inp.focus();
+
+  document.getElementById('lockoutWrap').classList.remove('show');
+  document.getElementById('lerr').textContent = '';
+  document.getElementById('latt').textContent = '';
+}
+
+// ── Check if locked out on page load ──
+function checkLockout() {
+  const until = parseInt(localStorage.getItem(LOCKOUT_KEY) || '0', 10);
+  if (until && Date.now() < until) {
+    lockedOut = true;
+    attempts = MAX_ATTEMPTS;
+    updateDots();
+
+    const inp = document.getElementById('pw');
+    const btn = document.getElementById('lockBtn');
+    inp.disabled = true;
+    btn.disabled = true;
+    document.getElementById('lockoutWrap').classList.add('show');
+    runLockoutCountdown(until);
+  }
+}
+
+// ── Show admin / lock ──
+function showAdmin() {
+  document.getElementById('lock').classList.add('gone');
+  document.getElementById('app').classList.add('show');
+}
+
+function doLock() {
+  sessionStorage.removeItem(SESSION_KEY);
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('lock').classList.remove('gone');
+  document.getElementById('lock').style.opacity = '';
+  document.getElementById('pw').value = '';
+  document.getElementById('pw').disabled = false;
+  document.getElementById('lockBtn').disabled = false;
+  document.getElementById('lerr').textContent = '';
+  document.getElementById('latt').textContent = '';
+  attempts = 0;
+  lockedOut = false;
+  updateDots();
+  document.getElementById('lockoutWrap').classList.remove('show');
+  document.getElementById('pw').focus();
+}
+</script>
 </body>
 </html>

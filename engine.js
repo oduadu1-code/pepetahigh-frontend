@@ -249,7 +249,13 @@ function doFly(G) {
 function doCrash(G) {
   G.state = 'crash';
   G.mult = G.crashAt;   // snap to exact value
-  G.myBets.forEach(b => { if (b.active && !b.cashedOut) { b.active = false; b.placed = false; } });
+  G.myBets.forEach(b => { 
+    if (b.active && !b.cashedOut) { 
+      b.active = false; b.placed = false; 
+    if (G.mode !== 'demo') { // ← ADD THIS BLOCK
+        PH.saveTxn({type:'bet', amount: b.amt, cashoutAt: null, wonAmount: 0, mode:'real', status:'loss'});
+    }
+    } });
 
   const recorded = parseFloat(G.crashAt.toFixed(2));
   G.roundHist.unshift(recorded);

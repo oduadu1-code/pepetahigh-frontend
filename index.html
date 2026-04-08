@@ -172,15 +172,15 @@ body{overflow:hidden;margin:0}
       </div>
       <div class="inp-wrap">
         <label class="inp-label" id="dep-ph-lbl">M-Pesa Number</label>
-        <div class="phone-wrap"><div class="phone-prefix">🇰🇪 +254</div>
-          <input class="inp" type="tel" id="dep-ph" placeholder="7XXXXXXXX" maxlength="9">
+        <!--<div class="phone-wrap"><div class="phone-prefix">🇰🇪 +254</div>-->
+          <input class="inp" type="tel" id="dep-ph" placeholder="07XXXXXXXX" maxlength="10">
         </div>
       </div>
       <div class="inp-wrap">
         <label class="inp-label">Amount (KSh)</label>
-        <input class="inp" type="number" id="dep-amt" placeholder="Min KSh 200" min="200">
+        <input class="inp" type="number" id="dep-amt" placeholder="Min KSh 50" min="50">
         <div class="quick-amts">
-          <span class="qa-chip" onclick="document.getElementById('dep-amt').value=200">200</span>
+          <span class="qa-chip" onclick="document.getElementById('dep-amt').value=50">50</span>
           <span class="qa-chip" onclick="document.getElementById('dep-amt').value=500">500</span>
           <span class="qa-chip" onclick="document.getElementById('dep-amt').value=1000">1,000</span>
           <span class="qa-chip" onclick="document.getElementById('dep-amt').value=2000">2,000</span>
@@ -189,7 +189,7 @@ body{overflow:hidden;margin:0}
         </div>
       </div>
       <div style="background:rgba(41,217,128,.05);border:1px solid rgba(41,217,128,.13);border-radius:8px;padding:9px 12px;font-size:.74rem;color:var(--text2)">
-        ✓ Min <strong>KSh 200</strong> &nbsp;·&nbsp; Paybill <strong>522533</strong> &nbsp;·&nbsp; +10% bonus on every deposit
+        ✓ Min <strong>KSh 50</strong> &nbsp;·&nbsp; +10% bonus on every deposit
       </div>
       <button class="btn btn-primary" onclick="initiateDeposit()">Send STK Push →</button>
     </div>
@@ -233,8 +233,8 @@ body{overflow:hidden;margin:0}
       <div class="inp-wrap"><label class="inp-label">Phone Number</label><div class="phone-wrap"><div class="phone-prefix">🇰🇪 +254</div><input class="inp" type="tel" id="wd-ph" placeholder="7XXXXXXXX" maxlength="9"></div></div>
       <div class="inp-wrap">
         <label class="inp-label">Amount (KSh)</label>
-        <input class="inp" type="number" id="wd-amt" placeholder="Min KSh 1,000" min="1000">
-        <div class="quick-amts"><span class="qa-chip" onclick="document.getElementById('wd-amt').value=1000">1,000</span><span class="qa-chip" onclick="document.getElementById('wd-amt').value=2000">2,000</span><span class="qa-chip" onclick="document.getElementById('wd-amt').value=5000">5,000</span></div>
+        <input class="inp" type="number" id="wd-amt" placeholder="Min KSh 500" min="500">
+        <div class="quick-amts"><span class="qa-chip" onclick="document.getElementById('wd-amt').value=500">500</span><span class="qa-chip" onclick="document.getElementById('wd-amt').value=1000">1,000</span><span class="qa-chip" onclick="document.getElementById('wd-amt').value=5000">5,000</span></div>
       </div>
       <div style="background:rgba(245,197,66,.05);border:1px solid rgba(245,197,66,.13);border-radius:8px;padding:9px 12px;font-size:.74rem;color:var(--text2)">⚠ Min <strong>KSh 1,000</strong> · Available: <strong style="color:var(--green)" id="wd-avail">KSh 0.00</strong></div>
       <button class="btn btn-primary" onclick="processWithdraw()">Withdraw Now →</button>
@@ -281,6 +281,8 @@ function navTo(tab){
   if(window._inRocketCrash){window._inRocketCrash=false;notify('rocketcrash','onNavAway');hideFr('rocketcrash');}
   if(window._inDice){window._inDice=false;notify('dice','onNavAway');hideFr('dice');}
   if(window._inMines){window._inMines=false;notify('mines','onNavAway');hideFr('mines');}
+  PH.setMode('play');
+  updateNavBal();      
   showOnly(tab);
   FRAMES.forEach(n=>document.getElementById('tb-'+n).classList.toggle('active',n===tab));
   activeTab=tab;
@@ -311,12 +313,14 @@ function launchAviator(){
 }
 function exitAviator(){
   window.G.inAviator=false;
+  PH.setMode('play');
   notify('aviator','onNavAway');
   hideFr('aviator');showOnly('home');
   activeTab='home';
   FRAMES.forEach(n=>document.getElementById('tb-'+n).classList.toggle('active',n==='home'));
   renderHistBar();adjustShell();
   notify('home','onTabVisible');
+  updateNavBal();
 }
 
 window._inFortuneSpin=false;
@@ -334,12 +338,14 @@ function launchFortuneSpin(){
 }
 function exitFortuneSpin(){
   window._inFortuneSpin=false;
+  PH.setMode('play');
   notify('fortunespin','onNavAway');
   hideFr('fortunespin');showOnly('home');
   activeTab='home';
   FRAMES.forEach(n=>document.getElementById('tb-'+n).classList.toggle('active',n==='home'));
   renderHistBar();adjustShell();
   notify('home','onTabVisible');
+  updateNavBal();
 }
 
 window._inRocketCrash=false;
@@ -357,12 +363,14 @@ function launchRocketCrash(){
 }
 function exitRocketCrash(){
   window._inRocketCrash=false;
+  PH.setMode('play');
   notify('rocketcrash','onNavAway');
   hideFr('rocketcrash');showOnly('home');
   activeTab='home';
   FRAMES.forEach(n=>document.getElementById('tb-'+n).classList.toggle('active',n==='home'));
   renderHistBar();adjustShell();
   notify('home','onTabVisible');
+  updateNavBal();
 }
 
 window._inDice=false;
@@ -380,12 +388,14 @@ function launchDice(){
 }
 function exitDice(){
   window._inDice=false;
+  PH.setMode('play');
   notify('dice','onNavAway');
   hideFr('dice');showOnly('home');
   activeTab='home';
   FRAMES.forEach(n=>document.getElementById('tb-'+n).classList.toggle('active',n==='home'));
   renderHistBar();adjustShell();
   notify('home','onTabVisible');
+  updateNavBal();
 }
 
 window._inMines=false;
@@ -403,12 +413,14 @@ function launchMines(){
 }
 function exitMines(){
   window._inMines=false;
+  PH.setMode('play');
   notify('mines','onNavAway');
   hideFr('mines');showOnly('home');
   activeTab='home';
   FRAMES.forEach(n=>document.getElementById('tb-'+n).classList.toggle('active',n==='home'));
   renderHistBar();adjustShell();
   notify('home','onTabVisible');
+  updateNavBal();
 }
 function openGameModal() {
   _pendingGame = 'aviator';
@@ -661,8 +673,8 @@ let _depAmt=0, _depCountdownInt=null, _depCheckoutId=null;
 async function initiateDeposit(){
   const ph=document.getElementById('dep-ph').value.trim();
   const amt=parseFloat(document.getElementById('dep-amt').value);
-  if(!ph||ph.length<9){showToast('Enter a valid 9-digit phone number','error');return;}
-  if(!amt||amt<200){showToast('Minimum deposit is KSh 200','error');return;}
+  if(!ph||ph.length<10){showToast('Enter a valid 10-digit phone number','error');return;}
+  if(!amt||amt<50){showToast('Minimum deposit is KSh 50','error');return;}
   _depAmt=amt;
   document.getElementById('dep-step1').style.display='none';
   document.getElementById('dep-step2').style.display='flex';
@@ -755,8 +767,8 @@ function cancelDeposit(){
 
 function processWithdraw(){
   const ph=document.getElementById('wd-ph').value.trim(),amt=parseFloat(document.getElementById('wd-amt').value),bal=PH.getWallet();
-  if(!ph||ph.length<9){showToast('Enter valid phone number','error');return;}
-  if(!amt||amt<1000){showToast('Minimum withdrawal is KSh 1,000','error');return;}
+  if(!ph||ph.length<10){showToast('Enter valid phone number','error');return;}
+  if(!amt||amt<500){showToast('Minimum withdrawal is KSh 500','error');return;}
   if(amt>bal){showToast('Insufficient balance','error');return;}
   const bonusInWallet=_getBonusInWallet();
   const withdrawable=Math.max(0,parseFloat((bal-bonusInWallet).toFixed(2)));
