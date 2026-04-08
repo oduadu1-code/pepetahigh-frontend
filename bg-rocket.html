@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Rocket Engine · Background</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#02040e;color:#eef0ff;font-family:'JetBrains Mono',monospace;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;gap:16px}
+.card{background:#06080f;border:1px solid rgba(249,115,22,.2);border-radius:12px;padding:20px 24px;width:100%;max-width:360px;text-align:center}
+.icon{font-size:2rem;margin-bottom:10px}
+.title{font-size:.82rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#f97316;margin-bottom:14px}
+.row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(249,115,22,.1);font-size:.72rem}
+.row:last-child{border-bottom:none}
+.row-lbl{color:#3a4068;letter-spacing:.06em;text-transform:uppercase}
+.row-val{font-weight:700}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:middle}
+.dot-green{background:#1fd17a;box-shadow:0 0 8px #1fd17a;animation:pulse 1.2s ease infinite}
+.dot-orange{background:#f97316;box-shadow:0 0 8px #f97316;animation:pulse 1.2s ease infinite}
+.dot-red{background:#f03a3a}
+.dot-idle{background:#3a4068}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.status-row{display:flex;align-items:center;justify-content:center;font-size:.78rem;margin-top:14px;gap:6px}
+.note{font-size:.6rem;color:#3a4068;margin-top:10px;line-height:1.6}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="icon">🚀</div>
+  <div class="title">Rocket Crash Engine</div>
+
+  <div class="row">
+    <span class="row-lbl">Status</span>
+    <span class="row-val" id="statusVal" style="color:#3a4068">Starting…</span>
+  </div>
+  <div class="row">
+    <span class="row-lbl">State</span>
+    <span class="row-val" id="stateVal" style="color:#3a4068">—</span>
+  </div>
+  <div class="row">
+    <span class="row-lbl">Next Crash</span>
+    <span class="row-val" id="crashVal" style="color:#3a4068">—</span>
+  </div>
+  <div class="row">
+    <span class="row-lbl">Live Mult</span>
+    <span class="row-val" id="multVal" style="color:#3a4068">—</span>
+  </div>
+  <div class="row">
+    <span class="row-lbl">Rounds Run</span>
+    <span class="row-val" id="roundVal" style="color:#3a4068">0</span>
+  </div>
+  <div class="row">
+    <span class="row-lbl">Broadcast</span>
+    <span class="row-val" id="broadVal" style="color:#3a4068">—</span>
+  </div>
+
+  <div class="status-row">
+    <span class="dot dot-idle" id="statusDot"></span>
+    <span id="statusLbl" style="color:#3a4068">Initialising…</span>
+  </div>
+  <div class="note">Keep this window open in the background.<br>The admin predictor reads data from this engine.</div>
+</div>
+
+<script>
+'use strict';
+
+// ── Rocket Crash — minimal standalone engine ──────────────────────────
+// Replicates the exact crash generator and flight formula from
+// rocket-crash.html so predictions match the real game perfectly.
+
+let _state        = 'wait';
+let _mult         = 1.00;
+let _targetCrash  = 2.00;
+let _waitRemaining = 5000;
+let _elapsed      = 0;
+let _lastTick     = 0;
+let _roundCount   = 0;
+const HIST        = (function(){ try{ return JSON.parse(localStorage.getItem('ph_hist_rocket_real')||'[]'); }catch(e){ return []; } })();
+
+// ── Crash generator — identical to rocket-crash.html REAL mode ────────
+function generateCrash() {
+  const r = Math.random();
+  if (r < 0.18) return 1.00;
+  if (r < 0.52) return parseFloat((1.01 + Math.random() * 0.97).toFixed(2));
+  if (r < 0.72) return parseFloat((1.99 + Math.random() * 2.00).toFixed(2));
+  if (r < 0.85) return parseFloat((4.00 + Math.random() * 5.99).toFixed(2));
+  if (r < 0.93) return parseFloat((10.0 + Math.random() * 14.99).toFixed(2));
+  if (r < 0.97) return parseFloat((25.0 + Math.random() * 24.99).toFixed(2));
+  if (r < 0.99) return parseFloat((50.0 + Math.random() * 149).toFixed(2));
+  return parseFloat((200.0 + Math.random() * 300).toFixed(2));
+}
+
+// ── State machine ─────────────────────────────────────────────────────
+const WAIT_DUR  = 5000;   // ms
+const TICK_MS   = 50;     // engine tick interval
+
+function startWait() {
+  _state         = 'wait';
+  _mult          = 1.00;
+  _waitRemaining = WAIT_DUR;
+  _elapsed       = 0;
+  _targetCrash   = generateCrash();
+  _roundCount++;
+  updateUI();
+}
+
+function startFlight() {
+  _state   = 'fly';
+  _mult    = 1.00;
+  _elapsed = 0;
+  _lastTick = Date.now();
+  updateUI();
+}
+
+function doBust() {
+  _state = 'bust';
+  _mult  = _targetCrash;
+
+  HIST.unshift(parseFloat(_targetCrash.toFixed(2)));
+  if (HIST.length > 50) HIST.pop();
+  try { localStorage.setItem('ph_hist_rocket_real', JSON.stringify(HIST)); } catch(e) {}
+
+  updateUI();
+  // After bust pause, start next wait
+  setTimeout(startWait, 2800);
+}
+
+// ── Main tick (setInterval — no rAF needed, no canvas) ───────────────
+setInterval(function tick() {
+  if (_state === 'wait') {
+    _waitRemaining -= TICK_MS;
+    if (_waitRemaining <= 0) {
+      _waitRemaining = 0;
+      startFlight();
+    }
+    return;
+  }
+
+  if (_state === 'fly') {
+    const now = Date.now();
+    const dt  = (now - (_lastTick || now)) / 1000;
+    _lastTick = now;
+    _elapsed += dt;
+
+    // Identical formula to rocket-crash.html flyLoop
+    _mult = Math.max(1, parseFloat((Math.pow(1.06, _elapsed * 5.5)).toFixed(2)));
+
+    if (_mult >= _targetCrash) {
+      _mult = _targetCrash;
+      doBust();
+    }
+    return;
+  }
+
+  // 'bust' — waiting for setTimeout to call startWait
+}, TICK_MS);
+
+// ── Expose PH_ROCKET for bridge-rocket.js ────────────────────────────
+// Normalise 'bust' → 'crash' so admin-rocket.html handles it correctly
+setInterval(function () {
+  window.PH_ROCKET = {
+    state:      _state === 'bust' ? 'crash' : _state,
+    mult:       _mult,
+    crashAt:    _targetCrash,
+    waitTimer:  _waitRemaining,
+    hist:       HIST.slice(0, 30),
+  };
+}, 80);
+
+// ── Status display ────────────────────────────────────────────────────
+const _stateColors = { wait: '#f0b429', fly: '#f97316', bust: '#f03a3a', crash: '#f03a3a' };
+const _dotClasses  = { wait: 'dot dot-orange', fly: 'dot dot-orange', bust: 'dot dot-red', crash: 'dot dot-red' };
+
+setInterval(function () {
+  const s = _state;
+  document.getElementById('stateVal').textContent  = s.charAt(0).toUpperCase() + s.slice(1);
+  document.getElementById('stateVal').style.color  = _stateColors[s] || '#eef0ff';
+  document.getElementById('crashVal').textContent  = _targetCrash.toFixed(2) + '×';
+  document.getElementById('crashVal').style.color  = '#eef0ff';
+  document.getElementById('multVal').textContent   = _mult.toFixed(2) + '×';
+  document.getElementById('multVal').style.color   = s === 'fly' ? '#f97316' : '#3a4068';
+  document.getElementById('roundVal').textContent  = _roundCount;
+
+  // Confirm broadcasting via localStorage
+  try {
+    const ls = localStorage.getItem('ph_rk_sync');
+    if (ls) {
+      const d = JSON.parse(ls);
+      const fresh = (Date.now() - (d.ts || 0)) < 500;
+      document.getElementById('broadVal').textContent  = fresh ? 'Live' : 'Idle';
+      document.getElementById('broadVal').style.color  = fresh ? '#1fd17a' : '#f0b429';
+      document.getElementById('statusDot').className   = fresh ? 'dot dot-green' : 'dot dot-orange';
+      document.getElementById('statusLbl').textContent = fresh ? 'Broadcasting live' : 'Broadcast idle';
+      document.getElementById('statusLbl').style.color = fresh ? '#1fd17a' : '#f0b429';
+    }
+  } catch(e) {}
+}, 300);
+
+// ── Mark engine as running ────────────────────────────────────────────
+document.getElementById('statusVal').textContent = 'Running';
+document.getElementById('statusVal').style.color = '#1fd17a';
+
+startWait();
+</script>
+
+<!-- Bridge reads window.PH_ROCKET — works standalone since no parent iframe dependency -->
+<script src="bridge-rocket.js"></script>
+
+</body>
+</html>

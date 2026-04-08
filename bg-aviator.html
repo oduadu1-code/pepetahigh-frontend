@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Aviator Engine · Background</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#09090f;color:#eef0ff;font-family:'JetBrains Mono',monospace;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;gap:16px}
+.card{background:#0f1018;border:1px solid #252740;border-radius:12px;padding:20px 24px;width:100%;max-width:360px;text-align:center}
+.icon{font-size:2rem;margin-bottom:10px}
+.title{font-size:.85rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#6c88ff;margin-bottom:14px}
+.row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #1b1d2e;font-size:.72rem}
+.row:last-child{border-bottom:none}
+.row-lbl{color:#4a4f7a;letter-spacing:.06em;text-transform:uppercase}
+.row-val{font-weight:700}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:middle}
+.dot-green{background:#29d980;box-shadow:0 0 8px #29d980;animation:pulse 1.2s ease infinite}
+.dot-red{background:#f24e4e}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.status-row{display:flex;align-items:center;justify-content:center;font-size:.78rem;margin-top:14px;gap:6px}
+.note{font-size:.6rem;color:#4a4f7a;margin-top:10px;line-height:1.6}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="icon">✈</div>
+  <div class="title">Aviator Prediction Engine</div>
+
+  <div class="row">
+    <span class="row-lbl">Status</span>
+    <span class="row-val" id="statusVal" style="color:#4a4f7a">Starting…</span>
+  </div>
+  <div class="row">
+    <span class="row-lbl">State</span>
+    <span class="row-val" id="stateVal" style="color:#4a4f7a">—</span>
+  </div>
+  <div class="row">
+    <span class="row-lbl">Next Crash</span>
+    <span class="row-val" id="crashVal" style="color:#4a4f7a">—</span>
+  </div>
+  <div class="row">
+    <span class="row-lbl">Live Mult</span>
+    <span class="row-val" id="multVal" style="color:#4a4f7a">—</span>
+  </div>
+  <div class="row">
+    <span class="row-lbl">Round</span>
+    <span class="row-val" id="roundVal" style="color:#4a4f7a">—</span>
+  </div>
+
+  <div class="status-row">
+    <span class="dot" id="broadcastDot" style="background:#4a4f7a"></span>
+    <span id="broadcastLbl" style="color:#4a4f7a">Broadcasting…</span>
+  </div>
+  <div class="note">Keep this window open in the background.<br>The admin predictor reads data from this engine.</div>
+</div>
+
+<!-- ── Load game dependencies ────────────────────────────────────── -->
+<script src="utils.js"></script>
+<script>
+// ── Safety stubs: fill in anything utils.js may not define ────────
+// These only activate if utils.js hasn't defined them already.
+
+window.PlayerCount = window.PlayerCount || { get: () => 80 };
+
+if (typeof fakeName  === 'undefined') window.fakeName  = () => '254' + String(Math.floor(Math.random() * 9e6 + 1e6));
+if (typeof maskName  === 'undefined') window.maskName  = n  => n ? n[0] + '***' + n[n.length - 1] : '?***?';
+if (typeof fakeInitial === 'undefined') window.fakeInitial = n => ((n || '?')[0]).toUpperCase();
+
+// PH stub — used by engine.js for balance/auth, safe to mock in bg context
+if (typeof PH === 'undefined' || !window.PH) {
+  window.PH = {
+    getMode:    ()    => 'real',
+    getUser:    ()    => null,
+    balance:    ()    => 0,
+    getWallet:  ()    => 0,
+    getDemoBal: ()    => 5000,
+    deduct:     ()    => {},
+    credit:     ()    => {},
+    saveTxn:    ()    => {},
+    getTxns:    ()    => [],
+    fmt:        v     => 'KSh ' + parseFloat(v || 0).toFixed(2),
+  };
+}
+
+// Suppress updateNavBal calls from engine
+window.updateNavBal = () => {};
+</script>
+
+<!-- ── Game engine ───────────────────────────────────────────────── -->
+<script src="engine.js"></script>
+
+<script>
+(function () {
+  'use strict';
+
+  const statusEl    = document.getElementById('statusVal');
+  const stateEl     = document.getElementById('stateVal');
+  const crashEl     = document.getElementById('crashVal');
+  const multEl      = document.getElementById('multVal');
+  const roundEl     = document.getElementById('roundVal');
+  const broadDot    = document.getElementById('broadcastDot');
+  const broadLbl    = document.getElementById('broadcastLbl');
+
+  if (!window.G_real || !window.startWorld) {
+    statusEl.textContent = '⚠ Engine failed to load';
+    statusEl.style.color = '#f24e4e';
+    console.error('[bg-aviator] engine.js did not define G_real / startWorld');
+    return;
+  }
+
+  // ── Start real-world engine ──────────────────────────────────────
+  startWorld(window.G_real);
+  statusEl.textContent = 'Running';
+  statusEl.style.color = '#29d980';
+
+  // ── Status display loop ─────────────────────────────────────────
+  let _bcCount = 0;
+
+  // Listen for BroadcastChannel own messages to confirm publishing
+  try {
+    const _bc = new BroadcastChannel('ph_av_bridge');
+    _bc.onmessage = () => { _bcCount++; };
+  } catch (e) {}
+
+  const _stateColors = { wait: '#f5c542', fly: '#29d980', crash: '#f24e4e', idle: '#4a4f7a' };
+
+  setInterval(() => {
+    const G = window.G_real;
+    if (!G) return;
+
+    const state = G.state || 'idle';
+    stateEl.textContent  = state.charAt(0).toUpperCase() + state.slice(1);
+    stateEl.style.color  = _stateColors[state] || '#eef0ff';
+    crashEl.textContent  = (G.crashAt || 0).toFixed(2) + '×';
+    crashEl.style.color  = '#eef0ff';
+    multEl.textContent   = (G.mult    || 1).toFixed(2) + '×';
+    multEl.style.color   = state === 'fly' ? '#6c88ff' : '#4a4f7a';
+    roundEl.textContent  = '#' + (G.roundNum || 1);
+
+    // Confirm bridge is publishing to localStorage
+    const lsVal = localStorage.getItem('ph_av_sync');
+    if (lsVal) {
+      try {
+        const d = JSON.parse(lsVal);
+        const fresh = (Date.now() - (d.ts || 0)) < 500;
+        broadDot.className = 'dot dot-green';
+        broadLbl.textContent = fresh ? 'Broadcasting live' : 'Broadcast idle';
+        broadLbl.style.color = fresh ? '#29d980' : '#f5c542';
+      } catch (e) {}
+    }
+  }, 300);
+})();
+</script>
+
+<!-- ── Bridge — reads window.G_real (parent===window in standalone) ─ -->
+<script src="bridge-aviator.js"></script>
+
+</body>
+</html>

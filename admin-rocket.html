@@ -13,13 +13,10 @@
   --border:#1a1f35;--border2:#242a45;
   --text:#dce4ff;--text2:#7a84b0;--text3:#3a4068;
   --orange:#ff6b2b;--red:#f03a3a;--green:#1fd17a;--gold:#f0b429;--blue:#3d6bff;--purple:#8b5cf6;
-  --orange-glow:rgba(255,107,43,.18);--green-glow:rgba(31,209,122,.15);--red-glow:rgba(240,58,58,.18);
 }
 html,body{height:100%;overflow:hidden}
 body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);display:flex;flex-direction:column}
-
-/* Subtle grid bg */
-body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(61,107,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(61,107,255,.03) 1px,transparent 1px);background-size:48px 48px;pointer-events:none}
+body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(255,107,43,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,107,43,.025) 1px,transparent 1px);background-size:48px 48px;pointer-events:none}
 
 /* ── TOP NAV ── */
 .top-nav{position:relative;z-index:10;display:flex;align-items:center;padding:0 20px;height:50px;background:rgba(6,8,16,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);flex-shrink:0;gap:14px}
@@ -40,13 +37,18 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 .conn-pill.live .cpill-dot,.conn-pill.searching .cpill-dot{animation:dotPulse 1.2s ease infinite}
 @keyframes dotPulse{0%,100%{opacity:1;box-shadow:0 0 5px currentColor}50%{opacity:.3;box-shadow:none}}
 
+/* Launch engine button */
+.launch-btn{display:none;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:.64rem;font-weight:700;background:rgba(255,107,43,.1);border:1px solid rgba(255,107,43,.3);color:var(--orange);cursor:pointer;transition:all .2s}
+.launch-btn:hover{background:rgba(255,107,43,.2);border-color:var(--orange)}
+.launch-btn.visible{display:flex}
+
 /* ── HISTORY BAR ── */
-.hist-bar{position:relative;z-index:9;display:flex;align-items:center;gap:6px;padding:0 18px;height:38px;background:rgba(11,13,24,.98);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+.hist-bar{position:relative;z-index:9;display:flex;align-items:center;gap:6px;padding:0 18px;height:36px;background:rgba(11,13,24,.98);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;flex-shrink:0}
 .hist-bar::-webkit-scrollbar{display:none}
 .hist-live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;animation:dotPulse 1.4s ease infinite}
-.hist-lbl{font-size:.56rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);flex-shrink:0;margin-right:4px}
-.hist-chips-wrap{display:flex;gap:5px;align-items:center}
-.hchip{flex-shrink:0;padding:3px 10px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:.62rem;font-weight:600;cursor:default;transition:transform .12s}
+.hist-lbl{font-size:.54rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);flex-shrink:0;margin-right:4px}
+.hist-chips-wrap{display:flex;gap:4px;align-items:center}
+.hchip{flex-shrink:0;padding:2px 9px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:.6rem;font-weight:600;cursor:default;transition:transform .12s}
 .hchip:hover{transform:scale(1.1)}
 .hc-bust{background:rgba(240,58,58,.1);color:var(--red);border:1px solid rgba(240,58,58,.18)}
 .hc-safe{background:rgba(31,209,122,.1);color:var(--green);border:1px solid rgba(31,209,122,.18)}
@@ -59,9 +61,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 
 /* ── LEFT PANEL ── */
 .left-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 24px;position:relative;overflow:hidden;gap:0}
-
-/* Glow orb behind display */
-.left-panel::after{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(255,107,43,.06) 0%,transparent 68%);pointer-events:none;z-index:0}
+.left-panel::after{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(255,107,43,.05) 0%,transparent 68%);pointer-events:none;z-index:0}
 
 .phase-badge{position:relative;z-index:2;display:inline-flex;align-items:center;gap:7px;padding:5px 16px;border-radius:20px;font-size:.66rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:20px}
 .pb-wait{background:rgba(240,180,41,.08);border:1px solid rgba(240,180,41,.28);color:var(--gold)}
@@ -81,7 +81,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 /* Big value display */
 .big-display{position:relative;z-index:2;text-align:center;margin-bottom:6px}
 .big-label{font-size:.56rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
-.big-val{font-family:'JetBrains Mono',monospace;font-size:clamp(5rem,12vw,8.5rem);font-weight:700;line-height:1;letter-spacing:-.02em;transition:color .25s,text-shadow .25s}
+.big-val{font-family:'JetBrains Mono',monospace;font-size:clamp(5rem,12vw,8.5rem);font-weight:700;line-height:1;letter-spacing:-.02em;transition:color .15s,text-shadow .15s}
 .bv-idle{color:var(--text3)}
 .bv-safe{color:var(--green);text-shadow:0 0 80px rgba(31,209,122,.35)}
 .bv-mid{color:var(--gold);text-shadow:0 0 80px rgba(240,180,41,.35)}
@@ -91,8 +91,14 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 @keyframes crashShake{0%,100%{transform:scale(1)}30%{transform:scale(1.08) rotate(-1deg)}70%{transform:scale(.94) rotate(.5deg)}}
 .big-sub{font-size:.72rem;color:var(--text2);margin-top:6px;position:relative;z-index:2}
 
-/* Live bar */
-.live-bar{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:0;width:100%;max-width:420px;background:var(--bg3);border:1px solid var(--border2);border-radius:14px;overflow:hidden;margin-top:24px}
+/* Target pill — shown during fly under the counting mult */
+.target-pill{position:relative;z-index:2;display:none;align-items:center;gap:10px;padding:8px 18px;border-radius:9px;margin-top:6px;background:rgba(255,107,43,.06);border:1px solid rgba(255,107,43,.18)}
+.target-pill.show{display:flex}
+.tp-lbl{font-size:.54rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3)}
+.tp-val{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700}
+
+/* Live bar — 2 cols only (target crash + round) */
+.live-bar{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;width:100%;max-width:380px;background:var(--bg3);border:1px solid var(--border2);border-radius:14px;overflow:hidden;margin-top:20px}
 .lb-item{padding:12px 22px;text-align:center;flex:1}
 .lb-divider{width:1px;background:var(--border2);align-self:stretch}
 .lb-lbl{font-size:.53rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
@@ -103,11 +109,18 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 .adv-pill{position:relative;z-index:2;display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:10px;font-size:.74rem;font-weight:600;margin-top:14px;max-width:420px;width:100%}
 .adv-safe{background:rgba(31,209,122,.06);border:1px solid rgba(31,209,122,.2);color:var(--green)}
 .adv-warn{background:rgba(240,180,41,.06);border:1px solid rgba(240,180,41,.2);color:var(--gold)}
-.adv-danger{background:rgba(240,58,58,.06);border:1px solid rgba(240,58,58,.2);color:var(--red)}
+.adv-danger{background:rgba(240,58,58,.06);border:1px solid rgba(240,58,58,.2);color:var(--red);animation:dangerPulse 1s ease infinite}
+@keyframes dangerPulse{0%,100%{box-shadow:none}50%{box-shadow:0 0 20px rgba(240,58,58,.2)}}
+
+/* Offline notice */
+.offline-notice{position:relative;z-index:2;text-align:center;display:none}
+.offline-notice.show{display:block}
+.on-icon{font-size:2.5rem;margin-bottom:12px;opacity:.25}
+.on-title{font-size:.82rem;font-weight:700;color:var(--text3);margin-bottom:6px}
+.on-sub{font-size:.68rem;color:var(--text3);line-height:1.7}
 
 /* ── RIGHT PANEL ── */
 .right-panel{border-left:1px solid var(--border);background:rgba(11,13,24,.8);backdrop-filter:blur(10px);display:flex;flex-direction:column;overflow:hidden}
-
 .rp-head{padding:14px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .rp-head-left{display:flex;align-items:center;gap:8px}
 .rp-live-dot{width:8px;height:8px;border-radius:50%;background:var(--red);flex-shrink:0}
@@ -115,14 +128,12 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 .rp-title{font-family:'Syne',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.04em}
 .rp-round-tag{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--text3)}
 
-/* Stats strip */
 .rp-stats{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--border);flex-shrink:0}
 .rps{padding:10px 12px;text-align:center;border-right:1px solid var(--border)}
 .rps:last-child{border-right:none}
 .rps-val{font-family:'JetBrains Mono',monospace;font-size:.9rem;font-weight:700;margin-bottom:2px}
 .rps-lbl{font-size:.52rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)}
 
-/* Prediction card */
 .pred-card{margin:10px 12px 0;background:linear-gradient(135deg,rgba(255,107,43,.06),rgba(139,92,246,.04));border:1px solid rgba(255,107,43,.2);border-radius:12px;padding:12px 14px;flex-shrink:0}
 .pc-lbl-row{display:flex;align-items:center;gap:6px;margin-bottom:8px}
 .pc-pulse{width:6px;height:6px;border-radius:50%;background:var(--orange);animation:dotPulse .8s ease infinite}
@@ -130,25 +141,20 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 .pc-val{font-family:'JetBrains Mono',monospace;font-size:2.4rem;font-weight:700;line-height:1}
 .pc-sub{font-size:.63rem;color:var(--text2);margin-top:5px}
 
-/* Confidence bar */
 .conf-section{padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0}
 .conf-row{display:flex;justify-content:space-between;font-size:.6rem;font-weight:600;color:var(--text3);margin-bottom:5px}
 .conf-track{height:3px;background:rgba(255,255,255,.04);border-radius:2px;overflow:hidden}
 .conf-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--orange),var(--purple));transition:width .7s ease}
 
-/* Queued list */
 .queued-list{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
 .queued-list::-webkit-scrollbar{width:3px}
 .queued-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-
 .queue-section-lbl{padding:10px 14px 6px;font-size:.53rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)}
-
 .q-item{display:flex;align-items:center;padding:11px 14px;border-bottom:1px solid rgba(26,31,53,.6);transition:background .15s;gap:10px;position:relative}
 .q-item:hover{background:rgba(255,255,255,.015)}
 .q-item.is-past{opacity:.45}
 .q-item.is-current{background:rgba(255,107,43,.03)}
 .q-item.is-current::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--orange)}
-
 .qi-num{font-size:.58rem;font-weight:700;color:var(--text3);width:52px;flex-shrink:0;font-family:'JetBrains Mono',monospace}
 .qi-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0;background:var(--bg4);border:1px solid var(--border2)}
 .qi-body{flex:1;min-width:0}
@@ -158,26 +164,19 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 .qi-val{font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-weight:700}
 .qi-status{font-size:.56rem;color:var(--text3);margin-top:1px}
 
-/* Debug */
 .debug{margin:10px 12px;background:rgba(240,180,41,.04);border:1px solid rgba(240,180,41,.18);border-radius:9px;padding:10px 12px;font-size:.65rem;line-height:1.7;color:var(--text2);display:none}
 .debug.show{display:block}
 .debug code{background:rgba(255,255,255,.06);padding:1px 5px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--text)}
 
-/* Footer */
 .rp-footer{padding:7px 14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:.57rem;color:var(--text3);flex-shrink:0}
-.footer-sync{display:flex;align-items:center;gap:5px}
 
-/* Flying glow animations */
-@keyframes flyingPulse{0%,100%{box-shadow:0 0 0 rgba(255,107,43,0)}50%{box-shadow:0 0 60px rgba(255,107,43,.08)}}
+@keyframes flyingPulse{0%,100%{box-shadow:none}50%{box-shadow:0 0 60px rgba(255,107,43,.07)}}
 .left-panel.flying{animation:flyingPulse 2s ease infinite}
-@keyframes crashPulse{0%,100%{box-shadow:0 0 0 rgba(240,58,58,0)}50%{box-shadow:0 0 80px rgba(240,58,58,.12)}}
+@keyframes crashPulse{0%,100%{box-shadow:none}50%{box-shadow:0 0 80px rgba(240,58,58,.1)}}
 .left-panel.crashed{animation:crashPulse 1s ease infinite}
 </style>
 <script>
-  // Session guard — redirect to login if not authenticated
-  if (sessionStorage.getItem('ph_adm_ok') !== '1') {
-    location.replace('admin-index.html');
-  }
+  if (sessionStorage.getItem('ph_adm_ok') !== '1') location.replace('admin-index.html');
 </script>
 </head>
 <body>
@@ -190,6 +189,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
   <div class="nav-tag">🚀 Predictor</div>
   <div class="nav-right">
     <div class="admin-pill">ADMIN</div>
+    <!-- Launch button — visible when not receiving data -->
+    <button class="launch-btn" id="launchBtn" onclick="launchEngine()">
+      🚀 Start Engine
+    </button>
     <div class="conn-pill searching" id="connPill">
       <div class="cpill-dot"></div>
       <span id="connLabel">Connecting…</span>
@@ -212,13 +215,11 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
   <!-- LEFT PANEL -->
   <div class="left-panel" id="leftPanel">
 
-    <!-- Phase badge -->
     <div class="phase-badge pb-offline" id="phaseBadge">
       <div class="pb-dot"></div>
       <span id="phaseText">Offline</span>
     </div>
 
-    <!-- Countdown ring (wait phase) -->
     <div class="ring-wrap" id="ringWrap" style="display:none">
       <svg width="72" height="72" viewBox="0 0 72 72">
         <circle class="ring-track" cx="36" cy="36" r="30"/>
@@ -227,20 +228,21 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
       <div class="ring-num" id="ringNum">—</div>
     </div>
 
-    <!-- Big value -->
+    <!-- Big value — predicted crash (wait) or LIVE MULT counting (fly) -->
     <div class="big-display">
       <div class="big-label" id="bigLabel">CRASH PREDICTION</div>
       <div class="big-val bv-idle" id="bigVal">—</div>
       <div class="big-sub" id="bigSub">Waiting for live connection…</div>
     </div>
 
-    <!-- Live bar (fly/crash phases) -->
+    <!-- Target crash pill — shown during fly -->
+    <div class="target-pill" id="targetPill">
+      <span class="tp-lbl">Target</span>
+      <span class="tp-val vc-idle" id="targetVal">—</span>
+    </div>
+
+    <!-- Live bar (2 cols: Target Crash + Round — no redundant Live Mult) -->
     <div class="live-bar" id="liveBar" style="display:none">
-      <div class="lb-item">
-        <div class="lb-lbl">Live Multiplier</div>
-        <div class="lb-val vc-high" id="liveMult">1.00×</div>
-      </div>
-      <div class="lb-divider"></div>
       <div class="lb-item">
         <div class="lb-lbl">Target Crash</div>
         <div class="lb-val vc-idle" id="liveTarget">—</div>
@@ -255,6 +257,13 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
     <!-- Advice -->
     <div class="adv-pill adv-safe" id="advPill" style="display:none">
       <span id="advText">—</span>
+    </div>
+
+    <!-- Offline notice -->
+    <div class="offline-notice" id="offlineNotice">
+      <div class="on-icon">🚀</div>
+      <div class="on-title">No data received</div>
+      <div class="on-sub">Click <strong>Start Engine</strong> above<br>to launch the prediction engine.</div>
     </div>
 
   </div>
@@ -276,35 +285,31 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
       <div class="rps"><div class="rps-val" id="statHigh" style="color:var(--gold)">—</div><div class="rps-lbl">High</div></div>
     </div>
 
-    <!-- Current prediction card -->
     <div class="pred-card">
       <div class="pc-lbl-row">
-        <div class="pc-pulse" id="pcPulse"></div>
+        <div class="pc-pulse"></div>
         <div class="pc-lbl" id="pcLbl">NEXT ROUND</div>
       </div>
       <div class="pc-val vc-idle" id="pcVal">—</div>
       <div class="pc-sub" id="pcSub">Awaiting connection…</div>
     </div>
 
-    <!-- Confidence -->
     <div class="conf-section">
       <div class="conf-row"><span>Confidence</span><span id="confPct" style="color:var(--text)">—</span></div>
       <div class="conf-track"><div class="conf-fill" id="confFill" style="width:0%"></div></div>
     </div>
 
-    <!-- Debug notice -->
     <div class="debug" id="debugPanel">
       <strong style="color:var(--gold)">⚠ Not receiving game data</strong><br>
-      Ensure <code>bridge-rocket.js</code> is loaded on the game page and both pages share the same browser.
+      Click <strong>Start Engine</strong> above, or ensure <code>bridge-rocket.js</code> is loaded on the game page and both pages share the same browser.
     </div>
 
-    <!-- Queue list -->
     <div class="queued-list" id="queuedList">
       <div style="padding:22px 14px;text-align:center;font-size:.7rem;color:var(--text3)">Waiting for game data…</div>
     </div>
 
     <div class="rp-footer">
-      <div class="footer-sync">🔄 Auto-synced · Real mode only</div>
+      <div>🔄 Auto-synced · Real mode only</div>
       <span id="syncTime">—</span>
     </div>
 
@@ -316,7 +321,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 
 const CHANNEL  = 'ph_rk_bridge';
 const LS_KEY   = 'ph_rk_sync';
-const STALE_MS = 2000;
+const STALE_MS = 2500;
 const WAIT_DUR = 5000;
 
 let _data        = null;
@@ -329,21 +334,19 @@ let _prevState   = null;
 try { _history = JSON.parse(localStorage.getItem('ph_admin_rk_hist') || '[]'); } catch(e) {}
 _sessionHigh = _history.length ? Math.max(..._history) : 0;
 
-// BroadcastChannel
+// ── Bridge receive ───────────────────────────────────────────────────
 let bc = null;
 try {
   bc = new BroadcastChannel(CHANNEL);
-  bc.onmessage = (e) => { if (e.data) handleData(e.data); };
+  bc.onmessage = e => { if (e.data) handleData(e.data); };
 } catch(e) {}
 
-// localStorage cross-tab
-window.addEventListener('storage', (e) => {
+window.addEventListener('storage', e => {
   if (e.key === LS_KEY && e.newValue) {
     try { handleData(JSON.parse(e.newValue)); } catch(err) {}
   }
 });
 
-// Poll fallback
 setInterval(() => {
   try {
     const raw = localStorage.getItem(LS_KEY);
@@ -363,7 +366,9 @@ function handleData(d) {
 
   if (state === 'wait' && crashAt > 0) _curCrashAt = crashAt;
 
-  if (_prevState === 'fly' && state === 'crash' && crashAt > 0) {
+  // FIX: rocket game uses 'bust' — handle both 'crash' and 'bust' for history tracking
+  const isCrash = (state === 'crash' || state === 'bust');
+  if ((_prevState === 'fly') && isCrash && crashAt > 0) {
     _history.unshift(parseFloat(crashAt.toFixed(2)));
     if (_history.length > 40) _history.pop();
     if (crashAt > _sessionHigh) _sessionHigh = crashAt;
@@ -372,7 +377,37 @@ function handleData(d) {
   _prevState = state;
 }
 
-// ── Helpers ──
+// ── Background engine popup ──────────────────────────────────────────
+let _bgWindow   = null;
+let _bgLaunched = false;
+
+function launchEngine() {
+  if (_bgWindow && !_bgWindow.closed) { _bgWindow.focus(); return; }
+  try {
+    _bgWindow = window.open(
+      'bg-rocket.html',
+      'ph_rk_bg_engine',
+      'width=400,height=240,menubar=no,toolbar=no,location=no,status=no,resizable=yes'
+    );
+    _bgLaunched = true;
+    document.getElementById('launchBtn').classList.remove('visible');
+  } catch(e) {
+    alert('Popup was blocked. Please allow popups for this page and try again.');
+  }
+}
+
+// Show launch button after 2s if no data; re-show if bg window closes
+setInterval(() => {
+  const connected = _lastMsg > 0 && (Date.now() - _lastMsg) < STALE_MS;
+  const btn = document.getElementById('launchBtn');
+  if (connected) { btn.classList.remove('visible'); return; }
+  if (_bgLaunched && _bgWindow && _bgWindow.closed) {
+    _bgLaunched = false; _bgWindow = null;
+  }
+  if (!_bgLaunched) btn.classList.add('visible');
+}, 2000);
+
+// ── Helpers ──────────────────────────────────────────────────────────
 function getConf(v) {
   if (v <= 1.00) return { pct: 95, label: 'Instant crash — very common' };
   if (v <= 1.98) return { pct: 88, label: 'Very High — sub-2× likely' };
@@ -390,7 +425,6 @@ function valCls(v) {
   if (v < 20) return 'bv-high';
   return 'bv-mega';
 }
-
 function vcCls(v) {
   if (!v || v <= 0) return 'vc-idle';
   if (v < 2)  return 'vc-safe';
@@ -398,14 +432,12 @@ function vcCls(v) {
   if (v < 20) return 'vc-high';
   return 'vc-mega';
 }
-
 function hcCls(v) {
   if (v < 1.5) return 'hc-bust';
   if (v < 3)   return 'hc-safe';
   if (v < 10)  return 'hc-mid';
   return 'hc-high';
 }
-
 function fmt(v) { return parseFloat(v).toFixed(2) + '×'; }
 
 function getAdv(mult, crashAt) {
@@ -419,21 +451,17 @@ function getAdv(mult, crashAt) {
 function buildQueue(crashAt, hist) {
   const el = document.getElementById('queuedList');
   const items = [];
-
   if (crashAt > 0) {
     const conf = getConf(crashAt);
     items.push({ label: 'CURRENT', icon: '⏳', title: 'This Round', sub: conf.pct + '% confidence · ' + conf.label, val: crashAt, status: 'Queued', past: false, current: true });
   }
-
   hist.slice(0, 9).forEach((v, i) => {
     items.push({ label: '#' + (i + 1) + ' ago', icon: '✓', title: 'Past Round', sub: 'Completed', val: v, status: 'Done', past: true, current: false });
   });
-
   if (!items.length) {
     el.innerHTML = '<div style="padding:22px 14px;text-align:center;font-size:.7rem;color:var(--text3)">Waiting for game data…</div>';
     return;
   }
-
   el.innerHTML = '<div class="queue-section-lbl">Round Queue</div>' +
     items.map(it => `
       <div class="q-item${it.past ? ' is-past' : ''}${it.current ? ' is-current' : ''}">
@@ -450,74 +478,82 @@ function buildQueue(crashAt, hist) {
       </div>`).join('');
 }
 
-// ── Main render loop ──
+// ── Main render loop ─────────────────────────────────────────────────
 function render() {
   const now       = Date.now();
   const connected = _lastMsg > 0 && (now - _lastMsg) < STALE_MS;
 
-  // Connection pill
-  const pill = document.getElementById('connPill');
-  const lbl  = document.getElementById('connLabel');
-  const dbg  = document.getElementById('debugPanel');
+  const pill    = document.getElementById('connPill');
+  const lbl     = document.getElementById('connLabel');
+  const dbg     = document.getElementById('debugPanel');
   const liveDot = document.getElementById('rpLiveDot');
+  const notice  = document.getElementById('offlineNotice');
 
   if (connected && _data) {
     pill.className = 'conn-pill live';
     lbl.textContent = 'Connected';
     liveDot.className = 'rp-live-dot active';
     if (dbg) dbg.classList.remove('show');
+    notice.classList.remove('show');
   } else if (_lastMsg === 0) {
     pill.className = 'conn-pill searching';
     lbl.textContent = 'Connecting…';
     liveDot.className = 'rp-live-dot';
     if (dbg) dbg.classList.add('show');
+    notice.classList.add('show');
   } else {
     pill.className = 'conn-pill dead';
     lbl.textContent = 'Disconnected';
     liveDot.className = 'rp-live-dot';
     if (dbg) dbg.classList.add('show');
+    notice.classList.remove('show');
   }
 
-  document.getElementById('syncTime').textContent = new Date().toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  document.getElementById('syncTime').textContent =
+    new Date().toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
   if (!connected || !_data) {
     document.getElementById('phaseBadge').className = 'phase-badge pb-offline';
     document.getElementById('phaseText').textContent = 'Offline';
     document.getElementById('ringWrap').style.display = 'none';
     document.getElementById('liveBar').style.display  = 'none';
+    document.getElementById('targetPill').classList.remove('show');
     document.getElementById('advPill').style.display  = 'none';
     document.getElementById('leftPanel').className    = 'left-panel';
     return;
   }
 
-  const state   = _data.state;
-  const crashAt = _curCrashAt || parseFloat((_data.crashAt || 0).toFixed(2));
-  const mult    = _data.mult    || 1;
-  const wTimer  = _data.waitTimer || 0;
-  const roundNum = _data.roundNum || 1;
+  // Normalise: rocket game may send 'bust', treat same as 'crash'
+  const rawState = _data.state;
+  const state    = (rawState === 'bust') ? 'crash' : rawState;
+  const crashAt  = _curCrashAt || parseFloat((_data.crashAt || 0).toFixed(2));
+  const mult     = _data.mult    || 1;
+  const wTimer   = _data.waitTimer || 0;
+  const roundNum = _data.roundNum  || 1;
 
   document.getElementById('rpRound').textContent   = 'Round #' + roundNum;
   document.getElementById('liveRound').textContent = '#' + roundNum;
 
-  // ── WAIT ──
+  // ── WAIT ──────────────────────────────────────────────────────────
   if (state === 'wait') {
     document.getElementById('phaseBadge').className = 'phase-badge pb-wait';
     document.getElementById('phaseText').textContent = 'Countdown — Next Round';
     document.getElementById('leftPanel').className  = 'left-panel';
     document.getElementById('ringWrap').style.display = 'flex';
     document.getElementById('liveBar').style.display  = 'none';
+    document.getElementById('targetPill').classList.remove('show');
     document.getElementById('advPill').style.display  = 'none';
 
     const secs = Math.max(0, Math.ceil(wTimer / 1000));
     document.getElementById('ringNum').textContent = secs;
-    const pct = Math.min(1, wTimer / WAIT_DUR);
-    document.getElementById('ringFill').setAttribute('stroke-dashoffset', (188.5 * pct).toFixed(1));
+    document.getElementById('ringFill').setAttribute('stroke-dashoffset',
+      (188.5 * Math.min(1, wTimer / WAIT_DUR)).toFixed(1));
 
     if (crashAt > 0) {
       document.getElementById('bigLabel').textContent = '⚡ NEXT ROUND PREDICTION';
       document.getElementById('bigVal').textContent   = fmt(crashAt);
       document.getElementById('bigVal').className     = 'big-val ' + valCls(crashAt);
-      document.getElementById('bigSub').textContent   = 'Round starts in ' + secs + 's — get ready';
+      document.getElementById('bigSub').textContent   = 'Starts in ' + secs + 's — get ready';
       const conf = getConf(crashAt);
       document.getElementById('pcLbl').textContent    = 'NEXT ROUND';
       document.getElementById('pcVal').textContent    = fmt(crashAt);
@@ -532,7 +568,7 @@ function render() {
     }
   }
 
-  // ── FLY ──
+  // ── FLY ───────────────────────────────────────────────────────────
   else if (state === 'fly') {
     document.getElementById('phaseBadge').className = 'phase-badge pb-fly';
     document.getElementById('phaseText').textContent = '🚀 In Flight';
@@ -540,23 +576,32 @@ function render() {
     document.getElementById('ringWrap').style.display = 'none';
     document.getElementById('liveBar').style.display  = 'flex';
 
-    document.getElementById('bigLabel').textContent   = 'TARGET CRASH — THIS ROUND';
-    document.getElementById('bigVal').textContent     = fmt(crashAt);
-    document.getElementById('bigVal').className       = 'big-val ' + valCls(crashAt);
-    document.getElementById('bigSub').textContent     = 'Round in progress — cash out before this value';
-    document.getElementById('liveMult').textContent   = fmt(mult);
-    document.getElementById('liveMult').className     = 'lb-val ' + vcCls(mult);
+    // ── Big number = LIVE MULT counting up ──
+    document.getElementById('bigLabel').textContent = '🚀  LIVE  MULTIPLIER';
+    document.getElementById('bigVal').textContent   = fmt(mult);
+    document.getElementById('bigVal').className     = 'big-val ' + valCls(mult);
+    document.getElementById('bigSub').textContent   = 'Round #' + roundNum;
+
+    // Target crash as compact pill
+    const tpill = document.getElementById('targetPill');
+    tpill.classList.add('show');
+    document.getElementById('targetVal').textContent = fmt(crashAt);
+    document.getElementById('targetVal').className   = 'tp-val ' + vcCls(crashAt);
+
+    // Live bar: target + round (no redundant live mult column)
     document.getElementById('liveTarget').textContent = fmt(crashAt);
     document.getElementById('liveTarget').className   = 'lb-val ' + vcCls(crashAt);
 
+    // Right panel prediction card = target crash
     const conf = getConf(crashAt);
-    document.getElementById('pcLbl').textContent    = 'CURRENT ROUND';
+    document.getElementById('pcLbl').textContent    = 'TARGET CRASH';
     document.getElementById('pcVal').textContent    = fmt(crashAt);
     document.getElementById('pcVal').className      = 'pc-val ' + vcCls(crashAt);
-    document.getElementById('pcSub').textContent    = 'In flight — multiplier climbing';
+    document.getElementById('pcSub').textContent    = 'Cash out before ' + fmt(crashAt);
     document.getElementById('confFill').style.width = conf.pct + '%';
     document.getElementById('confPct').textContent  = conf.pct + '%';
 
+    // Advice pill
     const adv = getAdv(mult, crashAt);
     if (adv) {
       document.getElementById('advPill').style.display = 'flex';
@@ -567,23 +612,22 @@ function render() {
     }
   }
 
-  // ── CRASH ──
+  // ── CRASH / BUST ──────────────────────────────────────────────────
   else if (state === 'crash') {
     document.getElementById('phaseBadge').className = 'phase-badge pb-crash';
     document.getElementById('phaseText').textContent = '💥 Crashed!';
     document.getElementById('leftPanel').className  = 'left-panel crashed';
     document.getElementById('ringWrap').style.display = 'none';
     document.getElementById('liveBar').style.display  = 'flex';
+    document.getElementById('targetPill').classList.remove('show');
     document.getElementById('advPill').style.display  = 'none';
 
     document.getElementById('bigLabel').textContent   = 'CRASHED AT';
     document.getElementById('bigVal').textContent     = fmt(crashAt);
     document.getElementById('bigVal').className       = 'big-val bv-crash';
     document.getElementById('bigSub').textContent     = 'Round complete — next prediction loading…';
-    document.getElementById('liveMult').textContent   = fmt(crashAt);
-    document.getElementById('liveMult').className     = 'lb-val vc-mega';
-    document.getElementById('liveTarget').textContent = '—';
-    document.getElementById('liveTarget').className   = 'lb-val vc-idle';
+    document.getElementById('liveTarget').textContent = fmt(crashAt);
+    document.getElementById('liveTarget').className   = 'lb-val vc-mega';
 
     document.getElementById('pcLbl').textContent    = 'CRASHED AT';
     document.getElementById('pcVal').textContent    = fmt(crashAt);
@@ -593,19 +637,19 @@ function render() {
     document.getElementById('confPct').textContent  = '100%';
   }
 
-  // ── Stats & History ──
+  // ── Stats & history ───────────────────────────────────────────────
   const hist = (_data.hist && _data.hist.length) ? _data.hist : _history;
   if (hist.length) {
-    const src = _history.length ? _history : hist;
-    const avg = src.reduce((s, v) => s + v, 0) / src.length;
+    const src  = _history.length ? _history : hist;
+    const avg  = src.reduce((s, v) => s + v, 0) / src.length;
     const high = Math.max(...src);
     if (high > _sessionHigh) _sessionHigh = high;
     document.getElementById('statRounds').textContent = src.length;
     document.getElementById('statAvg').textContent    = avg.toFixed(2) + '×';
-    document.getElementById('statHigh').textContent   = _sessionHigh > 0 ? _sessionHigh.toFixed(2) + '×' : high.toFixed(2) + '×';
+    document.getElementById('statHigh').textContent   = (_sessionHigh > 0 ? _sessionHigh : high).toFixed(2) + '×';
   }
 
-  // History chips
+  // History chips (top bar)
   const hc = document.getElementById('histChips');
   if (hist.length) {
     hc.innerHTML = hist.slice(0, 28).map(v =>
@@ -615,7 +659,6 @@ function render() {
     hc.innerHTML = '<span style="font-size:.6rem;color:var(--text3)">No rounds yet…</span>';
   }
 
-  // Queue list
   buildQueue(crashAt, hist);
 }
 
