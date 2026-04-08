@@ -23,6 +23,8 @@ body{background:#02040e;color:#eef0ff;font-family:'JetBrains Mono',monospace;dis
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 .status-row{display:flex;align-items:center;justify-content:center;font-size:.78rem;margin-top:14px;gap:6px}
 .note{font-size:.6rem;color:#3a4068;margin-top:10px;line-height:1.6}
+.warn{font-size:.64rem;color:#f0b429;margin-top:8px;line-height:1.6;background:rgba(240,180,41,.06);border:1px solid rgba(240,180,41,.2);border-radius:7px;padding:8px 10px;text-align:left;display:none}
+.warn.show{display:block}
 </style>
 </head>
 <body>
@@ -31,182 +33,152 @@ body{background:#02040e;color:#eef0ff;font-family:'JetBrains Mono',monospace;dis
   <div class="icon">🚀</div>
   <div class="title">Rocket Crash Engine</div>
 
-  <div class="row">
-    <span class="row-lbl">Status</span>
-    <span class="row-val" id="statusVal" style="color:#3a4068">Starting…</span>
-  </div>
-  <div class="row">
-    <span class="row-lbl">State</span>
-    <span class="row-val" id="stateVal" style="color:#3a4068">—</span>
-  </div>
-  <div class="row">
-    <span class="row-lbl">Next Crash</span>
-    <span class="row-val" id="crashVal" style="color:#3a4068">—</span>
-  </div>
-  <div class="row">
-    <span class="row-lbl">Live Mult</span>
-    <span class="row-val" id="multVal" style="color:#3a4068">—</span>
-  </div>
-  <div class="row">
-    <span class="row-lbl">Rounds Run</span>
-    <span class="row-val" id="roundVal" style="color:#3a4068">0</span>
-  </div>
-  <div class="row">
-    <span class="row-lbl">Broadcast</span>
-    <span class="row-val" id="broadVal" style="color:#3a4068">—</span>
-  </div>
+  <div class="row"><span class="row-lbl">Status</span><span class="row-val" id="statusVal" style="color:#3a4068">Listening…</span></div>
+  <div class="row"><span class="row-lbl">Source</span><span class="row-val" id="sourceVal" style="color:#3a4068">Game page</span></div>
+  <div class="row"><span class="row-lbl">State</span><span class="row-val" id="stateVal" style="color:#3a4068">—</span></div>
+  <div class="row"><span class="row-lbl">Next Crash</span><span class="row-val" id="crashVal" style="color:#3a4068">—</span></div>
+  <div class="row"><span class="row-lbl">Live Mult</span><span class="row-val" id="multVal" style="color:#3a4068">—</span></div>
+  <div class="row"><span class="row-lbl">Rounds Seen</span><span class="row-val" id="roundVal" style="color:#3a4068">0</span></div>
+  <div class="row"><span class="row-lbl">Broadcast</span><span class="row-val" id="broadVal" style="color:#3a4068">—</span></div>
 
   <div class="status-row">
     <span class="dot dot-idle" id="statusDot"></span>
-    <span id="statusLbl" style="color:#3a4068">Initialising…</span>
+    <span id="statusLbl" style="color:#3a4068">Waiting for game data…</span>
   </div>
-  <div class="note">Keep this window open in the background.<br>The admin predictor reads data from this engine.</div>
+
+  <div class="warn" id="warnBox">
+    ⚠ Not receiving data from rocket-crash.html.<br>
+    Make sure the game page is open in the <strong>same browser</strong> and <code>bridge-rocket.js</code> is loaded in it.
+  </div>
+
+  <div class="note">Keep this window open in the background.<br>Reads live data from your open Rocket Crash game tab.</div>
 </div>
 
 <script>
 'use strict';
 
-// ── Rocket Crash — minimal standalone engine ──────────────────────────
-// Replicates the exact crash generator and flight formula from
-// rocket-crash.html so predictions match the real game perfectly.
+// ══════════════════════════════════════════════════════════════════════
+//  bg-rocket.html — RELAY ONLY, no separate engine
+//
+//  WHY: rocket-crash.html already exposes window.PH_ROCKET every 80ms
+//  and bridge-rocket.js already writes it to localStorage + BroadcastChannel.
+//  Running a second engine here with its own RNG would produce DIFFERENT
+//  predictions that don't match what the player sees.
+//
+//  WHAT THIS PAGE DOES:
+//  1. Reads the data bridge-rocket.js already wrote to localStorage
+//  2. Re-broadcasts it so admin-rocket.html always gets a fresh copy
+//  3. Shows the status UI so you can confirm the pipeline is live
+// ══════════════════════════════════════════════════════════════════════
 
-let _state        = 'wait';
-let _mult         = 1.00;
-let _targetCrash  = 2.00;
-let _waitRemaining = 5000;
-let _elapsed      = 0;
-let _lastTick     = 0;
-let _roundCount   = 0;
-const HIST        = (function(){ try{ return JSON.parse(localStorage.getItem('ph_hist_rocket_real')||'[]'); }catch(e){ return []; } })();
+const LS_KEY   = 'ph_rk_sync';       // written by bridge-rocket.js
+const BC_OUT   = 'ph_rk_bridge';     // BroadcastChannel admin reads from
+const STALE_MS = 3000;               // if no data for 3s, show warning
 
-// ── Crash generator — identical to rocket-crash.html REAL mode ────────
-function generateCrash() {
-  const r = Math.random();
-  if (r < 0.18) return 1.00;
-  if (r < 0.52) return parseFloat((1.01 + Math.random() * 0.97).toFixed(2));
-  if (r < 0.72) return parseFloat((1.99 + Math.random() * 2.00).toFixed(2));
-  if (r < 0.85) return parseFloat((4.00 + Math.random() * 5.99).toFixed(2));
-  if (r < 0.93) return parseFloat((10.0 + Math.random() * 14.99).toFixed(2));
-  if (r < 0.97) return parseFloat((25.0 + Math.random() * 24.99).toFixed(2));
-  if (r < 0.99) return parseFloat((50.0 + Math.random() * 149).toFixed(2));
-  return parseFloat((200.0 + Math.random() * 300).toFixed(2));
-}
+let _lastData   = null;
+let _lastTs     = 0;
+let _roundsSeen = 0;
+let _prevState  = null;
 
-// ── State machine ─────────────────────────────────────────────────────
-const WAIT_DUR  = 5000;   // ms
-const TICK_MS   = 50;     // engine tick interval
+// BroadcastChannel — re-relay to admin page
+let bc = null;
+try { bc = new BroadcastChannel(BC_OUT); } catch (e) {}
 
-function startWait() {
-  _state         = 'wait';
-  _mult          = 1.00;
-  _waitRemaining = WAIT_DUR;
-  _elapsed       = 0;
-  _targetCrash   = generateCrash();
-  _roundCount++;
-  updateUI();
-}
-
-function startFlight() {
-  _state   = 'fly';
-  _mult    = 1.00;
-  _elapsed = 0;
-  _lastTick = Date.now();
-  updateUI();
-}
-
-function doBust() {
-  _state = 'bust';
-  _mult  = _targetCrash;
-
-  HIST.unshift(parseFloat(_targetCrash.toFixed(2)));
-  if (HIST.length > 50) HIST.pop();
-  try { localStorage.setItem('ph_hist_rocket_real', JSON.stringify(HIST)); } catch(e) {}
-
-  updateUI();
-  // After bust pause, start next wait
-  setTimeout(startWait, 2800);
-}
-
-// ── Main tick (setInterval — no rAF needed, no canvas) ───────────────
-setInterval(function tick() {
-  if (_state === 'wait') {
-    _waitRemaining -= TICK_MS;
-    if (_waitRemaining <= 0) {
-      _waitRemaining = 0;
-      startFlight();
-    }
-    return;
-  }
-
-  if (_state === 'fly') {
-    const now = Date.now();
-    const dt  = (now - (_lastTick || now)) / 1000;
-    _lastTick = now;
-    _elapsed += dt;
-
-    // Identical formula to rocket-crash.html flyLoop
-    _mult = Math.max(1, parseFloat((Math.pow(1.06, _elapsed * 5.5)).toFixed(2)));
-
-    if (_mult >= _targetCrash) {
-      _mult = _targetCrash;
-      doBust();
-    }
-    return;
-  }
-
-  // 'bust' — waiting for setTimeout to call startWait
-}, TICK_MS);
-
-// ── Expose PH_ROCKET for bridge-rocket.js ────────────────────────────
-// Normalise 'bust' → 'crash' so admin-rocket.html handles it correctly
-setInterval(function () {
-  window.PH_ROCKET = {
-    state:      _state === 'bust' ? 'crash' : _state,
-    mult:       _mult,
-    crashAt:    _targetCrash,
-    waitTimer:  _waitRemaining,
-    hist:       HIST.slice(0, 30),
+// Also listen on the same channel in case bridge-rocket.js is broadcasting
+// directly (some browsers support this even cross-tab)
+let bcIn = null;
+try {
+  bcIn = new BroadcastChannel(BC_OUT);
+  bcIn.onmessage = e => {
+    if (e.data && e.data.game === 'rocket') handleData(e.data);
   };
-}, 80);
+} catch (e) {}
 
-// ── Status display ────────────────────────────────────────────────────
-const _stateColors = { wait: '#f0b429', fly: '#f97316', bust: '#f03a3a', crash: '#f03a3a' };
-const _dotClasses  = { wait: 'dot dot-orange', fly: 'dot dot-orange', bust: 'dot dot-red', crash: 'dot dot-red' };
+function handleData(d) {
+  if (!d || d.game !== 'rocket') return;
+  _lastData = d;
+  _lastTs   = Date.now();
+  // Count round transitions
+  if (_prevState !== 'wait' && d.state === 'wait') _roundsSeen++;
+  _prevState = d.state;
+  updateUI(d);
+}
 
-setInterval(function () {
-  const s = _state;
-  document.getElementById('stateVal').textContent  = s.charAt(0).toUpperCase() + s.slice(1);
-  document.getElementById('stateVal').style.color  = _stateColors[s] || '#eef0ff';
-  document.getElementById('crashVal').textContent  = _targetCrash.toFixed(2) + '×';
-  document.getElementById('crashVal').style.color  = '#eef0ff';
-  document.getElementById('multVal').textContent   = _mult.toFixed(2) + '×';
-  document.getElementById('multVal').style.color   = s === 'fly' ? '#f97316' : '#3a4068';
-  document.getElementById('roundVal').textContent  = _roundCount;
-
-  // Confirm broadcasting via localStorage
+// Poll localStorage every 100ms — this is the main data source
+setInterval(() => {
   try {
-    const ls = localStorage.getItem('ph_rk_sync');
-    if (ls) {
-      const d = JSON.parse(ls);
-      const fresh = (Date.now() - (d.ts || 0)) < 500;
-      document.getElementById('broadVal').textContent  = fresh ? 'Live' : 'Idle';
-      document.getElementById('broadVal').style.color  = fresh ? '#1fd17a' : '#f0b429';
-      document.getElementById('statusDot').className   = fresh ? 'dot dot-green' : 'dot dot-orange';
-      document.getElementById('statusLbl').textContent = fresh ? 'Broadcasting live' : 'Broadcast idle';
-      document.getElementById('statusLbl').style.color = fresh ? '#1fd17a' : '#f0b429';
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (!d || !d.ts) return;
+    // Only process if fresh (within 2s) and newer than what we have
+    if ((Date.now() - d.ts) < 2000 && d.ts > _lastTs) {
+      handleData(d);
     }
-  } catch(e) {}
-}, 300);
+  } catch (e) {}
+}, 100);
 
-// ── Mark engine as running ────────────────────────────────────────────
-document.getElementById('statusVal').textContent = 'Running';
-document.getElementById('statusVal').style.color = '#1fd17a';
+// ── UI update ────────────────────────────────────────────────────────
+const _stateColors = { wait:'#f0b429', fly:'#f97316', bust:'#f03a3a', crash:'#f03a3a' };
 
-startWait();
+function updateUI(d) {
+  const s = d.state || 'idle';
+  document.getElementById('stateVal').textContent = s.charAt(0).toUpperCase() + s.slice(1);
+  document.getElementById('stateVal').style.color = _stateColors[s] || '#eef0ff';
+  document.getElementById('crashVal').textContent = (d.crashAt || 0).toFixed(2) + '×';
+  document.getElementById('crashVal').style.color = '#eef0ff';
+  document.getElementById('multVal').textContent  = (d.mult || 1).toFixed(2) + '×';
+  document.getElementById('multVal').style.color  = s === 'fly' ? '#f97316' : '#3a4068';
+  document.getElementById('roundVal').textContent = _roundsSeen;
+}
+
+// ── Status indicator loop ─────────────────────────────────────────────
+setInterval(() => {
+  const now      = Date.now();
+  const fresh    = _lastTs > 0 && (now - _lastTs) < STALE_MS;
+  const neverGot = _lastTs === 0;
+
+  const dot = document.getElementById('statusDot');
+  const lbl = document.getElementById('statusLbl');
+  const sta = document.getElementById('statusVal');
+  const wrn = document.getElementById('warnBox');
+
+  if (fresh) {
+    dot.className      = 'dot dot-green';
+    lbl.textContent    = 'Receiving live data';
+    lbl.style.color    = '#1fd17a';
+    sta.textContent    = 'Connected ✓';
+    sta.style.color    = '#1fd17a';
+    wrn.classList.remove('show');
+
+    // Confirm re-broadcast to admin
+    const ls = localStorage.getItem(LS_KEY);
+    if (ls) {
+      try {
+        const d2 = JSON.parse(ls);
+        const broadFresh = (now - (d2.ts || 0)) < 500;
+        document.getElementById('broadVal').textContent = broadFresh ? 'Live ✓' : 'Idle';
+        document.getElementById('broadVal').style.color = broadFresh ? '#1fd17a' : '#f0b429';
+      } catch (e) {}
+    }
+  } else if (neverGot) {
+    dot.className      = 'dot dot-orange';
+    lbl.textContent    = 'Waiting for game data…';
+    lbl.style.color    = '#f0b429';
+    sta.textContent    = 'Waiting…';
+    sta.style.color    = '#f0b429';
+    // Show warning after 5s with no data
+    if (now > 5000) wrn.classList.add('show');
+  } else {
+    dot.className      = 'dot dot-red';
+    lbl.textContent    = 'Data stream paused';
+    lbl.style.color    = '#f03a3a';
+    sta.textContent    = 'Stale';
+    sta.style.color    = '#f03a3a';
+    wrn.classList.add('show');
+  }
+}, 400);
 </script>
-
-<!-- Bridge reads window.PH_ROCKET — works standalone since no parent iframe dependency -->
-<script src="bridge-rocket.js"></script>
 
 </body>
 </html>
