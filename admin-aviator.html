@@ -8,53 +8,51 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0a0b12;--bg2:#0f1120;--bg3:#141728;--bg4:#1a1e33;--bg5:#212540;
-  --border:#1f2340;--border2:#2a2f50;
+  --bg:#07080f;--bg2:#0d0f1e;--bg3:#121528;--bg4:#181c30;--bg5:#1e2238;
+  --border:#1c2040;--border2:#262d52;
   --text:#e4e8ff;--text2:#8890b8;--text3:#444870;
-  --blue:#4f7bff;--blue2:#2d5cff;--green:#22d97a;--red:#f0404a;--gold:#f5c030;--purple:#9b5cff;
+  --blue:#4f7bff;--green:#22d97a;--red:#f0404a;--gold:#f5c030;--purple:#9b5cff;
 }
-body{background:var(--bg);color:var(--text);font-family:'Exo 2',sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden}
-
-/* ── TOP NAV ── */
-.top-nav{display:flex;align-items:center;justify-content:space-between;padding:0 18px;height:50px;background:rgba(10,11,18,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);flex-shrink:0;z-index:10}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Exo 2',sans-serif;display:flex;flex-direction:column}
+.top-nav{display:flex;align-items:center;justify-content:space-between;padding:0 18px;height:50px;background:rgba(7,8,15,.97);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);flex-shrink:0;z-index:10}
 .nav-left{display:flex;align-items:center;gap:12px}
-.nav-logo{font-family:'Rajdhani',sans-serif;font-size:1.05rem;font-weight:700;letter-spacing:.1em}
+.nav-logo{font-family:'Rajdhani',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:.1em}
 .nav-logo span{color:var(--blue)}
-.nav-tag{display:flex;align-items:center;gap:6px;background:rgba(79,123,255,.1);border:1px solid rgba(79,123,255,.2);border-radius:6px;padding:3px 10px;font-size:.62rem;font-weight:700;letter-spacing:.1em;color:var(--blue)}
+.nav-tag{display:flex;align-items:center;gap:6px;background:rgba(79,123,255,.1);border:1px solid rgba(79,123,255,.25);border-radius:6px;padding:3px 10px;font-size:.62rem;font-weight:700;letter-spacing:.1em;color:var(--blue)}
 .back-btn{background:none;border:1px solid var(--border2);color:var(--text3);font-family:'Exo 2',sans-serif;font-size:.68rem;padding:5px 12px;border-radius:7px;cursor:pointer;transition:all .18s}
 .back-btn:hover{border-color:var(--blue);color:var(--blue)}
 .conn-pill{display:flex;align-items:center;gap:7px;padding:5px 14px;border-radius:20px;font-size:.68rem;font-weight:700;transition:all .3s}
-.conn-pill.live{background:rgba(34,217,122,.1);border:1px solid rgba(34,217,122,.25);color:var(--green)}
+.conn-pill.live{background:rgba(34,217,122,.12);border:1px solid rgba(34,217,122,.3);color:var(--green)}
 .conn-pill.searching{background:rgba(245,192,48,.1);border:1px solid rgba(245,192,48,.25);color:var(--gold)}
 .conn-pill.dead{background:rgba(240,64,74,.1);border:1px solid rgba(240,64,74,.25);color:var(--red)}
 .conn-dot{width:7px;height:7px;border-radius:50%;background:currentColor}
 .conn-pill.live .conn-dot,.conn-pill.searching .conn-dot{animation:dotPulse 1.2s ease infinite}
-@keyframes dotPulse{0%,100%{opacity:1;box-shadow:0 0 5px currentColor}50%{opacity:.3;box-shadow:none}}
+@keyframes dotPulse{0%,100%{opacity:1;box-shadow:0 0 6px currentColor}50%{opacity:.3;box-shadow:none}}
 .launch-btn{display:none;align-items:center;gap:6px;padding:5px 13px;border-radius:20px;font-size:.66rem;font-weight:700;background:rgba(79,123,255,.12);border:1px solid rgba(79,123,255,.35);color:var(--blue);cursor:pointer;transition:all .2s}
 .launch-btn:hover{background:rgba(79,123,255,.22);border-color:var(--blue)}
 .launch-btn.visible{display:flex}
 
-/* ── HISTORY BAR ── */
-.hist-bar{display:flex;align-items:center;gap:5px;padding:0 16px;height:34px;background:rgba(10,11,18,.98);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+/* HISTORY BAR */
+.hist-bar{display:flex;align-items:center;gap:5px;padding:0 16px;height:34px;background:rgba(7,8,15,.99);border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;flex-shrink:0}
 .hist-bar::-webkit-scrollbar{display:none}
 .hist-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;animation:dotPulse 1.4s ease infinite}
 .hist-lbl{font-size:.54rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);flex-shrink:0;margin-right:2px}
 .hchip{padding:2px 8px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:.6rem;font-weight:600;flex-shrink:0}
-.hc-safe{background:rgba(34,217,122,.1);color:var(--green);border:1px solid rgba(34,217,122,.18)}
-.hc-mid{background:rgba(245,192,48,.1);color:var(--gold);border:1px solid rgba(245,192,48,.18)}
-.hc-high{background:rgba(79,123,255,.1);color:var(--blue);border:1px solid rgba(79,123,255,.18)}
-.hc-mega{background:rgba(240,64,74,.1);color:var(--red);border:1px solid rgba(240,64,74,.18)}
+.hc-safe{background:rgba(34,217,122,.12);color:var(--green);border:1px solid rgba(34,217,122,.2)}
+.hc-mid{background:rgba(245,192,48,.12);color:var(--gold);border:1px solid rgba(245,192,48,.2)}
+.hc-high{background:rgba(79,123,255,.12);color:var(--blue);border:1px solid rgba(79,123,255,.2)}
+.hc-mega{background:rgba(240,64,74,.12);color:var(--red);border:1px solid rgba(240,64,74,.2)}
 
-/* ── MAIN LAYOUT ── */
-.main{display:grid;grid-template-columns:1fr 320px;flex:1;overflow:hidden}
-@media(max-width:800px){.main{grid-template-columns:1fr;overflow-y:auto}}
+/* LAYOUT */
+.main{display:grid;grid-template-columns:1fr 1fr 320px;flex:1;overflow:hidden}
+@media(max-width:900px){.main{grid-template-columns:1fr 320px}}
+@media(max-width:700px){.main{grid-template-columns:1fr;overflow-y:auto}}
 
-/* ── LEFT PANEL ── */
-.left-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;position:relative;overflow:hidden;gap:0}
+/* ── LEFT PANEL — untouched ── */
+.left-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;position:relative;overflow:hidden;gap:0;border-right:1px solid var(--border)}
 .left-panel::before{content:'';position:absolute;inset:0;background:linear-gradient(rgba(79,123,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(79,123,255,.03) 1px,transparent 1px);background-size:42px 42px;animation:gridDrift 18s linear infinite;pointer-events:none}
 @keyframes gridDrift{0%{background-position:0 0}100%{background-position:42px 42px}}
-
-/* Phase badge */
 .phase-badge{position:relative;z-index:2;display:inline-flex;align-items:center;gap:7px;padding:5px 16px;border-radius:20px;font-size:.66rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:22px}
 .pb-wait{background:rgba(245,192,48,.1);border:1px solid rgba(245,192,48,.3);color:var(--gold)}
 .pb-fly{background:rgba(34,217,122,.1);border:1px solid rgba(34,217,122,.3);color:var(--green)}
@@ -62,18 +60,14 @@ body{background:var(--bg);color:var(--text);font-family:'Exo 2',sans-serif;heigh
 .pb-offline{background:rgba(68,72,112,.08);border:1px solid var(--border);color:var(--text3)}
 .pb-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
 .pb-fly .pb-dot,.pb-wait .pb-dot{animation:dotPulse .9s ease infinite}
-
-/* Countdown ring — shown during wait */
 .ring-wrap{position:relative;z-index:2;margin-bottom:18px}
 .ring-wrap svg{transform:rotate(-90deg)}
 .ring-track{fill:none;stroke:rgba(255,255,255,.05);stroke-width:3}
 .ring-fill{fill:none;stroke:var(--gold);stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset .1s linear}
 .ring-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--gold)}
-
-/* Big number display — center of left panel */
 .big-display{position:relative;z-index:2;text-align:center;margin-bottom:8px}
 .big-label{font-size:.56rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
-.big-val{font-family:'JetBrains Mono',monospace;font-size:clamp(5rem,13vw,8.5rem);font-weight:700;line-height:1;letter-spacing:-.02em;transition:color .12s,text-shadow .12s}
+.big-val{font-family:'JetBrains Mono',monospace;font-size:clamp(4rem,9vw,7rem);font-weight:700;line-height:1;letter-spacing:-.02em;transition:color .12s,text-shadow .12s}
 .bv-idle{color:var(--text3)}
 .bv-safe{color:var(--green);text-shadow:0 0 70px rgba(34,217,122,.4)}
 .bv-mid{color:var(--gold);text-shadow:0 0 70px rgba(245,192,48,.4)}
@@ -82,67 +76,115 @@ body{background:var(--bg);color:var(--text);font-family:'Exo 2',sans-serif;heigh
 .bv-crash{color:var(--red);text-shadow:0 0 90px rgba(240,64,74,.8);animation:crashShake .35s ease}
 @keyframes crashShake{0%,100%{transform:scale(1)}30%{transform:scale(1.07) rotate(-1deg)}70%{transform:scale(.95) rotate(.5deg)}}
 .big-sub{font-size:.75rem;color:var(--text2);margin-top:8px;position:relative;z-index:2;min-height:1.2em}
-
-/* Target pill — shown under the big multiplier during fly */
 .target-pill{position:relative;z-index:2;display:none;align-items:center;gap:10px;padding:8px 18px;border-radius:9px;margin-top:6px;background:rgba(79,123,255,.07);border:1px solid rgba(79,123,255,.18)}
 .target-pill.show{display:flex}
 .tp-lbl{font-size:.54rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3)}
 .tp-val{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700}
-
-/* Next-round countdown banner — shown during wait after first crash */
-.next-banner{position:relative;z-index:2;display:none;align-items:center;gap:10px;padding:8px 20px;border-radius:9px;margin-top:6px;background:rgba(245,192,48,.06);border:1px solid rgba(245,192,48,.2)}
-.next-banner.show{display:flex}
-.nb-lbl{font-size:.56rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3)}
-.nb-val{font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-weight:700;color:var(--gold)}
-
-/* Advice pill */
-.adv-pill{position:relative;z-index:2;display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;font-size:.76rem;font-weight:600;margin-top:16px;max-width:420px;width:100%}
-.adv-safe{background:rgba(34,217,122,.07);border:1px solid rgba(34,217,122,.2);color:var(--green)}
-.adv-warn{background:rgba(245,192,48,.07);border:1px solid rgba(245,192,48,.2);color:var(--gold)}
-.adv-danger{background:rgba(240,64,74,.07);border:1px solid rgba(240,64,74,.2);color:var(--red);animation:dangerPulse 1s ease infinite}
-@keyframes dangerPulse{0%,100%{box-shadow:none}50%{box-shadow:0 0 20px rgba(240,64,74,.25)}}
-
-/* Offline notice */
 .offline-notice{position:relative;z-index:2;text-align:center;display:none}
 .offline-notice.show{display:block}
 .on-icon{font-size:2.5rem;margin-bottom:12px;opacity:.3}
 .on-title{font-size:.82rem;font-weight:700;color:var(--text3);margin-bottom:6px}
 .on-sub{font-size:.68rem;color:var(--text3);line-height:1.6}
+.vc-safe{color:var(--green)}.vc-mid{color:var(--gold)}.vc-high{color:var(--blue)}.vc-mega{color:var(--red)}.vc-idle{color:var(--text3)}
 
-/* ── RIGHT PANEL ── */
-.right-panel{border-left:1px solid var(--border);background:rgba(10,11,18,.75);backdrop-filter:blur(8px);display:flex;flex-direction:column;overflow:hidden}
+/* ── CENTER PANEL — vibrant live multiplier ── */
+.center-panel{
+  position:relative;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse 90% 80% at 50% 55%,#0c1340 0%,#07080f 68%);
+}
+.center-panel::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(79,123,255,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(79,123,255,.055) 1px,transparent 1px);
+  background-size:44px 44px;animation:gridDrift 22s linear infinite;
+}
+/* Glow orb — changes colour by state */
+.glow-orb{
+  position:absolute;width:380px;height:380px;border-radius:50%;
+  background:radial-gradient(circle,rgba(79,123,255,.1) 0%,transparent 72%);
+  pointer-events:none;transition:background .5s ease;
+}
+.center-panel.s-fly   .glow-orb{background:radial-gradient(circle,rgba(34,217,122,.14) 0%,transparent 72%)}
+.center-panel.s-crash .glow-orb{background:radial-gradient(circle,rgba(240,64,74,.16) 0%,transparent 72%)}
+.center-panel.s-wait  .glow-orb{background:radial-gradient(circle,rgba(245,192,48,.1) 0%,transparent 72%)}
+
+/* Screens */
+.c-screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s ease;z-index:2}
+.c-screen.on{opacity:1;pointer-events:auto}
+
+/* FLY */
+.fly-tag{font-family:'Rajdhani',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:12px}
+.fly-mult{
+  font-family:'JetBrains Mono',monospace;
+  font-size:clamp(5rem,13vw,9rem);font-weight:700;line-height:1;letter-spacing:-.03em;
+  color:#22d97a;
+  text-shadow:0 0 50px rgba(34,217,122,.65),0 0 100px rgba(34,217,122,.2);
+  transition:color .25s,text-shadow .25s;
+}
+.fly-mult.m-mid {color:#f5c030;text-shadow:0 0 50px rgba(245,192,48,.65),0 0 100px rgba(245,192,48,.2)}
+.fly-mult.m-high{color:#4f7bff;text-shadow:0 0 55px rgba(79,123,255,.75),0 0 120px rgba(79,123,255,.25)}
+.fly-mult.m-mega{color:#ff4560;text-shadow:0 0 60px rgba(255,69,96,.8),0 0 130px rgba(255,69,96,.3)}
+.fly-mult.m-bust{color:#ff4560;text-shadow:0 0 100px rgba(255,69,96,1),0 0 200px rgba(255,69,96,.5);animation:bustShake .4s ease}
+@keyframes bustShake{0%,100%{transform:scale(1)}25%{transform:scale(1.1) rotate(-1.5deg)}75%{transform:scale(.93) rotate(1deg)}}
+.fly-rnd{font-size:.7rem;color:rgba(255,255,255,.25);margin-top:14px;letter-spacing:.06em}
+
+/* Pulsing rings during fly */
+.fly-ring{position:absolute;border-radius:50%;border:1px solid rgba(34,217,122,.1);pointer-events:none;animation:rPulse 2.2s ease-in-out infinite}
+.fly-ring-1{width:300px;height:300px}
+.fly-ring-2{width:420px;height:420px;animation-delay:.7s;border-color:rgba(34,217,122,.05)}
+@keyframes rPulse{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.05);opacity:.3}}
+
+/* WAIT */
+.wait-tag{font-family:'Rajdhani',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:14px}
+.wait-num{
+  font-family:'JetBrains Mono',monospace;
+  font-size:clamp(4.5rem,11vw,7.5rem);font-weight:700;line-height:1;
+  color:#f5c030;
+  text-shadow:0 0 50px rgba(245,192,48,.55),0 0 100px rgba(245,192,48,.15);
+}
+.wait-bar-wrap{width:160px;margin-top:22px}
+.wait-bar-bg{height:3px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden}
+.wait-bar-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--purple));border-radius:2px;transition:width .12s linear}
+.wait-sub{font-size:.66rem;color:rgba(255,255,255,.25);margin-top:10px;letter-spacing:.06em}
+
+/* CRASH flash */
+.crash-val{
+  font-family:'JetBrains Mono',monospace;
+  font-size:clamp(4rem,10vw,7rem);font-weight:700;
+  color:#ff4560;text-shadow:0 0 80px rgba(255,69,96,.9),0 0 160px rgba(255,69,96,.4);
+  animation:crashPop .3s ease;
+}
+@keyframes crashPop{0%{transform:scale(.88)}60%{transform:scale(1.09)}100%{transform:scale(1)}}
+.crash-sub{font-family:'Rajdhani',sans-serif;font-size:.82rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,69,96,.65);margin-top:10px}
+
+/* OFFLINE */
+.offline-ctr{display:flex;flex-direction:column;align-items:center;gap:8px}
+.offline-ico{font-size:2.4rem;opacity:.18}
+.offline-txt{font-size:.72rem;color:var(--text3);font-weight:600}
+
+/* RIGHT PANEL */
+.right-panel{border-left:1px solid var(--border);background:rgba(7,8,15,.82);backdrop-filter:blur(10px);display:flex;flex-direction:column;overflow:hidden}
 .rp-header{padding:14px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .rp-title{font-family:'Rajdhani',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.08em}
 .rp-round{font-size:.62rem;color:var(--text3);font-family:'JetBrains Mono',monospace}
-
 .rp-stats{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid var(--border);flex-shrink:0}
 .rp-stat{padding:9px 10px;text-align:center;border-right:1px solid var(--border)}
 .rp-stat:last-child{border-right:none}
 .rps-val{font-family:'JetBrains Mono',monospace;font-size:.85rem;font-weight:700;margin-bottom:2px}
 .rps-lbl{font-size:.52rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)}
-
-/* Prediction card */
 .pred-card{margin:10px 12px 4px;background:linear-gradient(135deg,rgba(79,123,255,.08),rgba(155,92,255,.05));border:1px solid rgba(79,123,255,.2);border-radius:12px;padding:12px 14px;flex-shrink:0}
 .pc-label{font-size:.56rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--blue);margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .pc-pulse{width:6px;height:6px;border-radius:50%;background:var(--blue);animation:dotPulse .8s ease infinite}
 .pc-val{font-family:'JetBrains Mono',monospace;font-size:2.2rem;font-weight:700;line-height:1}
 .pc-sub{font-size:.64rem;color:var(--text2);margin-top:5px}
-
-/* Confidence bar */
 .conf-wrap{padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0}
 .conf-row{display:flex;justify-content:space-between;font-size:.62rem;color:var(--text3);margin-bottom:5px;font-weight:600}
 .conf-track{height:4px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden}
 .conf-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--blue),var(--purple));transition:width .7s ease}
-
-/* History chips in right panel */
-.hist-section{padding:8px 12px 0;border-top:1px solid var(--border);flex-shrink:0}
-.hist-chips{display:flex;flex-wrap:wrap;gap:4px;max-height:50px;overflow:hidden}
-
-/* Past rounds list */
 .up-list{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
 .up-list::-webkit-scrollbar{width:3px}
 .up-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-.up-item{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid rgba(31,35,64,.5);gap:10px}
+.up-item{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid rgba(28,32,64,.5);gap:10px}
 .up-num{font-size:.58rem;font-weight:700;color:var(--text3);width:56px;flex-shrink:0}
 .up-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;background:rgba(79,123,255,.08);border:1px solid var(--border)}
 .up-meta{flex:1;min-width:0}
@@ -151,11 +193,7 @@ body{background:var(--bg);color:var(--text);font-family:'Exo 2',sans-serif;heigh
 .up-right{text-align:right;flex-shrink:0}
 .up-val{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:700}
 .up-status{font-size:.56rem;color:var(--text3);margin-top:1px}
-
 .sync-footer{padding:7px 16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:.58rem;color:var(--text3);flex-shrink:0}
-
-/* Colour helpers */
-.vc-safe{color:var(--green)}.vc-mid{color:var(--gold)}.vc-high{color:var(--blue)}.vc-mega{color:var(--red)}.vc-idle{color:var(--text3)}
 </style>
 <script>if(sessionStorage.getItem('ph_adm_ok')!=='1')location.replace('admin-index.html');</script>
 </head>
@@ -169,10 +207,7 @@ body{background:var(--bg);color:var(--text);font-family:'Exo 2',sans-serif;heigh
   </div>
   <div style="display:flex;align-items:center;gap:10px">
     <button class="launch-btn" id="launchBtn" onclick="launchEngine()">⚡ Start Engine</button>
-    <div class="conn-pill searching" id="connPill">
-      <div class="conn-dot"></div>
-      <span id="connLabel">Connecting…</span>
-    </div>
+    <div class="conn-pill searching" id="connPill"><div class="conn-dot"></div><span id="connLabel">Connecting…</span></div>
   </div>
 </nav>
 
@@ -186,15 +221,9 @@ body{background:var(--bg);color:var(--text);font-family:'Exo 2',sans-serif;heigh
 
 <div class="main">
 
-  <!-- LEFT PANEL -->
+  <!-- LEFT PANEL — untouched -->
   <div class="left-panel" id="leftPanel">
-
-    <div class="phase-badge pb-offline" id="phaseBadge">
-      <div class="pb-dot"></div>
-      <span id="phaseText">Offline</span>
-    </div>
-
-    <!-- Countdown ring — wait phase -->
+    <div class="phase-badge pb-offline" id="phaseBadge"><div class="pb-dot"></div><span id="phaseText">Offline</span></div>
     <div class="ring-wrap" id="ringWrap" style="display:none">
       <svg width="72" height="72" viewBox="0 0 72 72">
         <circle class="ring-track" cx="36" cy="36" r="31"/>
@@ -202,38 +231,59 @@ body{background:var(--bg);color:var(--text);font-family:'Exo 2',sans-serif;heigh
       </svg>
       <div class="ring-num" id="ringNum">—</div>
     </div>
-
-    <!-- Big number: prediction during wait, LIVE MULT during fly, crashed value -->
     <div class="big-display">
       <div class="big-label" id="bigLabel">CRASH PREDICTION</div>
       <div class="big-val bv-idle" id="bigVal">—</div>
       <div class="big-sub" id="bigSub">Waiting for live connection…</div>
     </div>
-
-    <!-- Target pill: shown during fly so user always sees predicted crash -->
     <div class="target-pill" id="targetPill">
       <span class="tp-lbl">Target crash</span>
       <span class="tp-val vc-idle" id="targetVal">—</span>
     </div>
-
-    <!-- Next round info during wait (shown only if we have a prediction) -->
-    <div class="next-banner" id="nextBanner">
-      <span class="nb-lbl">Next prediction</span>
-      <span class="nb-val" id="nextBannerVal">—</span>
-    </div>
-
-    <!-- Advice during fly -->
-    <div class="adv-pill adv-safe" id="advPill" style="display:none">
-      <span id="advText">—</span>
-    </div>
-
-    <!-- Shown when engine not started -->
     <div class="offline-notice" id="offlineNotice">
       <div class="on-icon">✈</div>
       <div class="on-title">No data received</div>
       <div class="on-sub">Click <strong>Start Engine</strong> above<br>to launch the prediction engine.</div>
     </div>
+  </div>
 
+  <!-- CENTER PANEL — vibrant, clean -->
+  <div class="center-panel s-offline" id="centerPanel">
+    <div class="glow-orb"></div>
+    <!-- decorative rings (fly only) -->
+    <div class="fly-ring fly-ring-1" id="flyRing1" style="display:none"></div>
+    <div class="fly-ring fly-ring-2" id="flyRing2" style="display:none"></div>
+
+    <!-- FLY screen -->
+    <div class="c-screen" id="screenFly">
+      <div class="fly-tag">✈ &nbsp; LIVE MULTIPLIER</div>
+      <div class="fly-mult" id="flyMult">1.00×</div>
+      <div class="fly-rnd" id="flyRnd">Round #—</div>
+    </div>
+
+    <!-- WAIT screen -->
+    <div class="c-screen" id="screenWait">
+      <div class="wait-tag">NEXT ROUND IN</div>
+      <div class="wait-num" id="waitNum">5</div>
+      <div class="wait-bar-wrap">
+        <div class="wait-bar-bg"><div class="wait-bar-fill" id="waitFill" style="width:0%"></div></div>
+      </div>
+      <div class="wait-sub" id="waitSub">Place your bet</div>
+    </div>
+
+    <!-- CRASH screen -->
+    <div class="c-screen" id="screenCrash">
+      <div class="crash-val" id="crashVal">—</div>
+      <div class="crash-sub">✈ FLEW AWAY</div>
+    </div>
+
+    <!-- OFFLINE screen -->
+    <div class="c-screen on" id="screenOffline">
+      <div class="offline-ctr">
+        <div class="offline-ico">✈</div>
+        <div class="offline-txt">Waiting for engine…</div>
+      </div>
+    </div>
   </div>
 
   <!-- RIGHT PANEL -->
@@ -242,33 +292,29 @@ body{background:var(--bg);color:var(--text);font-family:'Exo 2',sans-serif;heigh
       <div class="rp-title">📊 Prediction Panel</div>
       <div class="rp-round" id="rpRound">Round #—</div>
     </div>
-
     <div class="rp-stats">
       <div class="rp-stat"><div class="rps-val" id="statRounds">0</div><div class="rps-lbl">Tracked</div></div>
       <div class="rp-stat"><div class="rps-val" id="statAvg" style="color:var(--blue)">—</div><div class="rps-lbl">Avg</div></div>
       <div class="rp-stat"><div class="rps-val" id="statHigh" style="color:var(--gold)">—</div><div class="rps-lbl">High</div></div>
     </div>
-
     <div class="pred-card">
       <div class="pc-label"><div class="pc-pulse"></div><span id="pcLabel">NEXT ROUND</span></div>
       <div class="pc-val vc-idle" id="pcVal">—</div>
       <div class="pc-sub" id="pcSub">Awaiting connection…</div>
     </div>
-
     <div class="conf-wrap">
       <div class="conf-row"><span>Confidence</span><span id="confPct" style="color:var(--text)">—</span></div>
       <div class="conf-track"><div class="conf-fill" id="confFill" style="width:0%"></div></div>
     </div>
-
     <div class="up-list" id="upList">
       <div style="padding:20px 14px;text-align:center;font-size:.7rem;color:var(--text3)">Waiting for game data…</div>
     </div>
-
     <div class="sync-footer">
       <span>🔄 Auto-synced · Real mode only</span>
       <span id="syncTime">—</span>
     </div>
   </div>
+
 </div>
 
 <script>
@@ -277,290 +323,258 @@ body{background:var(--bg);color:var(--text);font-family:'Exo 2',sans-serif;heigh
 const CHANNEL  = 'ph_av_bridge';
 const LS_KEY   = 'ph_av_sync';
 const STALE_MS = 4000;
+const WAIT_DUR = 5000;
 
-let _data = null, _lastMsg = 0, _prevState = null;
-let _history = [], _sessionHigh = 0, _curCrashAt = 0;
+let _data=null,_lastMsg=0,_prevState=null;
+let _history=[],_sessionHigh=0,_curCrashAt=0;
+try{_history=JSON.parse(localStorage.getItem('ph_admin_av_hist')||'[]');}catch(e){}
+_sessionHigh=_history.length?Math.max(..._history):0;
 
-try { _history = JSON.parse(localStorage.getItem('ph_admin_av_hist') || '[]'); } catch(e) {}
-_sessionHigh = _history.length ? Math.max(..._history) : 0;
+let bc=null;
+try{bc=new BroadcastChannel(CHANNEL);bc.onmessage=e=>{if(e.data)handleData(e.data);};}catch(e){}
+window.addEventListener('storage',e=>{if(e.key===LS_KEY&&e.newValue){try{handleData(JSON.parse(e.newValue));}catch(err){}}});
+setInterval(()=>{try{const r=localStorage.getItem(LS_KEY);if(!r)return;const d=JSON.parse(r);if(d&&d.ts&&(Date.now()-d.ts)<4000)handleData(d);}catch(e){}},80);
 
-// ── Bridge receive ──────────────────────────────────────────────────
-let bc = null;
-try { bc = new BroadcastChannel(CHANNEL); bc.onmessage = e => { if (e.data) handleData(e.data); }; } catch(e) {}
-
-window.addEventListener('storage', e => {
-  if (e.key === LS_KEY && e.newValue) { try { handleData(JSON.parse(e.newValue)); } catch(err) {} }
-});
-
-setInterval(() => {
-  try {
-    const r = localStorage.getItem(LS_KEY); if (!r) return;
-    const d = JSON.parse(r);
-    if (d && d.ts && (Date.now() - d.ts) < 4000) handleData(d);
-  } catch(e) {}
-}, 80);
-
-function handleData(d) {
-  if (!d || d.game !== 'aviator') return;
-  _data = d; _lastMsg = Date.now();
-  const crashAt = parseFloat((d.crashAt || 0).toFixed(2));
-  // Lock in crashAt during wait phase
-  if (d.state === 'wait' && crashAt > 0) _curCrashAt = crashAt;
-  // Record history on crash
-  if (_prevState === 'fly' && d.state === 'crash' && crashAt > 0) {
+function handleData(d){
+  if(!d||d.game!=='aviator')return;
+  _data=d;_lastMsg=Date.now();
+  const crashAt=parseFloat((d.crashAt||0).toFixed(2));
+  if(d.state==='wait'&&crashAt>0)_curCrashAt=crashAt;
+  if(_prevState==='fly'&&d.state==='crash'&&crashAt>0){
     _history.unshift(parseFloat(crashAt.toFixed(2)));
-    if (_history.length > 40) _history.pop();
-    if (crashAt > _sessionHigh) _sessionHigh = crashAt;
-    try { localStorage.setItem('ph_admin_av_hist', JSON.stringify(_history)); } catch(e) {}
+    if(_history.length>40)_history.pop();
+    if(crashAt>_sessionHigh)_sessionHigh=crashAt;
+    try{localStorage.setItem('ph_admin_av_hist',JSON.stringify(_history));}catch(e){}
   }
-  _prevState = d.state;
+  _prevState=d.state;
 }
 
-// ── Engine popup ────────────────────────────────────────────────────
-let _bgWin = null, _bgLaunched = false;
-function launchEngine() {
-  if (_bgWin && !_bgWin.closed) { _bgWin.focus(); return; }
-  try {
-    _bgWin = window.open('bg-aviator.html','ph_av_bg','width=400,height=280,menubar=no,toolbar=no,location=no,status=no,resizable=yes');
-    _bgLaunched = true;
-    document.getElementById('launchBtn').classList.remove('visible');
-  } catch(e) { alert('Popup blocked — please allow popups and try again.'); }
+let _bgWin=null,_bgLaunched=false;
+function launchEngine(){
+  if(_bgWin&&!_bgWin.closed){_bgWin.focus();return;}
+  try{_bgWin=window.open('bg-aviator.html','ph_av_bg','width=400,height=280,menubar=no,toolbar=no,location=no,status=no,resizable=yes');_bgLaunched=true;document.getElementById('launchBtn').classList.remove('visible');}
+  catch(e){alert('Popup blocked — please allow popups.');}
 }
-setInterval(() => {
-  const connected = _lastMsg > 0 && (Date.now() - _lastMsg) < STALE_MS;
-  const btn = document.getElementById('launchBtn');
-  if (connected) { btn.classList.remove('visible'); return; }
-  if (_bgLaunched && _bgWin && _bgWin.closed) { _bgLaunched = false; _bgWin = null; }
-  if (!_bgLaunched) btn.classList.add('visible');
-}, 2000);
+setInterval(()=>{
+  const connected=_lastMsg>0&&(Date.now()-_lastMsg)<STALE_MS;
+  const btn=document.getElementById('launchBtn');
+  if(connected){btn.classList.remove('visible');return;}
+  if(_bgLaunched&&_bgWin&&_bgWin.closed){_bgLaunched=false;_bgWin=null;}
+  if(!_bgLaunched)btn.classList.add('visible');
+},2000);
 
-// ── Helpers ─────────────────────────────────────────────────────────
-function getConf(v) {
-  if (v <= 1.5)  return { pct: 92, label: 'Very High' };
-  if (v <= 2)    return { pct: 80, label: 'High' };
-  if (v <= 5)    return { pct: 65, label: 'Moderate' };
-  if (v <= 10)   return { pct: 52, label: 'Moderate' };
-  if (v <= 25)   return { pct: 38, label: 'Low' };
-  if (v <= 100)  return { pct: 22, label: 'Low — rare' };
-  return { pct: 10, label: 'Very Low' };
+/* ── SMOOTH MULTIPLIER via rAF ───────────────────────────────────── */
+let _smoothMult=1.00,_targetMult=1.00,_flyTs=0,_flyActive=false,_rafId=null;
+
+function startFly(initialMult){
+  _smoothMult=initialMult||1.00;
+  _targetMult=initialMult||1.00;
+  _flyActive=true;
+  // Back-calculate start time from current mult so it continues smoothly
+  _flyTs=performance.now()-Math.log(Math.max(1,_smoothMult))*5800;
+  if(_rafId)cancelAnimationFrame(_rafId);
+  _rafId=requestAnimationFrame(flyTick);
 }
-function valCls(v) {
-  if (!v || v <= 0) return 'bv-idle';
-  if (v < 2)  return 'bv-safe';
-  if (v < 5)  return 'bv-mid';
-  if (v < 20) return 'bv-high';
-  return 'bv-mega';
+function stopFly(){
+  _flyActive=false;
+  if(_rafId){cancelAnimationFrame(_rafId);_rafId=null;}
 }
-function vcCls(v) {
-  if (!v || v <= 0) return 'vc-idle';
-  if (v < 2)  return 'vc-safe';
-  if (v < 5)  return 'vc-mid';
-  if (v < 20) return 'vc-high';
-  return 'vc-mega';
+function flyTick(ts){
+  if(!_flyActive)return;
+  const elapsed=ts-_flyTs;
+  _smoothMult=Math.max(1,parseFloat((Math.pow(Math.E,elapsed/5800)).toFixed(2)));
+  if(_targetMult>1&&_smoothMult>_targetMult+0.5)_smoothMult=_targetMult;
+  renderFlyMult(_smoothMult);
+  _rafId=requestAnimationFrame(flyTick);
 }
-function hcCls(v) {
-  if (v < 2)  return 'hc-safe';
-  if (v < 5)  return 'hc-mid';
-  if (v < 20) return 'hc-high';
-  return 'hc-mega';
-}
-function fmt(v) { return parseFloat(v).toFixed(2) + '×'; }
-function getAdv(mult, crashAt) {
-  if (!mult || !crashAt) return null;
-  const pct = (mult / crashAt) * 100;
-  if (pct < 45) return { cls: 'adv-safe', txt: pct < 22 ? '✅ Very early — safe zone' : '✅ Safe — watch closely' };
-  if (pct < 78) return { cls: 'adv-warn',  txt: '⚠️ Approaching crash — consider cashing out' };
-  return { cls: 'adv-danger', txt: '🚨 CRASH IMMINENT — cash out NOW' };
+function renderFlyMult(m){
+  const el=document.getElementById('flyMult');
+  el.textContent=m.toFixed(2)+'×';
+  if(m<2)       el.className='fly-mult';
+  else if(m<5)  el.className='fly-mult m-mid';
+  else if(m<20) el.className='fly-mult m-high';
+  else           el.className='fly-mult m-mega';
 }
 
-// ── Past rounds list ────────────────────────────────────────────────
-function buildList(crashAt, hist) {
-  const el = document.getElementById('upList'); if (!el) return;
-  const items = [];
-  if (crashAt > 0) {
-    const conf = getConf(crashAt);
-    items.push({ num: 'CURRENT', icon: '⏳', title: 'This Round', sub: conf.pct + '% confidence · ' + conf.label, val: crashAt, status: 'Queued', done: false });
-  }
-  hist.slice(0, 8).forEach((v, i) => {
-    items.push({ num: '#' + (i+1) + ' ago', icon: '✓', title: 'Past Round', sub: 'Completed', val: v, status: 'Done', done: true });
-  });
-  if (!items.length) { el.innerHTML = '<div style="padding:20px 14px;text-align:center;font-size:.7rem;color:var(--text3)">Waiting for game data…</div>'; return; }
-  el.innerHTML = items.map(it => `
+/* ── Screen switcher ─────────────────────────────────────────────── */
+let _curScreen='offline';
+function showScreen(s){
+  if(_curScreen===s)return;
+  _curScreen=s;
+  ['screenFly','screenWait','screenCrash','screenOffline'].forEach(id=>document.getElementById(id).classList.remove('on'));
+  document.getElementById('screen'+s.charAt(0).toUpperCase()+s.slice(1)).classList.add('on');
+  // rings
+  const fly=s==='fly';
+  document.getElementById('flyRing1').style.display=fly?'block':'none';
+  document.getElementById('flyRing2').style.display=fly?'block':'none';
+  // glow class
+  document.getElementById('centerPanel').className='center-panel s-'+s;
+}
+
+/* ── Helpers ─────────────────────────────────────────────────────── */
+function getConf(v){
+  if(v<=1.5) return{pct:92,label:'Very High'};
+  if(v<=2)   return{pct:80,label:'High'};
+  if(v<=5)   return{pct:65,label:'Moderate'};
+  if(v<=10)  return{pct:52,label:'Moderate'};
+  if(v<=25)  return{pct:38,label:'Low'};
+  if(v<=100) return{pct:22,label:'Low — rare'};
+  return{pct:10,label:'Very Low'};
+}
+function valCls(v){if(!v||v<=0)return'bv-idle';if(v<2)return'bv-safe';if(v<5)return'bv-mid';if(v<20)return'bv-high';return'bv-mega';}
+function vcCls(v){if(!v||v<=0)return'vc-idle';if(v<2)return'vc-safe';if(v<5)return'vc-mid';if(v<20)return'vc-high';return'vc-mega';}
+function hcCls(v){if(v<2)return'hc-safe';if(v<5)return'hc-mid';if(v<20)return'hc-high';return'hc-mega';}
+function fmt(v){return parseFloat(v).toFixed(2)+'×';}
+
+function buildList(crashAt,hist){
+  const el=document.getElementById('upList');if(!el)return;
+  const items=[];
+  if(crashAt>0){const conf=getConf(crashAt);items.push({num:'CURRENT',icon:'⏳',title:'This Round',sub:conf.pct+'% confidence · '+conf.label,val:crashAt,status:'Queued',done:false});}
+  hist.slice(0,8).forEach((v,i)=>{items.push({num:'#'+(i+1)+' ago',icon:'✓',title:'Past Round',sub:'Completed',val:v,status:'Done',done:true});});
+  if(!items.length){el.innerHTML='<div style="padding:20px 14px;text-align:center;font-size:.7rem;color:var(--text3)">Waiting for game data…</div>';return;}
+  el.innerHTML=items.map(it=>`
     <div class="up-item" style="${it.done?'opacity:.5':''}">
-      <div class="up-num">${it.num}</div>
-      <div class="up-icon">${it.icon}</div>
+      <div class="up-num">${it.num}</div><div class="up-icon">${it.icon}</div>
       <div class="up-meta"><div class="up-meta-title">${it.title}</div><div class="up-meta-sub">${it.sub}</div></div>
-      <div class="up-right">
-        <div class="up-val ${vcCls(it.val)}">${fmt(it.val)}</div>
-        <div class="up-status">${it.status}</div>
-      </div>
+      <div class="up-right"><div class="up-val ${vcCls(it.val)}">${fmt(it.val)}</div><div class="up-status">${it.status}</div></div>
     </div>`).join('');
 }
 
-// ── Main render loop ────────────────────────────────────────────────
-function render() {
-  const now = Date.now();
-  const connected = _lastMsg > 0 && (now - _lastMsg) < STALE_MS;
+/* ── Main render (100ms — just for data sync, NOT for multiplier display) ── */
+let _lastState='';
+function render(){
+  const now=Date.now();
+  const connected=_lastMsg>0&&(now-_lastMsg)<STALE_MS;
 
-  // Connection pill
-  const pill = document.getElementById('connPill');
-  const lbl  = document.getElementById('connLabel');
-  const notice = document.getElementById('offlineNotice');
-  if (connected && _data) {
-    pill.className = 'conn-pill live'; lbl.textContent = 'Connected';
-    notice.classList.remove('show');
-  } else if (_lastMsg === 0) {
-    pill.className = 'conn-pill searching'; lbl.textContent = 'Connecting…';
-    notice.classList.add('show');
-  } else {
-    pill.className = 'conn-pill dead'; lbl.textContent = 'Disconnected';
-    notice.classList.remove('show');
-  }
+  const pill=document.getElementById('connPill'),lbl=document.getElementById('connLabel');
+  if(connected&&_data){pill.className='conn-pill live';lbl.textContent='Connected';}
+  else if(_lastMsg===0){pill.className='conn-pill searching';lbl.textContent='Connecting…';}
+  else{pill.className='conn-pill dead';lbl.textContent='Disconnected';}
 
-  document.getElementById('syncTime').textContent =
-    new Date().toLocaleTimeString('en-KE', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  document.getElementById('syncTime').textContent=new Date().toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 
-  if (!connected || !_data) {
-    document.getElementById('phaseBadge').className = 'phase-badge pb-offline';
-    document.getElementById('phaseText').textContent = 'Offline';
-    document.getElementById('ringWrap').style.display  = 'none';
+  if(!connected||!_data){
+    document.getElementById('phaseBadge').className='phase-badge pb-offline';
+    document.getElementById('phaseText').textContent='Offline';
+    document.getElementById('ringWrap').style.display='none';
     document.getElementById('targetPill').classList.remove('show');
-    document.getElementById('nextBanner').classList.remove('show');
-    document.getElementById('advPill').style.display   = 'none';
-    return;
+    document.getElementById('offlineNotice').classList.add('show');
+    showScreen('offline');
+    stopFly();_lastState='';return;
   }
+  document.getElementById('offlineNotice').classList.remove('show');
 
-  const state    = _data.state;
-  const crashAt  = _curCrashAt || parseFloat((_data.crashAt || 0).toFixed(2));
-  const mult     = _data.mult    || 1;
-  const wTimer   = _data.waitTimer || 0;
-  const roundNum = _data.roundNum  || 1;
+  const state=_data.state;
+  const crashAt=_curCrashAt||parseFloat((_data.crashAt||0).toFixed(2));
+  const mult=_data.mult||1;
+  const wTimer=_data.waitTimer||0;
+  const roundNum=_data.roundNum||1;
 
-  document.getElementById('rpRound').textContent = 'Round #' + roundNum;
+  // Keep target mult updated so smooth interpolator doesn't overshoot
+  if(state==='fly')_targetMult=mult;
 
-  // ── WAIT ──────────────────────────────────────────────────────────
-  if (state === 'wait') {
-    document.getElementById('phaseBadge').className = 'phase-badge pb-wait';
-    document.getElementById('phaseText').textContent = 'Next Round Starting…';
-    document.getElementById('ringWrap').style.display = 'block';
+  document.getElementById('rpRound').textContent='Round #'+roundNum;
+  document.getElementById('flyRnd').textContent='Round #'+roundNum;
+
+  /* ── LEFT PANEL ── */
+  if(state==='wait'){
+    document.getElementById('phaseBadge').className='phase-badge pb-wait';
+    document.getElementById('phaseText').textContent='Next Round Starting…';
+    document.getElementById('ringWrap').style.display='block';
     document.getElementById('targetPill').classList.remove('show');
-    document.getElementById('advPill').style.display  = 'none';
-
-    // Countdown ring
-    const secs = Math.max(0, Math.ceil(wTimer / 1000));
-    document.getElementById('ringNum').textContent = secs;
-    document.getElementById('ringFill').setAttribute('stroke-dashoffset',
-      (194.8 * Math.min(1, wTimer / 5000)).toFixed(1));
-
-    if (crashAt > 0) {
-      // Show predicted crash as the big number during countdown
-      document.getElementById('bigLabel').textContent = '⚡ NEXT ROUND PREDICTION';
-      document.getElementById('bigVal').textContent   = fmt(crashAt);
-      document.getElementById('bigVal').className     = 'big-val ' + valCls(crashAt);
-      document.getElementById('bigSub').textContent   = 'Starts in ' + secs + 's — place your bet';
-      document.getElementById('nextBanner').classList.remove('show');
-
-      const conf = getConf(crashAt);
-      document.getElementById('pcLabel').textContent  = 'NEXT ROUND';
-      document.getElementById('pcVal').textContent    = fmt(crashAt);
-      document.getElementById('pcVal').className      = 'pc-val ' + vcCls(crashAt);
-      document.getElementById('pcSub').textContent    = conf.pct + '% confidence · ' + conf.label;
-      document.getElementById('confFill').style.width = conf.pct + '%';
-      document.getElementById('confPct').textContent  = conf.pct + '%';
-    } else {
-      document.getElementById('bigLabel').textContent = 'CRASH PREDICTION';
-      document.getElementById('bigVal').textContent   = '—';
-      document.getElementById('bigVal').className     = 'big-val bv-idle';
-      document.getElementById('bigSub').textContent   = 'Calculating prediction…';
+    const secs=Math.max(0,Math.ceil(wTimer/1000));
+    document.getElementById('ringNum').textContent=secs;
+    document.getElementById('ringFill').setAttribute('stroke-dashoffset',(194.8*Math.min(1,wTimer/WAIT_DUR)).toFixed(1));
+    if(crashAt>0){
+      document.getElementById('bigLabel').textContent='⚡ NEXT ROUND PREDICTION';
+      document.getElementById('bigVal').textContent=fmt(crashAt);
+      document.getElementById('bigVal').className='big-val '+valCls(crashAt);
+      document.getElementById('bigSub').textContent='Starts in '+secs+'s — place your bet';
+      const conf=getConf(crashAt);
+      document.getElementById('pcLabel').textContent='NEXT ROUND';
+      document.getElementById('pcVal').textContent=fmt(crashAt);
+      document.getElementById('pcVal').className='pc-val '+vcCls(crashAt);
+      document.getElementById('pcSub').textContent=conf.pct+'% confidence · '+conf.label;
+      document.getElementById('confFill').style.width=conf.pct+'%';
+      document.getElementById('confPct').textContent=conf.pct+'%';
+    }else{
+      document.getElementById('bigVal').textContent='—';document.getElementById('bigVal').className='big-val bv-idle';
+      document.getElementById('bigSub').textContent='Calculating…';
     }
-  }
-
-  // ── FLY ───────────────────────────────────────────────────────────
-  else if (state === 'fly') {
-    document.getElementById('phaseBadge').className = 'phase-badge pb-fly';
-    document.getElementById('phaseText').textContent = '✈ In Flight';
-    document.getElementById('ringWrap').style.display = 'none';
-    document.getElementById('nextBanner').classList.remove('show');
-
-    // BIG NUMBER = LIVE MULTIPLIER counting up (like ZetuPesa)
-    document.getElementById('bigLabel').textContent = '✈  LIVE  MULTIPLIER';
-    document.getElementById('bigVal').textContent   = fmt(mult);
-    document.getElementById('bigVal').className     = 'big-val ' + valCls(mult);
-    document.getElementById('bigSub').textContent   = 'Round #' + roundNum;
-
-    // Target crash shown as compact pill below the big mult
-    if (crashAt > 0) {
-      document.getElementById('targetPill').classList.add('show');
-      document.getElementById('targetVal').textContent = fmt(crashAt);
-      document.getElementById('targetVal').className   = 'tp-val ' + vcCls(crashAt);
-    }
-
-    // Right panel shows target crash
-    const conf = getConf(crashAt);
-    document.getElementById('pcLabel').textContent  = 'TARGET CRASH';
-    document.getElementById('pcVal').textContent    = fmt(crashAt);
-    document.getElementById('pcVal').className      = 'pc-val ' + vcCls(crashAt);
-    document.getElementById('pcSub').textContent    = 'Cash out before ' + fmt(crashAt);
-    document.getElementById('confFill').style.width = conf.pct + '%';
-    document.getElementById('confPct').textContent  = conf.pct + '%';
-
-    // Advice pill
-    const adv = getAdv(mult, crashAt);
-    if (adv) {
-      document.getElementById('advPill').style.display  = 'flex';
-      document.getElementById('advPill').className      = 'adv-pill ' + adv.cls;
-      document.getElementById('advText').textContent    = adv.txt;
-    } else {
-      document.getElementById('advPill').style.display  = 'none';
-    }
-  }
-
-  // ── CRASH ─────────────────────────────────────────────────────────
-  else if (state === 'crash') {
-    document.getElementById('phaseBadge').className = 'phase-badge pb-crash';
-    document.getElementById('phaseText').textContent = '💥 Crashed!';
-    document.getElementById('ringWrap').style.display = 'none';
+  } else if(state==='fly'){
+    document.getElementById('phaseBadge').className='phase-badge pb-fly';
+    document.getElementById('phaseText').textContent='✈ In Flight';
+    document.getElementById('ringWrap').style.display='none';
+    if(crashAt>0){document.getElementById('targetPill').classList.add('show');document.getElementById('targetVal').textContent=fmt(crashAt);document.getElementById('targetVal').className='tp-val '+vcCls(crashAt);}
+    document.getElementById('bigLabel').textContent='TARGET CRASH';
+    document.getElementById('bigVal').textContent=fmt(crashAt);
+    document.getElementById('bigVal').className='big-val '+valCls(crashAt);
+    document.getElementById('bigSub').textContent='Cash out before '+fmt(crashAt);
+    const conf=getConf(crashAt);
+    document.getElementById('pcLabel').textContent='TARGET CRASH';
+    document.getElementById('pcVal').textContent=fmt(crashAt);
+    document.getElementById('pcVal').className='pc-val '+vcCls(crashAt);
+    document.getElementById('pcSub').textContent='Cash out before '+fmt(crashAt);
+    document.getElementById('confFill').style.width=conf.pct+'%';
+    document.getElementById('confPct').textContent=conf.pct+'%';
+  } else if(state==='crash'){
+    document.getElementById('phaseBadge').className='phase-badge pb-crash';
+    document.getElementById('phaseText').textContent='💥 Crashed!';
+    document.getElementById('ringWrap').style.display='none';
     document.getElementById('targetPill').classList.remove('show');
-    document.getElementById('advPill').style.display  = 'none';
-
-    // Show crashed value
-    document.getElementById('bigLabel').textContent = 'CRASHED AT';
-    document.getElementById('bigVal').textContent   = fmt(crashAt);
-    document.getElementById('bigVal').className     = 'big-val bv-crash';
-    document.getElementById('bigSub').textContent   = 'Next prediction loading…';
-
-    // Show next round countdown banner if crashAt from prev round known
-    document.getElementById('nextBanner').classList.remove('show');
-
-    document.getElementById('pcLabel').textContent  = 'CRASHED AT';
-    document.getElementById('pcVal').textContent    = fmt(crashAt);
-    document.getElementById('pcVal').className      = 'pc-val vc-mega';
-    document.getElementById('pcSub').textContent    = 'Round closed';
-    document.getElementById('confFill').style.width = '100%';
-    document.getElementById('confPct').textContent  = '100%';
+    document.getElementById('bigLabel').textContent='CRASHED AT';
+    document.getElementById('bigVal').textContent=fmt(crashAt);
+    document.getElementById('bigVal').className='big-val bv-crash';
+    document.getElementById('bigSub').textContent='Next round starting soon…';
+    document.getElementById('pcLabel').textContent='CRASHED AT';
+    document.getElementById('pcVal').textContent=fmt(crashAt);
+    document.getElementById('pcVal').className='pc-val vc-mega';
+    document.getElementById('pcSub').textContent='Round closed';
+    document.getElementById('confFill').style.width='100%';
+    document.getElementById('confPct').textContent='100%';
   }
 
-  // ── Stats & history ───────────────────────────────────────────────
-  const hist = (_data.roundHist && _data.roundHist.length) ? _data.roundHist : _history;
-  if (hist.length) {
-    const avg  = hist.reduce((s, v) => s + v, 0) / hist.length;
-    const high = Math.max(...hist);
-    if (high > _sessionHigh) _sessionHigh = high;
-    document.getElementById('statRounds').textContent = hist.length;
-    document.getElementById('statAvg').textContent    = avg.toFixed(2) + '×';
-    document.getElementById('statHigh').textContent   = _sessionHigh.toFixed(2) + '×';
-
-    // Top history bar
-    const topHc = document.getElementById('topHistChips');
-    topHc.innerHTML = hist.slice(0, 24).map(v =>
-      `<span class="hchip ${hcCls(v)}">${parseFloat(v).toFixed(2)}×</span>`
-    ).join('');
+  /* ── CENTER PANEL — state transitions ── */
+  if(state!==_lastState){
+    if(state==='fly'){
+      showScreen('fly');
+      startFly(mult);
+    } else if(state==='wait'){
+      stopFly();
+      showScreen('wait');
+    } else if(state==='crash'){
+      stopFly();
+      document.getElementById('crashVal').textContent=fmt(crashAt);
+      document.getElementById('flyMult').textContent=fmt(crashAt);
+      document.getElementById('flyMult').className='fly-mult m-bust';
+      showScreen('crash');
+    }
+    _lastState=state;
   }
 
-  buildList(crashAt, hist);
+  /* Center: update wait countdown */
+  if(state==='wait'){
+    const secs=Math.max(0,Math.ceil(wTimer/1000));
+    document.getElementById('waitNum').textContent=secs>0?secs:'✈';
+    document.getElementById('waitFill').style.width=Math.min(100,((WAIT_DUR-wTimer)/WAIT_DUR)*100)+'%';
+    document.getElementById('waitSub').textContent=secs>0?'Place your bet now':'Starting…';
+  }
+
+  /* Stats & history */
+  const hist=(_data.roundHist&&_data.roundHist.length)?_data.roundHist:_history;
+  if(hist.length){
+    const avg=hist.reduce((s,v)=>s+v,0)/hist.length;
+    const high=Math.max(...hist);
+    if(high>_sessionHigh)_sessionHigh=high;
+    document.getElementById('statRounds').textContent=hist.length;
+    document.getElementById('statAvg').textContent=avg.toFixed(2)+'×';
+    document.getElementById('statHigh').textContent=_sessionHigh.toFixed(2)+'×';
+    document.getElementById('topHistChips').innerHTML=hist.slice(0,24).map(v=>`<span class="hchip ${hcCls(v)}">${parseFloat(v).toFixed(2)}×</span>`).join('');
+  }
+  buildList(crashAt,hist);
 }
 
-setInterval(render, 80);
+setInterval(render,100);
 render();
 </script>
 </body>

@@ -72,7 +72,7 @@ canvas#rc{display:block;width:100%;height:100%}
 .state-badge.fly{background:rgba(41,217,128,.1);border:1px solid rgba(41,217,128,.25);color:var(--green)}
 .state-badge.bust{background:rgba(242,78,78,.12);border:1px solid rgba(242,78,78,.3);color:var(--red)}
 
-/* ── Countdown bar (like Aviator) ── */
+/* ── Countdown bar ── */
 .countdown-wrap{position:absolute;top:38px;left:50%;transform:translateX(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:5px;pointer-events:none}
 .countdown-wrap.hidden{display:none}
 .countdown-bar-bg{width:130px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
@@ -198,10 +198,8 @@ body:not(.desktop) .chat-toggle{display:flex}
     <div class="canvas-wrap" id="canvasWrap">
       <canvas id="rc"></canvas>
 
-      <!-- State badge -->
       <div class="state-badge wait" id="stateBadge">Next round in 5s…</div>
 
-      <!-- Countdown bar (shown during wait only) -->
       <div class="countdown-wrap" id="countdownWrap">
         <div class="countdown-bar-bg">
           <div class="countdown-bar-fill" id="countdownFill" style="width:0%"></div>
@@ -280,6 +278,43 @@ body:not(.desktop) .chat-toggle{display:flex}
 <script>
 'use strict';
 
+// ═══════════════════════════════════════════════════════════════════
+//  SEEDED PRNG — Mulberry32
+//  Identical approach to engine.js (Aviator).
+//  Crash points are deterministic per (day × mode × roundNum) so
+//  every session produces the same statistical distribution.
+// ═══════════════════════════════════════════════════════════════════
+function _mulberry32(seed) {
+  return function () {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+// Daily base seed — same for every browser/session on a given UTC day
+function _dailySeed() {
+  const day = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  let h = 0x811c9dc5;
+  for (let i = 0; i < day.length; i++) {
+    h ^= day.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h;
+}
+
+// World salts — real and demo never share a seed
+const _RC_SALT_REAL = 0xBEEFCAFE;
+const _RC_SALT_DEMO = 0xDEADF00D;
+
+// Call once per round (in startFlight) to get a fresh, seeded PRNG
+function _makeRoundRNG(isDemo, roundNum) {
+  const salt  = isDemo ? _RC_SALT_DEMO : _RC_SALT_REAL;
+  const seed  = (_dailySeed() ^ salt ^ (roundNum * 0x9e3779b9)) >>> 0;
+  return _mulberry32(seed);
+}
+
 // ── PARENT BRIDGE ─────────────────────────────────────────────────────
 function ph(){try{return parent.window.PH;}catch(e){return null;}}
 function getbal(){const p=ph();if(!p)return parseFloat(sessionStorage.getItem(_dm?'rc_db_d':'rc_db')||(_dm?'5000':'1000'));try{return _dm?p.getDemoBal():p.getWallet();}catch(e){return 0;}}
@@ -298,7 +333,6 @@ new ResizeObserver(resizeCanvas).observe(document.getElementById('canvasWrap'));
 const STARS=Array.from({length:100},()=>({x:Math.random(),y:Math.random(),r:Math.random()*1.6+.3,tw:Math.random()*3+.5,off:Math.random()*100}));
 const trail=[];let _rx=0.08,_ry=0.9;
 
-// Track whether canvas loop is already scheduled to avoid double-rAF
 let _canvasLoopRunning=false;
 
 function drawCanvas(){
@@ -313,7 +347,6 @@ function drawCanvas(){
   for(let y=0;y<H;y+=H/6){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
 
   if(_state==='wait'){
-    // Update countdown fill bar
     const elapsed=5000-_waitRemaining;
     const pct=Math.min(100,Math.max(0,(elapsed/5000)*100));
     const fill=document.getElementById('countdownFill');
@@ -366,7 +399,6 @@ function drawCanvas(){
     ctx.beginPath();ctx.arc(rx,ry,42,0,2*Math.PI);ctx.fillStyle=mg;ctx.fill();
   }
 
-  // Keep looping during fly and bust (bust shows explosion for ~2.8s then wait takes over)
   if(_state==='fly'||_state==='bust'){
     requestAnimationFrame(drawCanvas);
   }
@@ -377,9 +409,9 @@ let _state='wait',_mult=1,_elapsed=0,_targetCrash=2,_betPlaced=false,_cashedOut=
 let _animId=null,_waitTimer=null,_countdownInt=null,_waitTrickleInt=null;
 let _lastT=null,_autoCo=0,_waitRemaining=5000;
 let _dm=false,_bet=100,sndOn=true;
+let _roundNum=0; // ← round counter for seeded PRNG
 const PRESETS=[50,100,200,500,1000,2000];
 
-// ── Load history from localStorage (persists across refreshes) ────────
 const _RC_HIST_KEY = () => {
   try{ return parent.window.PH?.getMode()==='demo' ? 'ph_hist_rocket_demo' : 'ph_hist_rocket_real'; }catch(e){ return _dm ? 'ph_hist_rocket_demo' : 'ph_hist_rocket_real'; }
 };
@@ -404,29 +436,32 @@ function genFakePlayers(){
   }
 }
 
-function generateCrash(){
-  if(!_dm){
+// ── KEY FIX: generateCrash now accepts a seeded rng instead of ────────
+// calling Math.random() directly. This makes the crash distribution
+// identical across all sessions on the same day.
+function generateCrash(rng) {
+  if (!_dm) {
     // REAL — tough house edge, ~52% crash under 2×
-    const r=Math.random();
-    if(r<0.18) return 1.00;
-    if(r<0.52) return parseFloat((1.01+Math.random()*0.97).toFixed(2));
-    if(r<0.72) return parseFloat((1.99+Math.random()*2.00).toFixed(2));
-    if(r<0.85) return parseFloat((4.00+Math.random()*5.99).toFixed(2));
-    if(r<0.93) return parseFloat((10.0+Math.random()*14.99).toFixed(2));
-    if(r<0.97) return parseFloat((25.0+Math.random()*24.99).toFixed(2));
-    if(r<0.99) return parseFloat((50.0+Math.random()*149).toFixed(2));
-    return parseFloat((200.0+Math.random()*300).toFixed(2));
+    const r = rng();
+    if (r < 0.18) return 1.00;
+    if (r < 0.52) return parseFloat((1.01 + rng() * 0.97).toFixed(2));
+    if (r < 0.72) return parseFloat((1.99 + rng() * 2.00).toFixed(2));
+    if (r < 0.85) return parseFloat((4.00 + rng() * 5.99).toFixed(2));
+    if (r < 0.93) return parseFloat((10.0 + rng() * 14.99).toFixed(2));
+    if (r < 0.97) return parseFloat((25.0 + rng() * 24.99).toFixed(2));
+    if (r < 0.99) return parseFloat((50.0 + rng() * 149).toFixed(2));
+    return parseFloat((200.0 + rng() * 300).toFixed(2));
   } else {
     // DEMO — generous, more highs to showcase the game
-    const r=Math.random();
-    if(r<0.04) return 1.00;
-    if(r<0.14) return parseFloat((1.01+Math.random()*0.84).toFixed(2));
-    if(r<0.30) return parseFloat((1.86+Math.random()*2.13).toFixed(2));
-    if(r<0.50) return parseFloat((4.00+Math.random()*5.99).toFixed(2));
-    if(r<0.68) return parseFloat((10.0+Math.random()*14.99).toFixed(2));
-    if(r<0.82) return parseFloat((25.0+Math.random()*24.99).toFixed(2));
-    if(r<0.93) return parseFloat((50.0+Math.random()*149).toFixed(2));
-    return parseFloat((200.0+Math.random()*300).toFixed(2));
+    const r = rng();
+    if (r < 0.04) return 1.00;
+    if (r < 0.14) return parseFloat((1.01 + rng() * 0.84).toFixed(2));
+    if (r < 0.30) return parseFloat((1.86 + rng() * 2.13).toFixed(2));
+    if (r < 0.50) return parseFloat((4.00 + rng() * 5.99).toFixed(2));
+    if (r < 0.68) return parseFloat((10.0 + rng() * 14.99).toFixed(2));
+    if (r < 0.82) return parseFloat((25.0 + rng() * 24.99).toFixed(2));
+    if (r < 0.93) return parseFloat((50.0 + rng() * 149).toFixed(2));
+    return parseFloat((200.0 + rng() * 300).toFixed(2));
   }
 }
 
@@ -435,14 +470,12 @@ function startWait(){
   _state='wait';_mult=1;_betPlaced=false;_cashedOut=false;
   _rx=0.08;_ry=0.9;trail.length=0;_elapsed=0;_waitRemaining=5000;
 
-  // Clear all previous timers
   if(_waitTimer){clearTimeout(_waitTimer);_waitTimer=null;}
   if(_countdownInt){clearInterval(_countdownInt);_countdownInt=null;}
   if(_waitTrickleInt){clearInterval(_waitTrickleInt);_waitTrickleInt=null;}
 
   genFakePlayers();lpRender();
 
-  // Reset UI
   document.getElementById('cashoutWrap').classList.remove('show');
   document.getElementById('multVal').classList.remove('bust');
   document.getElementById('multVal').textContent='1.00×';
@@ -451,11 +484,9 @@ function startWait(){
   document.getElementById('betBtn').classList.remove('active');
   document.getElementById('betBtn').disabled=false;
 
-  // Show countdown elements
   document.getElementById('countdownWrap').classList.remove('hidden');
   document.getElementById('countdownFill').style.width='0%';
 
-  // State badge countdown
   let _countdown=5;
   const badge=document.getElementById('stateBadge');
   badge.className='state-badge wait';
@@ -473,7 +504,6 @@ function startWait(){
     }
   },1000);
 
-  // Trickle players during wait
   _waitTrickleInt=setInterval(()=>{
     if(_state!=='wait'){clearInterval(_waitTrickleInt);_waitTrickleInt=null;return;}
     const add=1+(Math.random()*2|0);
@@ -486,10 +516,7 @@ function startWait(){
     lpRender();
   },500);
 
-  // Schedule flight after exactly 5 seconds
   _waitTimer=setTimeout(startFlight,5000);
-
-  // Restart canvas loop
   requestAnimationFrame(drawCanvas);
 }
 
@@ -498,14 +525,20 @@ function startFlight(){
   if(_countdownInt){clearInterval(_countdownInt);_countdownInt=null;}
   if(_waitTrickleInt){clearInterval(_waitTrickleInt);_waitTrickleInt=null;}
 
-  // Re-read mode fresh every round — parent is always ready by flight time
+  // Re-read mode fresh every round
   try{ _dm = ph()?.getMode()==='demo'; }catch(e){}
 
   _state='fly';_mult=1;_elapsed=0;_lastT=null;
-  _targetCrash=generateCrash();
+
+  // ── KEY FIX: build seeded RNG for this round, then generate crash ──
+  // Same day + same mode + same round number → identical crashAt in
+  // every browser session. No more session-dependent divergence.
+  _roundNum++;
+  const _rng = _makeRoundRNG(_dm, _roundNum);
+  _targetCrash = generateCrash(_rng);
+
   _autoCo=parseFloat(document.getElementById('autoCo').value)||0;
 
-  // Hide countdown bar
   document.getElementById('countdownWrap').classList.add('hidden');
   document.getElementById('countdownFill').style.width='100%';
 
@@ -516,13 +549,12 @@ function startFlight(){
   }
   document.getElementById('betBtn').disabled=true;
 
-  // Canvas loop is self-sustaining during fly via drawCanvas rAF
   _lastT=null;
   requestAnimationFrame(flyLoop);
 }
 
 function flyLoop(ts){
-  if(_state!=='fly')return; // safety guard — stop if state changed
+  if(_state!=='fly')return;
   if(_lastT===null)_lastT=ts;
   const dt=(ts-_lastT)/1000;_lastT=ts;_elapsed+=dt;
   _mult=Math.max(1,parseFloat((Math.pow(1.06,_elapsed*5.5)).toFixed(2)));
@@ -549,15 +581,11 @@ function doBust(){
   document.getElementById('multLbl').textContent='💥 CRASHED!';
   updateStateUI();
 
-  // Save to history and localStorage
   HIST.unshift(parseFloat(_mult.toFixed(2)));
   if(HIST.length>50)HIST.pop();
   try{localStorage.setItem(_RC_HIST_KEY(),JSON.stringify(HIST));}catch(e){}
 
-  renderHist();
-  lpRender();
-
-  // Canvas bust animation runs via drawCanvas rAF
+  renderHist();lpRender();
   requestAnimationFrame(drawCanvas);
 
   if(_betPlaced&&!_cashedOut){toast('💥 Crashed at '+_mult.toFixed(2)+'×  −'+_bet+' KES');}
@@ -784,9 +812,7 @@ window.onLaunched=()=>{
   if(!_chatLog.length){_seedChat();}
   renderChat();
   startFakeChat();
-  // Restart canvas draw loop when returning to the game
   requestAnimationFrame(drawCanvas);
-  // If mid-flight, restart flyLoop too
   if(_state==='fly'){
     _lastT=null;
     requestAnimationFrame(flyLoop);
@@ -794,8 +820,6 @@ window.onLaunched=()=>{
 };
 
 window.onNavAway=()=>{
-  // Do NOT stop game timers — let the game keep running in background
-  // Only stop chat to save resources
   if(_chatInt){clearInterval(_chatInt);_chatInt=null;}
 };
 
@@ -804,7 +828,6 @@ window.onAuthChange=()=>updateBal();
 // ── INIT ──────────────────────────────────────────────────────────────
 buildChips();
 setBet(100);
-// ✅ Read mode BEFORE startWait so generateCrash uses correct odds from round 1
 try{ _dm = ph()?.getMode()==='demo'; }catch(e){ _dm=false; }
 updateBal();
 try{if(ph()?.getMode()==='demo')setMode('demo');}catch(e){}
@@ -816,35 +839,19 @@ startWait();
 </script>
 <script>
 // ── PH Admin Bridge: expose live game state to bridge-rocket.js ──────
-// This runs every 80ms and writes the current round state into
-// window.PH_ROCKET so the bridge can pick it up and relay it to
-// the admin predictor panel via BroadcastChannel + localStorage.
 (function () {
   'use strict';
-
-  // These variable names must match exactly what's in your game closure.
-  // In your rocket-crash.html they are: _state, _mult, _targetCrash,
-  // _waitRemaining, HIST  — all declared with `let` / `const` at top scope.
-  //
-  // Because they live inside a <script> tag on the same page (not a module),
-  // they ARE accessible via window in most browsers when referenced directly.
-  // If your build tool wraps them in a module, you'll need to assign them
-  // to window manually inside startWait / startFlight / doBust.
-
   setInterval(function () {
     try {
       window.PH_ROCKET = {
-        state:     _state,           // 'wait' | 'fly' | 'bust'
-        mult:      _mult,            // current live multiplier (during fly)
-        crashAt:   _targetCrash,     // predicted/actual crash multiplier
-        waitTimer: _waitRemaining,   // ms remaining in wait countdown
+        state:     _state,
+        mult:      _mult,
+        crashAt:   _targetCrash,
+        waitTimer: _waitRemaining,
         hist:      (typeof HIST !== 'undefined' ? HIST : []).slice(0, 30),
       };
-    } catch (e) {
-      // Variables not yet in scope — safe to ignore, bridge waits
-    }
+    } catch (e) {}
   }, 80);
-
   console.info('[PH Bridge] PH_ROCKET sync active');
 })();
 </script>
