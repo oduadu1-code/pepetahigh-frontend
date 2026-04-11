@@ -178,9 +178,9 @@ body{overflow:hidden;margin:0}
       </div>
       <div class="inp-wrap">
         <label class="inp-label">Amount (KSh)</label>
-        <input class="inp" type="number" id="dep-amt" placeholder="Min KSh 50" min="50">
+        <input class="inp" type="number" id="dep-amt" placeholder="Min KSh 200" min="200">
         <div class="quick-amts">
-          <span class="qa-chip" onclick="document.getElementById('dep-amt').value=50">50</span>
+          <span class="qa-chip" onclick="document.getElementById('dep-amt').value=200">200</span>
           <span class="qa-chip" onclick="document.getElementById('dep-amt').value=500">500</span>
           <span class="qa-chip" onclick="document.getElementById('dep-amt').value=1000">1,000</span>
           <span class="qa-chip" onclick="document.getElementById('dep-amt').value=2000">2,000</span>
@@ -189,7 +189,7 @@ body{overflow:hidden;margin:0}
         </div>
       </div>
       <div style="background:rgba(41,217,128,.05);border:1px solid rgba(41,217,128,.13);border-radius:8px;padding:9px 12px;font-size:.74rem;color:var(--text2)">
-        ✓ Min <strong>KSh 50</strong> &nbsp;·&nbsp; +10% bonus on every deposit
+        ✓ Min <strong>KSh 200</strong> &nbsp;·&nbsp; +10% bonus on every deposit
       </div>
       <button class="btn btn-primary" onclick="initiateDeposit()">Send STK Push →</button>
     </div>
@@ -675,7 +675,7 @@ async function initiateDeposit(){
   const ph=document.getElementById('dep-ph').value.trim();
   const amt=parseFloat(document.getElementById('dep-amt').value);
   if(!ph||ph.length<10){showToast('Enter a valid 10-digit phone number','error');return;}
-  if(!amt||amt<50){showToast('Minimum deposit is KSh 50','error');return;}
+  if(!amt||amt<200){showToast('Minimum deposit is KSh 200','error');return;}
   _depAmt=amt;
   document.getElementById('dep-step1').style.display='none';
   document.getElementById('dep-step2').style.display='flex';
@@ -784,8 +784,7 @@ function processWithdraw(){
   showToast('KSh '+amt.toLocaleString()+' processing — arrives in 5 mins ✓','success',5000);
 }
 function openWd(){
-  if(!PH.getUser()){openModal('login-modal');return;}
-  document.getElementById('wd-avail').textContent=PH.fmt(PH.getWallet());openModal('wd-modal');
+  showToast('Withdrawals temporarily unavailable. Check back soon.','error',4000);
 }
 
 // ── Init ──────────────────────────────────────────────────────────────
