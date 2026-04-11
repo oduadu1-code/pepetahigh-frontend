@@ -237,6 +237,14 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
         <circle class="ring-track" cx="36" cy="36" r="30"/>
         <circle class="ring-fill" id="ringFill" cx="36" cy="36" r="30" stroke-dasharray="188.5" stroke-dashoffset="0"/>
       </svg>
+    <div class="big-display">
+      <div class="big-label" id="bigLabel">PREDICTION</div>
+      <div class="big-val bv-idle" id="bigVal">—</div>
+      <div class="big-sub" id="bigSub">Awaiting data…</div>
+    </div>
+    <div class="target-pill" id="targetPill">
+      <div class="tp-lbl">TARGET</div>
+      <div class="tp-val vc-idle" id="targetVal">—</div>
     </div>
     <div class="offline-notice" id="offlineNotice">
       <div class="on-icon">🚀</div>
@@ -255,6 +263,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
     <div class="c-screen" id="screenFly">
       <div class="fly-tag">🚀 &nbsp; LIVE MULTIPLIER</div>
       <div class="fly-mult" id="flyMult">1.00×</div> 
+      <div class="fly-rnd" id="flyRnd">Round #—</div>
     </div>
 
     <!-- WAIT -->
