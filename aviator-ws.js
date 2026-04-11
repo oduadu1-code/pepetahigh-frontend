@@ -32,7 +32,7 @@
   // Falls back to localhost for local dev if config.js hasn't defined it
   const WS_BASE = (typeof GAME_SERVER_URL !== 'undefined')
     ? GAME_SERVER_URL
-    : 'ws://localhost:4000';
+    : 'wss://pepetahigh-server.onrender.com';
       // G_real lives in the parent frame (engine.js loads in index.html).
   // aviator-ws.js runs inside the aviator.html iframe, so
   // window.G_real here is undefined — we must reach up to parent.
@@ -206,14 +206,25 @@
         _activeBetAmt = 0;
         _mirrorWait(msg.waitMs, msg.roundNum);
         if (_cb.onWait) _cb.onWait(msg.waitMs, msg.roundNum);
-        // Auto-bet: if the user had autoBet on, place it now
         _tryAutoBet();
-        break;
+        // Generate fake players for the bets tab
+        try {
+          const G = _G();
+          if (G) {
+            G.roundNum = msg.roundNum || G.roundNum;
+            parent.genRoundBets(G);
+            parent.startBetPlacement(G);
+          }
+        } catch(e) {}
+        break;  
 
       // ── Plane takes off ──
+      
       case 'round_start':
         _mirrorFly(msg.roundNum);
         if (_cb.onFly) _cb.onFly(msg.roundNum);
+        // Stop fake bet placement — round has started
+        try { parent.stopBetPlacement(_G()); } catch(e) {}
         break;
 
       // ── Multiplier update (every 50ms from server) ──

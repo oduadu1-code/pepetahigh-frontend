@@ -173,17 +173,34 @@ function sortBets(G) {
 }
 
 function startBetPlacement(G) {
-  const interval = Math.max(15, Math.floor(1800 / Math.max(1, G.pendingBets.length)));  
+  const totalBets = G.pendingBets.length;
+  const totalMs   = 7200; // spread over 7.2s of the 8s wait window
+  let elapsed     = 0;
+
   G.placementInt = setInterval(() => {
     if (!G.pendingBets.length || G.state !== 'wait') {
       clearInterval(G.placementInt); G.placementInt = null; return;
     }
-    const batch = Math.floor(Math.random() * 5) + 2;
-    
-    for (let i = 0; i < batch && G.pendingBets.length; i++) G.roundBets.push(G.pendingBets.shift());
+    elapsed += 120;
+    const progress = elapsed / totalMs; // 0 → 1
+
+    // Slow start, steady middle, small rush near end
+    // batch size: 1 early, 2-3 middle, 4-5 near end
+    let batch;
+    if (progress < 0.2)      batch = 1;
+    else if (progress < 0.6) batch = Math.floor(Math.random() * 2) + 1;
+    else if (progress < 0.85)batch = Math.floor(Math.random() * 2) + 2;
+    else                     batch = Math.floor(Math.random() * 3) + 3;
+
+    // Occasionally skip a tick entirely (player thinking, not instant)
+    if (Math.random() < 0.25 && progress < 0.8) return;
+
+    for (let i = 0; i < batch && G.pendingBets.length; i++) {
+      G.roundBets.push(G.pendingBets.shift());
+    }
     sortBets(G);
     if (G.onRoundBetsChange) G.onRoundBetsChange('placement');
-  }, interval);
+  }, 120);
 }
 
 function stopBetPlacement(G) {
@@ -375,6 +392,9 @@ function _stopFallback() {
 function startWorld(G) {
   if (G.running) return;
   G.running = true;
+  window.genRoundBets      = genRoundBets;
+  window.startBetPlacement = startBetPlacement;
+  window.stopBetPlacement  = stopBetPlacement;
   if (G.state === 'idle') doWait(G, 5000);
   _initWorker();
 }

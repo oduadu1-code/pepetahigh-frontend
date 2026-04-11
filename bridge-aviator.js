@@ -28,9 +28,9 @@
   // NOTE: Change this to your deployed game-server URL before going live.
   // During local dev: ws://localhost:4000
   const GAME_SERVER_WS = (function() {
-    try { return parent.window.GAME_SERVER_URL || 'wss://pepetahigh-game-server.onrender.com'; }
-    catch(e) { return 'wss://pepetahigh-game-server.onrender.com'; }
-  })();
+    try { return parent.window.GAME_SERVER_URL || 'wss://pepetahigh-server.onrender.com'; }
+    catch(e) { return 'wss://pepetahigh-server.onrender.com'; }
+  })(); 
 
   const CHANNEL = 'ph_av_bridge';
   const LS_KEY  = 'ph_av_sync';
@@ -101,11 +101,6 @@
         G.crashAt = serverMsg.crashPoint || G.mult;
         if (serverMsg.roundNum) G.roundNum = serverMsg.roundNum;
         // Update round history
-        if (G.crashAt) {
-          G.roundHist.unshift(parseFloat(G.crashAt.toFixed(2)));
-          if (G.roundHist.length > 30) G.roundHist.pop();
-          try { localStorage.setItem('ph_av_hist_real', JSON.stringify(G.roundHist.slice(0, 50))); } catch(e) {}
-        }
         if (G.onCrash) G.onCrash(parseFloat(G.crashAt.toFixed(2)));
         break;
 
