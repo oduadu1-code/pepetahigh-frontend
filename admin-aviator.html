@@ -46,14 +46,14 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 .hc-mid{background:rgba(240,180,41,.1);color:var(--gold);border:1px solid rgba(240,180,41,.18)}
 .hc-high{background:rgba(139,92,246,.1);color:var(--purple);border:1px solid rgba(139,92,246,.18)}
 
-/* LAYOUT */
-.main{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr 340px;flex:1;overflow:hidden}
-@media(max-width:900px){.main{grid-template-columns:1fr 340px}}
+/* LAYOUT — center is 3/4, side panels share 1/4 each */
+.main{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,3fr) minmax(0,1fr);flex:1;overflow:hidden}
+@media(max-width:900px){.main{grid-template-columns:minmax(0,1fr) minmax(0,2fr)}}
 @media(max-width:700px){.main{grid-template-columns:1fr;overflow-y:auto}}
 
 /* LEFT PANEL */
-.left-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 24px;position:relative;overflow:hidden;gap:0;border-right:1px solid var(--border)}
-.left-panel::after{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(79,110,247,.05) 0%,transparent 68%);pointer-events:none;z-index:0}
+.left-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 12px;position:relative;overflow:hidden;gap:0;border-right:1px solid var(--border)}
+.left-panel::after{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(79,110,247,.05) 0%,transparent 68%);pointer-events:none;z-index:0}
 .phase-badge{position:relative;z-index:2;display:inline-flex;align-items:center;gap:7px;padding:5px 16px;border-radius:20px;font-size:.66rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:20px}
 .pb-wait{background:rgba(240,180,41,.08);border:1px solid rgba(240,180,41,.28);color:var(--gold)}
 .pb-fly{background:rgba(79,110,247,.08);border:1px solid rgba(79,110,247,.28);color:var(--blue)}
@@ -68,7 +68,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 .ring-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--gold)}
 .big-display{position:relative;z-index:2;text-align:center;margin-bottom:6px}
 .big-label{font-size:.56rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
-.big-val{font-family:'JetBrains Mono',monospace;font-size:clamp(4rem,9vw,7rem);font-weight:700;line-height:1;letter-spacing:-.02em;transition:color .15s,text-shadow .15s}
+.big-val{font-family:'JetBrains Mono',monospace;font-size:clamp(2rem,3.5vw,3.2rem);font-weight:700;line-height:1;letter-spacing:-.02em;transition:color .15s,text-shadow .15s}
 .bv-idle{color:var(--text3)}
 .bv-safe{color:var(--green);text-shadow:0 0 80px rgba(31,209,122,.35)}
 .bv-mid{color:var(--gold);text-shadow:0 0 80px rgba(240,180,41,.35)}
@@ -116,7 +116,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 .fly-tag{font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:12px}
 .fly-mult{
   font-family:'JetBrains Mono',monospace;
-  font-size:clamp(5rem,13vw,9rem);font-weight:700;line-height:1;letter-spacing:-.03em;
+  font-size:clamp(6rem,16vw,12rem);font-weight:700;line-height:1;letter-spacing:-.03em;
   color:#4f6ef7;
   text-shadow:0 0 55px rgba(79,110,247,.7),0 0 110px rgba(79,110,247,.25);
   transition:color .25s,text-shadow .25s;
@@ -134,7 +134,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 
 /* WAIT */
 .wait-tag{font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:14px}
-.wait-num{font-family:'JetBrains Mono',monospace;font-size:clamp(4.5rem,11vw,7.5rem);font-weight:700;line-height:1;color:#f0b429;text-shadow:0 0 50px rgba(240,180,41,.6),0 0 100px rgba(240,180,41,.2)}
+.wait-num{font-family:'JetBrains Mono',monospace;font-size:clamp(6rem,14vw,10rem);font-weight:700;line-height:1;color:#f0b429;text-shadow:0 0 50px rgba(240,180,41,.6),0 0 100px rgba(240,180,41,.2)}
 .wait-bar-wrap{width:160px;margin-top:22px}
 .wait-bar-bg{height:3px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden}
 .wait-bar-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--purple));border-radius:2px;transition:width .12s linear}
@@ -164,7 +164,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 .pc-lbl-row{display:flex;align-items:center;gap:6px;margin-bottom:8px}
 .pc-pulse{width:6px;height:6px;border-radius:50%;background:var(--blue);animation:dotPulse .8s ease infinite}
 .pc-lbl{font-size:.56rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--blue)}
-.pc-val{font-family:'JetBrains Mono',monospace;font-size:2.4rem;font-weight:700;line-height:1}
+.pc-val{font-family:'JetBrains Mono',monospace;font-size:1.6rem;font-weight:700;line-height:1}
 .pc-sub{font-size:.63rem;color:var(--text2);margin-top:5px}
 .conf-section{padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0}
 .conf-row{display:flex;justify-content:space-between;font-size:.6rem;font-weight:600;color:var(--text3);margin-bottom:5px}
@@ -389,12 +389,29 @@ function wsLog(msg) {
 function handleServerMsg(msg) {
   // Admin state payload (shape from games/aviator.js getAdminState)
   if (msg.game === 'aviator' && msg.state !== undefined) {
+    const prevState = _state;
     _state    = msg.state;      // 'waiting'|'flying'|'crashed'
     _mult     = msg.mult   || 1;
     _crashAt  = msg.crashAt|| 0;
     _waitMs   = msg.waitTimer || 0;
     _roundNum = msg.roundNum  || _roundNum;
     if (msg.roundHist && msg.roundHist.length) _history = msg.roundHist;
+    // Keep multiplier anchored when flying
+    if (msg.state === 'flying' || msg.state === 'fly') {
+      if (!_flyActive) startFly(_mult);
+      else onServerTick(_mult);
+    } else if (msg.state === 'waiting' || msg.state === 'wait') {
+      stopFly();
+      if (_waitMs > 0 && prevState !== 'waiting') _waitEnd = Date.now() + _waitMs;
+    } else if (msg.state === 'crashed' || msg.state === 'crash') {
+      stopFly();
+      if (_mult > 1 && !_history.includes(parseFloat(_mult.toFixed(2)))) {
+        _history.unshift(parseFloat(_mult.toFixed(2)));
+        if (_history.length > 30) _history.pop();
+        _sessionHigh = Math.max(_sessionHigh, _mult);
+        try { localStorage.setItem('ph_adm_av_hist', JSON.stringify(_history)); } catch(e) {}
+      }
+    }
     return;
   }
 
@@ -413,6 +430,8 @@ function handleServerMsg(msg) {
         _state = 'flying';
         _mult  = msg.multiplier || 1;
         _crashAt = msg.crashAt || _crashAt;
+        if (!_flyActive) startFly(_mult);
+        else onServerTick(_mult);
       } else if (msg.phase === 'crashed') {
         _state = 'crashed';
         _mult  = msg.multiplier || _mult;
@@ -439,7 +458,8 @@ function handleServerMsg(msg) {
     case 'tick':
       _state = 'flying';
       _mult  = msg.mult || 1;
-      _targetMult = _mult;
+      if (!_flyActive) startFly(_mult);
+      else onServerTick(_mult);
       break;
 
     case 'round_crash':
@@ -461,16 +481,34 @@ function handleServerMsg(msg) {
 }
 
 // ── Smooth multiplier ─────────────────────────────────────────────────
-let _targetMult = 1;
+// The server sends tick events every ~50ms with the real multiplier.
+// We anchor on each tick and project forward using the same curve:
+//   mult = e^(elapsed_ms / 5800)
+// Inverse: elapsed_at_anchor = ln(mult_anchor) * 5800
+// Then:    elapsed_now = elapsed_at_anchor + (now - anchor_ts)
+//          mult_now    = e^(elapsed_now / 5800)
+// This guarantees the display never resets and always tracks the server.
 
-function startFly(m) {
-  _smoothMult  = m || 1;
-  _targetMult  = m || 1;
-  _flyActive   = true;
-  const elapsed = _smoothMult > 1 ? Math.log(_smoothMult) * 5800 : 0;
-  _flyTs = performance.now() - elapsed;
+let _anchorMult = 1;     // server mult at last tick
+let _anchorTs   = 0;     // performance.now() at last tick
+let _flyActive  = false;
+let _rafId      = null;
+
+function startFly(initialMult) {
+  _anchorMult = Math.max(1.001, initialMult || 1);
+  _anchorTs   = performance.now();
+  _flyActive  = true;
   if (_rafId) cancelAnimationFrame(_rafId);
   _rafId = requestAnimationFrame(flyTick);
+}
+
+function onServerTick(serverMult) {
+  // Re-anchor every time server sends a tick
+  _anchorMult = Math.max(1.001, serverMult || 1);
+  _anchorTs   = performance.now();
+  if (_flyActive && !_rafId) {
+    _rafId = requestAnimationFrame(flyTick);
+  }
 }
 
 function stopFly() {
@@ -480,11 +518,11 @@ function stopFly() {
 
 function flyTick(ts) {
   if (!_flyActive) return;
-  const elSec = (ts - _flyTs) / 1000;
-  // Match engine.js: Math.pow(E, elapsed_ms/5800) — ts is in ms, convert
-  _smoothMult = Math.max(1, parseFloat(Math.pow(Math.E, (ts - _flyTs) / 5800).toFixed(2)));
-  if (_targetMult > 1 && _smoothMult > _targetMult + 0.5) _smoothMult = _targetMult;
-  renderMult(_smoothMult);
+  const msSinceAnchor   = ts - _anchorTs;
+  const elapsedAtAnchor = Math.log(_anchorMult) * 5800;
+  const elapsedNow      = elapsedAtAnchor + msSinceAnchor;
+  const projected       = Math.max(1, parseFloat(Math.pow(Math.E, elapsedNow / 5800).toFixed(2)));
+  renderMult(projected);
   _rafId = requestAnimationFrame(flyTick);
 }
 
