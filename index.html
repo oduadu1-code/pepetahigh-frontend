@@ -679,7 +679,8 @@ async function initiateDeposit(){
   _depAmt=amt;
   document.getElementById('dep-step1').style.display='none';
   document.getElementById('dep-step2').style.display='flex';
-  const fullPhone='254'+ph;
+  const digits = ph.replace(/^0+/, '');
+  const fullPhone = '254' + digits;
   const label=_dm==='airtel'?'Airtel Money':'M-Pesa';
   document.getElementById('dep-stk-msg').innerHTML=
     `A ${label} prompt has been sent to<br><strong style="color:var(--primary)">+254 ${ph}</strong><br><br>Enter your <strong>${label} PIN</strong> to complete.`;
