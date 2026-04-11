@@ -116,7 +116,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 .fly-tag{font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:12px}
 .fly-mult{
   font-family:'JetBrains Mono',monospace;
-  font-size:clamp(6rem,16vw,12rem);font-weight:700;line-height:1;letter-spacing:-.03em;
+  font-size:clamp(3rem,8vw,6rem);font-weight:700;line-height:1;letter-spacing:-.03em;
   color:#4f6ef7;
   text-shadow:0 0 55px rgba(79,110,247,.7),0 0 110px rgba(79,110,247,.25);
   transition:color .25s,text-shadow .25s;
@@ -249,9 +249,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
     <div class="fly-ring fly-ring-2" id="flyRing2" style="display:none"></div>
 
     <div class="c-screen" id="screenFly">
-      <div class="fly-tag">✈ &nbsp; LIVE MULTIPLIER</div>
       <div class="fly-mult" id="flyMult">1.00×</div>
-      <div class="fly-rnd" id="flyRnd">Round #—</div>
     </div>
 
     <div class="c-screen" id="screenWait">
@@ -461,7 +459,7 @@ function handleServerMsg(msg) {
       else onServerTick(_mult);
       break;
 
-    case 'round_crash':
+    case 'round_crash': {
       const cp = msg.crashPoint || _mult;
       _state   = 'crashed';
       _mult    = cp;
@@ -472,7 +470,7 @@ function handleServerMsg(msg) {
       try { localStorage.setItem('ph_adm_av_hist', JSON.stringify(_history)); } catch(e) {}
       stopFly();
       break;
-
+    }
     case 'connected':
       wsLog('Auth ok: ' + msg.authenticated);
       break;
@@ -526,7 +524,7 @@ function flyTick(ts) {
 
 function renderMult(m) {
   const el = document.getElementById('flyMult');
-  el.textContent = m.toFixed(2) + '×';
+  el.textContent = m.toFixed(2);
   if      (m < 2)  el.className = 'fly-mult';
   else if (m < 5)  el.className = 'fly-mult m-mid';
   else if (m < 20) el.className = 'fly-mult m-high';
@@ -741,7 +739,7 @@ function render() {
     } else if (state === 'crash') {
       stopFly();
       document.getElementById('crashValDisp').textContent = fmt(crashAt);
-      document.getElementById('flyMult').textContent      = fmt(crashAt);
+      document.getElementById('flyMult').textContent = crashAt.toFixed(2);
       document.getElementById('flyMult').className        = 'fly-mult m-bust';
       showScreen('crash');
     }
