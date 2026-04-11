@@ -244,6 +244,7 @@ body{overflow:hidden;margin:0}
 
 <script src="config.js"></script>
 <script src="utils.js"></script>
+<script src="aviator-ws.js"></script>
 <script src="engine.js"></script>
 <script>
 'use strict';
@@ -791,6 +792,7 @@ renderNav();renderHistBar();adjustShell();
 wireCallbacks();
 window.startWorld(window.G_real);
 window.startWorld(window.G_demo);
+AviatorWS.connect();
 
 document.getElementById('fr-bets').addEventListener('load',()=>{
   const G=window.G;

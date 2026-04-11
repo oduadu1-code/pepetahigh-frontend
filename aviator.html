@@ -580,35 +580,59 @@ function refreshCO(){
 // ─────────────────────────────────────────────────────────────────────
 // BET ACTIONS
 // ─────────────────────────────────────────────────────────────────────
-function doPlace(i){
+function doPlace(i) {
   _unlock();
-  const G = parent.window.G;
+  const G    = parent.window.G;
+  const mode = PH.getMode();
 
-  // Only block during active flight
-  if(G.state==='fly'){
-    showToast('Wait for next round','info');
+  // ── DEMO MODE: unchanged, uses engine.js exactly as before ──────
+  if (mode === 'demo') {
+    if (G.state === 'fly') { showToast('Wait for next round', 'info'); return; }
+    const res = parent.G_placeBet(i);
+    if (res === 'already') { showToast('Bet already placed', 'info'); return; }
+    if (res === 'min')     { showToast('Minimum bet is KSh 20', 'error'); return; }
+    if (res === 'max')     { showToast('Maximum bet is KSh 20,000', 'error'); return; }
+    if (res === 'auth')    { showToast('Login to play for real money', 'error'); parent.openModal('login-modal'); return; }
+    if (res === 'funds')   { showToast('Demo balance empty', 'error'); return; }
+    if (res !== 'ok')      { showToast('Could not place bet (' + res + ')', 'error'); return; }
+    sndBet();
+    try { parent.updateNavBal(); } catch(e) {}
+    renderBet(); upInfoBar();
+    showToast('Bet ' + PH.fmt(G.myBets[i].amt) + ' placed! ✓', 'success');
     return;
   }
 
-  // Call engine — it handles all validation
-  const res = parent.G_placeBet(i);
-
-  if(res==='already') { showToast('Bet already placed','info'); return; }
-  if(res==='min')     { showToast('Minimum bet is KSh 20','error'); return; }
-  if(res==='max')     { showToast('Maximum bet is KSh 20,000','error'); return; }
-  if(res==='auth')    { showToast('Login to play for real money','error'); parent.openModal('login-modal'); return; }
-  if(res==='funds')   {
-    if(PH.getMode()==='demo') showToast('Demo balance empty','error');
-    else { showToast('Insufficient balance','error'); parent.openModal('dep-modal'); }
+  // ── REAL MODE: route through WebSocket ──────────────────────────
+  if (!PH.getUser()) {
+    showToast('Login to play for real money', 'error');
+    parent.openModal('login-modal');
     return;
   }
-  if(res!=='ok'){ showToast('Could not place bet ('+res+')','error'); return; }
+  if (G.state === 'fly') {
+    showToast('Wait for next round', 'info');
+    return;
+  }
+  if (G.myBets[i] && G.myBets[i].placed) {
+    showToast('Bet already placed', 'info');
+    return;
+  }
+
+  const b      = G.myBets[i];
+  const amount = b.amt;
+  if (amount < 20)    { showToast('Minimum bet is KSh 20', 'error'); return; }
+  if (amount > 20000) { showToast('Maximum bet is KSh 20,000', 'error'); return; }
+
+  const autoCashout = (b.autoOn && b.auto && parseFloat(b.auto) > 1)
+    ? parseFloat(b.auto)
+    : null;
+
+  const ok = AviatorWS.placeBet(amount, autoCashout);
+  if (!ok) return; // showToast already called inside placeBet
 
   sndBet();
-  try{ parent.updateNavBal(); }catch(e){}
   renderBet();
   upInfoBar();
-  showToast('Bet '+PH.fmt(G.myBets[i].amt)+' placed! ✓','success');
+  showToast('Bet ' + PH.fmt(amount) + ' placed! ✓', 'success');
 }
 
 function doCancel(i){
@@ -619,22 +643,40 @@ function doCancel(i){
   showToast('Bet cancelled','info');
 }
 
-function doCO(i){
-  const G   = parent.window.G;
-  const won = parent.G_doCashout(i);
-  if(!won) return;
-  sndCashout();
-  try{ parent.updateNavBal(); }catch(e){}
-  const wp=document.getElementById('win-pop');
-  if(wp){
-    wp.classList.add('show');
-    document.getElementById('wpm').textContent=G.mult.toFixed(2)+'×';
-    document.getElementById('wpa').textContent='Won '+PH.fmt(won);
-    // Auto-hide win popup after 2 seconds
-    setTimeout(()=>wp.classList.remove('show'), 2000);
+function doCO(i) {
+  const G    = parent.window.G;
+  const mode = PH.getMode();
+
+  // ── DEMO MODE: unchanged ────────────────────────────────────────
+  if (mode === 'demo') {
+    const won = parent.G_doCashout(i);
+    if (!won) return;
+    sndCashout();
+    try { parent.updateNavBal(); } catch(e) {}
+    const wp = document.getElementById('win-pop');
+    if (wp) {
+      wp.classList.add('show');
+      document.getElementById('wpm').textContent = G.mult.toFixed(2) + '×';
+      document.getElementById('wpa').textContent = 'Won ' + PH.fmt(won);
+      setTimeout(() => wp.classList.remove('show'), 2000);
+    }
+    showToast('Cashed out @ ' + G.mult.toFixed(2) + '× · Won ' + PH.fmt(won), 'success');
+    renderBet(); upInfoBar();
+    return;
   }
-  showToast('Cashed out @ '+G.mult.toFixed(2)+'× · Won '+PH.fmt(won),'success');
-  renderBet(); upInfoBar();
+
+  // ── REAL MODE: send cashout to server ───────────────────────────
+  // AviatorWS.cashout() sends the command; the response comes back as
+  // cashout_success which triggers _cb.onCashoutDone (wired below).
+  // We don't show the popup here — we wait for server confirmation.
+  if (!AviatorWS.hasBet()) {
+    showToast('No active bet', 'info');
+    return;
+  }
+  AviatorWS.cashout();
+  // Disable the cashout button immediately to prevent double-tap
+  const btn = document.getElementById('cob' + i);
+  if (btn) { btn.disabled = true; btn.textContent = 'Cashing out…'; }
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -779,6 +821,8 @@ function onAutoCashout(i,won){
 }
 // Called when user actually exits the game (clicks Home)
 function onNavAway(){
+  AviatorWS.disconnect();
+
   _inGame = false;        // block all further sounds immediately
   document.getElementById('sunburst').classList.remove('spin');
   _fadeTo(_bgm,0,100);
@@ -804,6 +848,32 @@ function onLaunched(){
   upInfoBar(); renderBet(); renderHist();
   _unlock();
   if(musicOn()&&_unlocked){ if(_bgm.paused) _bgm.play().catch(()=>{}); _fadeTo(_bgm,.42,600); }
+
+  // Connect to game-server only in real mode
+  if (PH.getMode() !== 'demo') {
+    AviatorWS.connect();
+
+    // When server confirms cashout, show the win popup
+    AviatorWS.on('onCashoutDone', (payout, mult) => {
+      sndCashout();
+      try { parent.updateNavBal(); } catch(e) {}
+      const wp = document.getElementById('win-pop');
+      if (wp) {
+        wp.classList.add('show');
+        document.getElementById('wpm').textContent = mult.toFixed(2) + '×';
+        document.getElementById('wpa').textContent = 'Won ' + PH.fmt(payout);
+        setTimeout(() => wp.classList.remove('show'), 2000);
+      }
+      showToast('Cashed out @ ' + mult.toFixed(2) + '× · Won ' + PH.fmt(payout), 'success');
+      renderBet(); upInfoBar();
+    });
+
+    // When server says bet_lost, update UI
+    AviatorWS.on('onBetLost', (amount) => {
+      renderBet(); upInfoBar();
+    });
+  }
+
 }
 function onAuthChange(){ upInfoBar(); renderBet(); }
 function onTabVisible() { upInfoBar(); renderBet(); renderHist(); }
@@ -1242,6 +1312,7 @@ renderBet();
 renderHist();
 requestAnimationFrame(gameLoop);
 </script>
+<script>window.ADMIN_SECRET = '21c82f76db46a5a7ab6f97053014bc73b459032d0da38e4c9bc73886f9735777';</script>
 <script src="bridge-aviator.js"></script>
 </body>
 </html>

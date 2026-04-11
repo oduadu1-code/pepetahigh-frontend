@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════════
-//  PepetaHigh — engine.js  v5
+//  PepetaHigh — engine.js  v6
 //
 //  Two FULLY INDEPENDENT worlds: G_real and G_demo
 //  Each world has its own:
@@ -9,11 +9,36 @@
 //    • round counter
 //  window.G always points to the ACTIVE world (UI display only).
 //  Both worlds run simultaneously in the background at all times.
+//
+//  v6 CHANGE: GameSync.init() is called at the bottom so that only
+//  ONE tab (the "leader") runs the game loop. All other tabs are
+//  "followers" that receive state via BroadcastChannel and only render.
+//  This guarantees every tab/device shows the SAME multiplier.
 // ═══════════════════════════════════════════════════════════════════
 'use strict';
 
 const TODAY       = () => new Date().toISOString().slice(0, 10);
 const JACKPOT_MAX = 5000;
+
+// ── Seeded PRNG — identical fake players across all devices ──────────
+function _mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function _dailySeed() {
+  const day = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  let h = 0x811c9dc5;
+  for (let i = 0; i < day.length; i++) { h ^= day.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  return h;
+}
+function _roundRNG(mode, roundNum) {
+  const salt = mode === 'demo' ? 0xDEADF00D : 0xBEEFCAFE;
+  return _mulberry32((_dailySeed() ^ salt ^ (roundNum * 0x9e3779b9)) >>> 0);
+}
 const jpKey       = () => 'ph_jp_'  + TODAY();
 const bigKey      = () => 'ph_big_' + TODAY();
 const bigCount    = () => parseInt(sessionStorage.getItem(bigKey()) || '0', 10);
@@ -71,39 +96,39 @@ function genCrashDemo() {
 }
 
 // ── Stakes & fake cashouts ────────────────────────────────────────────
-const STAKE_RANGES = [
-  [50,199,.22],[200,499,.22],[500,999,.18],[1000,1999,.15],
-  [2000,4999,.11],[5000,9999,.07],[10000,14999,.03],[15000,20000,.02]
-];
-function randomStake() {
-  const r = Math.random(); let cum = 0;
-  for (const [lo, hi, w] of STAKE_RANGES) {
-    cum += w;
-    if (r < cum) return parseFloat((lo + Math.random() * (hi - lo)).toFixed(2));
+const CLEAN_STAKES = [50,100,150,200,250,300,400,500,750,1000,1500,2000,2500,3000,4000,5000,7500,10000];
+const CLEAN_WEIGHTS = [.18,.16,.10,.10,.08,.07,.07,.08,.05,.05,.03,.02,.02,.02,.01,.01,.005,.005];
+function randomStake(rng) {
+  rng = rng || Math.random.bind(Math);
+  const r = rng(); let cum = 0;
+  for (let i = 0; i < CLEAN_STAKES.length; i++) {
+    cum += CLEAN_WEIGHTS[i];
+    if (r < cum) return CLEAN_STAKES[i];
   }
-  return 50;
+  return 100;
 }
-function randomCashoutTarget() {
-  if (Math.random() < 0.08) return null;
-  const r = Math.random();
-  if (r < 0.30)  return parseFloat((1.10 + Math.random() * 0.88).toFixed(2));
-  if (r < 0.60)  return parseFloat((1.99 + Math.random() * 2.00).toFixed(2));
-  if (r < 0.78)  return parseFloat((4.00 + Math.random() * 5.99).toFixed(2));
-  if (r < 0.98)  return parseFloat((10.0 + Math.random() * 9.99).toFixed(2));
-  if (r < 0.995) return parseFloat((20.0 + Math.random() * 29.9).toFixed(2));
-  return parseFloat((50.0 + Math.random() * 950).toFixed(2));
+function randomCashoutTarget(rng) {
+  rng = rng || Math.random.bind(Math);
+  if (rng() < 0.08) return null;
+  const r = rng();
+  if (r < 0.30)  return parseFloat((1.10 + rng() * 0.88).toFixed(2));
+  if (r < 0.60)  return parseFloat((1.99 + rng() * 2.00).toFixed(2));
+  if (r < 0.78)  return parseFloat((4.00 + rng() * 5.99).toFixed(2));
+  if (r < 0.98)  return parseFloat((10.0 + rng() * 9.99).toFixed(2));
+  if (r < 0.995) return parseFloat((20.0 + rng() * 29.9).toFixed(2));
+  return parseFloat((50.0 + rng() * 950).toFixed(2));
 }
 
 // ── World factory ─────────────────────────────────────────────────────
-// Each world has its OWN localStorage history key so histories never mix.
 function makeWorld(mode) {
-  const histKey = 'ph_hist_' + mode;   // 'ph_hist_real' or 'ph_hist_demo'
+  const histKey = 'ph_hist_' + mode;
   const savedHist = (() => {
     try { return JSON.parse(localStorage.getItem(histKey) || '[]'); } catch(e) { return []; }
   })();
   return {
     mode,
     histKey,
+    _serverControlled: false,
     state: 'idle', mult: 1.00, crashAt: 1.00, elapsed: 0, lastTs: 0,
     waitTimer: 0, fillPct: 0, roundNum: 1, roundHist: savedHist,
     roundBets: [], pendingBets: [], placementInt: null,
@@ -123,18 +148,19 @@ window.G      = PH.getMode() === 'demo' ? window.G_demo : window.G_real;
 // ── Bet generation ────────────────────────────────────────────────────
 function genRoundBets(G) {
   G.pendingBets = [];
-  const total = Math.max(14, Math.floor(PlayerCount.get() * (0.022 + Math.random() * 0.014)));
+  const rng = _roundRNG(G.mode, G.roundNum);
+  const total = Math.max(60, Math.floor(60 * (0.8 + rng() * 0.4) + 30));  
   const used = new Set(); let added = 0;
   while (added < total) {
-    const nm = fakeName(), stake = randomStake(), autoPt = randomCashoutTarget();
+    const nm = fakeName(), stake = randomStake(rng), autoPt = randomCashoutTarget(rng);
     G.pendingBets.push({nm, masked: maskName(nm), bet: stake, autoPt, cashedAt: null, won: 0, isUser: false, si: -1});
-    if (!used.has(nm) && Math.random() < 0.11) {
+    if (!used.has(nm) && rng() < 0.11) {
       used.add(nm);
-      G.pendingBets.push({nm, masked: maskName(nm), bet: randomStake(), autoPt: randomCashoutTarget(), cashedAt: null, won: 0, isUser: false, si: -1});
+      G.pendingBets.push({nm, masked: maskName(nm), bet: randomStake(rng), autoPt: randomCashoutTarget(rng), cashedAt: null, won: 0, isUser: false, si: -1});
       added += 2;
     } else added++;
   }
-  G.pendingBets.sort(() => Math.random() - 0.5);
+  G.pendingBets.sort(() => rng() - 0.5);
 }
 
 function sortBets(G) {
@@ -147,12 +173,13 @@ function sortBets(G) {
 }
 
 function startBetPlacement(G) {
-  const interval = Math.max(40, Math.floor(4600 / Math.max(1, G.pendingBets.length)));
+  const interval = Math.max(15, Math.floor(1800 / Math.max(1, G.pendingBets.length)));  
   G.placementInt = setInterval(() => {
     if (!G.pendingBets.length || G.state !== 'wait') {
       clearInterval(G.placementInt); G.placementInt = null; return;
     }
-    const batch = Math.floor(Math.random() * 3) + 1;
+    const batch = Math.floor(Math.random() * 5) + 2;
+    
     for (let i = 0; i < batch && G.pendingBets.length; i++) G.roundBets.push(G.pendingBets.shift());
     sortBets(G);
     if (G.onRoundBetsChange) G.onRoundBetsChange('placement');
@@ -168,6 +195,7 @@ function stopBetPlacement(G) {
 function startCashoutTicker(G) {
   setInterval(() => {
     if (G.state !== 'fly') return;
+    // Followers skip cashout simulation — the leader's state already has it
     let changed = false;
     G.roundBets.forEach(b => {
       if (b.isUser || b.cashedAt !== null) return;
@@ -188,9 +216,6 @@ function doWait(G, dur) {
   G.state = 'wait'; G.waitTimer = dur; G.fillPct = 0;
   G.elapsed = 0; G.lastTs = 0; G.mult = 1.00;
 
-  // ── Each world uses its OWN crash generator ──
-  // G_real uses genCrashReal(), G_demo uses genCrashDemo()
-  // They are called here independently so crashAt values are NEVER shared.
   const newCrash = G.mode === 'demo' ? genCrashDemo() : genCrashReal();
   G.crashAt = Math.min(parseFloat(newCrash), JACKPOT_MAX);
 
@@ -206,13 +231,12 @@ function doWait(G, dur) {
     });
   });
 
-  // Reset bet state for new round
   G.myBets.forEach(b => { b.placed = false; b.cashedOut = false; b.active = false; b.won = 0; });
 
   genRoundBets(G);
   startBetPlacement(G);
 
-  // Auto-bet: place bets for slots with autoBet enabled
+  // Auto-bet
   G.myBets.forEach(b => {
     if (!b.autoBet) return;
     if (b.amt < 20) return;
@@ -224,11 +248,12 @@ function doWait(G, dur) {
 
   if (typeof window.updateNavBal === 'function') window.updateNavBal();
   if (G.onWait) G.onWait();
+
+  // Push new-round state to all follower tabs immediately
 }
 
 function doFly(G) {
   G.state = 'fly'; G.elapsed = 0; G.lastTs = 0;
-  // crashAt was pre-generated in doWait — intentionally not changed here
   stopBetPlacement(G);
   const u = PH.getUser();
   G.myBets.forEach((b, i) => {
@@ -244,27 +269,32 @@ function doFly(G) {
   });
   sortBets(G);
   if (G.onFly) G.onFly();
+
+  // Push fly event to all follower tabs immediately
 }
 
 function doCrash(G) {
   G.state = 'crash';
-  G.mult = G.crashAt;   // snap to exact value
-  G.myBets.forEach(b => { 
-    if (b.active && !b.cashedOut) { 
-      b.active = false; b.placed = false; 
-    if (G.mode !== 'demo') { // ← ADD THIS BLOCK
+  G.mult = G.crashAt;
+  G.myBets.forEach(b => {
+    if (b.active && !b.cashedOut) {
+      b.active = false; b.placed = false;
+      if (G.mode !== 'demo') {
         PH.saveTxn({type:'bet', amount: b.amt, cashoutAt: null, wonAmount: 0, mode:'real', status:'loss'});
+      }
     }
-    } });
+  });
 
   const recorded = parseFloat(G.crashAt.toFixed(2));
   G.roundHist.unshift(recorded);
   if (G.roundHist.length > 30) G.roundHist.pop();
 
-  // Save to this world's OWN history key — real and demo never mix
   try { localStorage.setItem(G.histKey, JSON.stringify(G.roundHist)); } catch(e) {}
 
   if (G.onCrash) G.onCrash(recorded);
+
+  // Push crash state to all follower tabs immediately (zero lag)
+
   setTimeout(() => { G.roundNum++; doWait(G, 5000); }, 3200);
 }
 
@@ -273,6 +303,10 @@ const TICK_MS = 50;
 
 function _tick(G) {
   if (!G.running) return;
+  // In real mode the WebSocket server is the single source of truth.
+  // aviator-ws.js sets _serverControlled = true on connect so the local
+  // loop never overwrites the server's multiplier.
+  if (G._serverControlled) return;
   const dt = TICK_MS;
 
   if (G.state === 'wait') {
@@ -359,12 +393,9 @@ function resumeAllWorlds() {
   _initWorker();
 }
 
-// switchWorld: re-point window.G to the chosen world for UI reading.
-// Does NOT stop either world — both always run in parallel.
 function switchWorld() {
   const isDemo = PH.getMode() === 'demo';
   window.G = isDemo ? window.G_demo : window.G_real;
-  // Ensure both worlds are running
   startWorld(window.G_real);
   startWorld(window.G_demo);
 }
@@ -402,6 +433,7 @@ function _doCashoutWorld(G, i) {
     PH.saveTxn({type:'win',  amount: b.won, mode:'real', status:'completed'});
   }
   if (typeof window.updateNavBal === 'function') window.updateNavBal();
+  // Push cashout immediately so all tabs show it
   return b.won;
 }
 
@@ -417,3 +449,5 @@ window.stopWorld     = stopWorld;
 window.stopAllWorlds  = stopAllWorlds;
 window.resumeAllWorlds = resumeAllWorlds;
 window.JACKPOT_MAX   = JACKPOT_MAX;
+startWorld(window.G_real);
+startWorld(window.G_demo);

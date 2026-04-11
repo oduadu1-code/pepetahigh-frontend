@@ -10,7 +10,7 @@
 body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bottom:80px}
 .sticky{position:sticky;top:0;z-index:10;background:var(--bg)}
 
-/* ── CTA BANNER — FIRST element after nav ── */
+/* ── CTA BANNER ── */
 .cta-banner{
   display:flex;align-items:center;gap:12px;
   padding:13px 16px;
@@ -43,7 +43,6 @@ body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bott
 }
 .cta-pill:active{transform:scale(.92);}
 
-/* Game CTA themes */
 #cta-aviator{background:linear-gradient(135deg,#0d1460 0%,#1a2288 45%,#0d1460 100%)}
 #cta-aviator .cta-icon{background:rgba(255,200,30,.12);border:1px solid rgba(255,200,30,.2)}
 #cta-aviator .cta-label{color:#a0b0ff}
@@ -79,25 +78,11 @@ body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bott
 #cta-mines .cta-sub{color:#6ee7b7}
 #cta-mines .cta-pill{background:linear-gradient(135deg,#10b981,#059669);color:#fff}
 
-/* ── Stats bar — BELOW CTA ── */
+/* ── Stats bar ── */
 .bets-hdr{display:flex;padding:8px 12px;gap:0;border-bottom:1px solid var(--border);background:var(--bg2)}
 .bh{flex:1;display:flex;flex-direction:column}
 .bh-lbl{font-size:.58rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
 .bh-val{font-family:var(--font-d);font-size:.82rem;font-weight:700;color:var(--text)}
-
-/* Rocket live mult */
-.rocket-live-wrap{background:var(--bg2);border-bottom:1px solid var(--border);padding:4px 0 2px}
-.rocket-live-mult{font-family:var(--font-d);font-size:1.1rem;font-weight:900;text-align:center;padding:6px 0 3px;letter-spacing:.05em}
-.rocket-status-bar{display:flex;align-items:center;justify-content:center;gap:6px;padding:2px 0 6px;font-size:.7rem;color:var(--text3)}
-
-/* ── Tabs & pills ── */
-.tab-row{display:flex;border-bottom:1px solid var(--border);background:var(--bg2)}
-.tab-btn{flex:1;padding:9px;border:none;background:transparent;font-family:var(--font-b);font-size:.8rem;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--text3);transition:all .2s}
-.tab-btn.active{color:var(--primary);border-bottom-color:var(--primary)}
-.gpills{display:flex;gap:7px;padding:9px 12px;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto}
-.gpills::-webkit-scrollbar{display:none}
-.gpill{padding:5px 13px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--text3);font-family:var(--font-b);font-size:.76rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0}
-.gpill.on{border-color:var(--primary);background:rgba(79,110,247,.1);color:var(--primary)}
 
 /* History bar */
 .game-hist-bar{display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(10,5,20,.9);border-bottom:1px solid rgba(162,89,255,.15);overflow-x:auto;min-height:34px}
@@ -108,6 +93,15 @@ body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bott
 .demo-note{background:rgba(245,197,66,.06);border-bottom:1px solid rgba(245,197,66,.18);padding:9px 14px;display:none;align-items:center;gap:9px;font-size:.78rem;color:var(--gold)}
 .demo-note.show{display:flex}
 .demo-note button{margin-left:auto;background:none;border:1.5px solid var(--gold);color:var(--gold);border-radius:6px;padding:3px 10px;font-size:.72rem;font-weight:700;cursor:pointer}
+
+/* Tabs & pills */
+.tab-row{display:flex;border-bottom:1px solid var(--border);background:var(--bg2)}
+.tab-btn{flex:1;padding:9px;border:none;background:transparent;font-family:var(--font-b);font-size:.8rem;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;color:var(--text3);transition:all .2s}
+.tab-btn.active{color:var(--primary);border-bottom-color:var(--primary)}
+.gpills{display:flex;gap:7px;padding:9px 12px;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto}
+.gpills::-webkit-scrollbar{display:none}
+.gpill{padding:5px 13px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--text3);font-family:var(--font-b);font-size:.76rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.gpill.on{border-color:var(--primary);background:rgba(79,110,247,.1);color:var(--primary)}
 
 /* Column heads */
 .col-head{display:grid;grid-template-columns:1fr .8fr .65fr .9fr;padding:5px 12px;background:var(--bg3);border-bottom:1px solid var(--border)}
@@ -135,7 +129,7 @@ body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bott
 /* Cashout rows */
 .co-row{display:grid;grid-template-columns:36px 1fr auto;align-items:center;gap:10px;padding:8px 13px;border-bottom:1px solid rgba(37,39,64,.2)}
 
-/* Bet-placing activity ticker */
+/* Activity ticker */
 .activity-ticker{display:flex;align-items:center;gap:7px;padding:5px 12px;background:rgba(79,110,247,.04);border-bottom:1px solid rgba(79,110,247,.1);font-size:.68rem;color:var(--text3);overflow:hidden;height:28px;flex-shrink:0}
 .activity-ticker.hidden{display:none}
 .at-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;animation:atPulse 1.2s ease infinite}
@@ -152,7 +146,7 @@ body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bott
 
 <div class="sticky" id="sticky-top">
 
-  <!-- ═══ CTA BANNERS — one per game, toggled by pill selection ═══ -->
+  <!-- CTA BANNERS -->
   <button class="cta-banner" id="cta-aviator">
     <div class="cta-icon">🏆</div>
     <div class="cta-text">
@@ -203,7 +197,7 @@ body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bott
     <div class="cta-pill">Play →</div>
   </button>
 
-  <!-- ═══ STATS — right below CTA ═══ -->
+  <!-- STATS -->
   <div class="bets-hdr" id="stats-bar" style="display:none">
     <div class="bh"><div class="bh-lbl">Total Bets</div><div class="bh-val" id="bh-total">-</div></div>
     <div class="bh" style="text-align:center"><div class="bh-lbl">Active</div><div class="bh-val" id="bh-active" style="color:var(--green)">-</div></div>
@@ -216,14 +210,7 @@ body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bott
     <span id="at-msg" class="at-msg">Waiting for players…</span>
   </div>
 
-  <!-- Rocket live multiplier -->
-  <div id="rocket-live" style="display:none" class="rocket-live-wrap">
-    <div class="rocket-live-mult" id="rocket-mult-disp" style="color:var(--green)">-</div>
-    <div class="rocket-status-bar">
-      <span class="online-dot" style="width:6px;height:6px"></span>
-      <span id="rocket-status-txt">Waiting for launch...</span>
-    </div>
-  </div>
+  <!-- rocket-live-wrap REMOVED ENTIRELY — no multiplier row -->
 
   <!-- History bar -->
   <div class="game-hist-bar hidden" id="game-hist-bar">
@@ -277,14 +264,24 @@ body{background:var(--bg);font-family:var(--font-b);overflow-y:auto;padding-bott
 
 if(sessionStorage.getItem('ph_theme')==='light') document.body.classList.add('theme-light');
 
-/* ── inline name helpers ── */
-var _F=['Star','Ace','Nova','Blaze','Turbo','Hyper','Void','Solar','Lunar','Cosmic','Iron','Dark','Pulse','Zap','Neo','Apex','Flux','Echo','Neon','Riot'];
-var _L=['Pilot','Rider','Burst','Crew','Wing','Bet','Hit','Dash','Max','Surf','Run','Wave','Ace','Pro','King','One','Fire','Bold','Rush','Fly'];
-if(typeof window.fakeName==='undefined')   window.fakeName  =function(){return _F[_F.length*Math.random()|0]+_L[_L.length*Math.random()|0]+(Math.random()*900+100|0);};
-if(typeof window.maskName==='undefined')   window.maskName  =function(n){if(!n||n.length<=4)return (n||'')[0]+'***';return n.slice(0,2)+'***'+n.slice(-1);};
-if(typeof window.fakeInitial==='undefined')window.fakeInitial=function(n){return(n&&n[0]||'?').toUpperCase();};
+// TO — Kenyan names, masked like phone numbers
+var _KE_FIRST=['Wanjiku','Kamau','Otieno','Akinyi','Mutua','Kipchoge','Wekesa','Omondi',
+  'Njeri','Mwangi','Chebet','Odhiambo','Wairimu','Kariuki','Adhiambo','Kibet',
+  'Ndungu','Auma','Githinji','Moraa','Rotich','Awuor','Macharia','Jelimo',
+  'Kimani','Ochola','Wambui','Koech','Nyambura','Oloo','Wangari','Sang',
+  'Juma','Amina','Hassan','Fatuma','Ali','Mwenda','Zawadi','Baraka'];
+var _KE_SUFF=['_ke','_tz','_ug','_rw','254','255','_g','_pro','_x','_real','_win','_bet'];
+if(typeof window.fakeName==='undefined') window.fakeName=function(){
+  const n=_KE_FIRST[_KE_FIRST.length*Math.random()|0];
+  const s=_KE_SUFF[_KE_SUFF.length*Math.random()|0];
+  return n+s;
+};
+if(typeof window.maskName==='undefined') window.maskName=function(n){
+  if(!n||n.length<=4) return (n||'')[0]+'***';
+  return n.slice(0,3)+'***'+n.slice(-1);
+};
+if(typeof window.fakeInitial==='undefined') window.fakeInitial=function(n){return(n&&n[0]||'?').toUpperCase();};
 
-/* ── helpers ── */
 function isDemo(){ try{return(window.PH||parent.window.PH).getMode()==='demo';}catch(e){return false;} }
 function getUser(){ try{return(window.PH||parent.window.PH).getUser();}catch(e){return null;} }
 function getTxns(){ try{return(window.PH||parent.window.PH).getTxns();}catch(e){return[];} }
@@ -294,14 +291,31 @@ function el(id){return document.getElementById(id);}
 function setText(id,v){var e=el(id);if(e)e.textContent=v;}
 function setCls(id,on,cls){var e=el(id);if(e)e.classList.toggle(cls,on);}
 
+/* Read the real rocket game state — written by rocket.html every 80ms.
+   The rocket game runs in a sibling iframe, so PH_ROCKET may be on
+   parent.window directly, or on a sibling iframe's contentWindow. */
+function getRocketState(){
+  // 1. Parent window (most common — parent sets it as a proxy)
+  try{ if(parent.window.PH_ROCKET) return parent.window.PH_ROCKET; }catch(e){}
+  // 2. Sibling iframes — scan all frames in the parent
+  try{
+    var frames=parent.window.frames;
+    for(var i=0;i<frames.length;i++){
+      try{
+        if(frames[i].PH_ROCKET) return frames[i].PH_ROCKET;
+      }catch(e){}
+    }
+  }catch(e){}
+  return null;
+}
+
 /* ── state ── */
 var bets=[], state='idle', mult=1, tab='all', game='aviator';
 var _stableOrder=[];
-var _rkBets=[], _rkState='wait', _rkMult=1, _rkHist=[], _rkMultInt=null, _rkRunning=false;
+var _rkBets=[], _rkHist=[], _rkPollInt=null, _rkRunning=false, _rkLastState='';
 var _feedRunning=false, _feedInt=null;
 
 /* ── CTA wiring ── */
-// ✅ FIX: map each game to its open function
 var CTA_GAMES=['aviator','rocket','dice','fortunespin','mines'];
 var CTA_FN={
   aviator:    function(){try{parent.openGameModal();}catch(e){}},
@@ -315,17 +329,12 @@ CTA_GAMES.forEach(function(g){
   if(btn)btn.addEventListener('click',function(){ CTA_FN[g]&&CTA_FN[g](); });
 });
 
-// ✅ FIX: showCTA hides all banners and shows only the active game's banner
 function showCTA(activeGame){
   CTA_GAMES.forEach(function(g){
     var b=el('cta-'+g);
     if(b) b.classList.toggle('hidden', g!==activeGame);
   });
-  // Keep Aviator jackpot value fresh
-  try{
-    var jmax=(parent.window.JACKPOT_MAX||5000).toLocaleString()+'×';
-    setText('cta-av-val',jmax);
-  }catch(e){}
+  try{ setText('cta-av-val',(parent.window.JACKPOT_MAX||5000).toLocaleString()+'×'); }catch(e){}
 }
 
 /* ── pill / tab clicks ── */
@@ -333,14 +342,14 @@ el('sticky-top').addEventListener('click', function(e){
   var btn=e.target.closest('button');
   if(!btn)return;
   var id=btn.id||'';
-  if(id==='tab-all')        setTab('all');
-  else if(id==='tab-mine')  setTab('mine');
+  if(id==='tab-all')         setTab('all');
+  else if(id==='tab-mine')   setTab('mine');
   else if(id==='btn-switchreal'){ try{parent.pickMode('play');}catch(ex){} }
-  else if(id==='gp-aviator')    setGame('aviator');
-  else if(id==='gp-rocket')     setGame('rocket');
-  else if(id==='gp-dice')       setGame('dice');
-  else if(id==='gp-fortunespin')setGame('fortunespin');
-  else if(id==='gp-mines')      setGame('mines');
+  else if(id==='gp-aviator')     setGame('aviator');
+  else if(id==='gp-rocket')      setGame('rocket');
+  else if(id==='gp-dice')        setGame('dice');
+  else if(id==='gp-fortunespin') setGame('fortunespin');
+  else if(id==='gp-mines')       setGame('mines');
 });
 
 function setTab(t){
@@ -353,18 +362,15 @@ function setTab(t){
 function setGame(g){
   game=g;
   ['aviator','rocket','dice','fortunespin','mines'].forEach(function(n){ setCls('gp-'+n,n===g,'on'); });
-
-  // ✅ FIX: swap the CTA banner to match the active game pill
   showCTA(g);
-
   try{ parent.onBetsGameChange&&parent.onBetsGameChange(g); }catch(ex){}
   stopFeed();
-  if(g==='rocket') { if(!_rkRunning) startRocket(); else render(); }
+  stopRocketPoll();
+  if(g==='rocket') startRocket();
   else if(g!=='aviator') startFeed(g);
   render();
 }
 
-/* ── sync aviator from parent ── */
 function sync(){
   try{var G=parent.window.G;if(!G)return;bets=G.roundBets||[];state=G.state||'idle';mult=G.mult||1;}catch(e){}
 }
@@ -374,24 +380,14 @@ function upHeader(){
   var demo=isDemo(), isAv=game==='aviator', isRk=game==='rocket';
   var isFeed=(game==='dice'||game==='fortunespin'||game==='mines');
   var showAviRk=isAv||isRk;
-
   setCls('demo-note',demo,'show');
-
-  var showStats=!demo&&tab==='all'&&showAviRk;
-  el('stats-bar').style.display=showStats?'flex':'none';
-
-  var showHist=!demo&&showAviRk;
-  setCls('game-hist-bar',!showHist,'hidden');
-
+  el('stats-bar').style.display=(!demo&&tab==='all'&&showAviRk)?'flex':'none';
+  setCls('game-hist-bar',!((!demo)&&showAviRk),'hidden');
   el('col-head').style.display=showAviRk?'grid':'none';
   el('mines-col-head').style.display=game==='mines'?'grid':'none';
-  el('rocket-live').style.display=(!demo&&isRk)?'block':'none';
   el('feed-hdr').style.display=isFeed?'flex':'none';
-
-  var names={dice:'🎲 Dice Roll',fortunespin:'🎡 Fortune Spin',mines:'💣 Mines'};
-  setText('feed-game-name',names[game]||'');
-
-  if(showStats){
+  setText('feed-game-name',{dice:'🎲 Dice Roll',fortunespin:'🎡 Fortune Spin',mines:'💣 Mines'}[game]||'');
+  if(!demo&&tab==='all'&&showAviRk){
     var src=isAv?bets:_rkBets;
     var tot=src.length, act=src.filter(function(b){return b.cashedAt===null;}).length;
     var stakes=src.reduce(function(s,b){return s+(b.bet||0);},0);
@@ -407,11 +403,18 @@ function renderHistBar(){
   var demo=isDemo(), isAv=game==='aviator', isRk=game==='rocket';
   if(demo||(!isAv&&!isRk)){hc.innerHTML='';return;}
   var hist=[];
-  if(isAv){ try{hist=parent.window.G_real?parent.window.G_real.roundHist:[];}catch(e){} }
-  else {
-  // Always show real-money rocket history from localStorage, not demo
-  try{ hist=JSON.parse(localStorage.getItem('ph_hist_rocket_real')||'[]'); }catch(e){ hist=_rkHist; }
-  if(!hist.length) hist=_rkHist; // fallback to in-memory if nothing saved yet
+  if(isAv){
+    try{hist=parent.window.G_real?parent.window.G_real.roundHist:[];}catch(e){}
+  } else {
+    // 1. Try live state from rocket iframe
+    var rs=getRocketState();
+    if(rs&&rs.hist&&rs.hist.length) hist=rs.hist;
+    // 2. Fall back to localStorage (persists across refreshes)
+    if(!hist.length){
+      try{hist=JSON.parse(localStorage.getItem('ph_hist_rocket_real')||'[]');}catch(e){}
+    }
+    // 3. Fall back to in-memory (accumulated this session)
+    if(!hist.length) hist=_rkHist;
   }
   if(!hist||!hist.length){hc.innerHTML='<span style="font-size:.62rem;color:var(--text3)">No rounds yet...</span>';return;}
   hc.innerHTML=hist.slice(0,26).map(function(m){
@@ -420,7 +423,6 @@ function renderHistBar(){
   }).join('');
 }
 
-/* ── main render ── */
 function render(){
   sync(); upHeader();
   if(tab==='mine'){renderMine();return;}
@@ -468,17 +470,23 @@ function updateCashedRows(){
   });
 }
 
-/* ── ROCKET ── */
+/* ══════════════════════════════════════════════════════════════
+   ROCKET — polls PH_ROCKET (real game's live state) every 80ms.
+   Fake players resolve their cashouts against the REAL mult
+   as it climbs. No internal simulation whatsoever.
+   ══════════════════════════════════════════════════════════════ */
 var RK_N=['StarPilot','AceFlyer','OrbitalX','NovaBurst','CometRide','BlazeCrew','XtremeJet','TurboAce','VoidDash','GalaxySurf','NebulaBet','SolarMax','QuasarRun','PulseWave','DarkMatter','IronWing','PhoenixUp','HyperLane','LunarBet','CosmicHit','ZeroGrav','BurnRate','IgniteX','ApexBurn','NitroUp'];
-var RK_BRANGE=[[50,199,.24],[200,499,.22],[500,999,.20],[1000,2999,.17],[3000,7999,.10],[8000,14999,.05],[15000,20000,.02]];
+var RK_BRANGE=[[50,99,.30],[100,199,.25],[200,499,.20],[500,999,.13],[1000,2999,.07],[3000,9999,.04],[10000,20000,.01]];
 var RK_C=['#f97316','#ef4444','#fb923c','#f59e0b','#10b981','#6366f1','#8b5cf6','#ec4899','#06b6d4','#84cc16'];
 var RK_T=[1.2,1.5,1.8,2,2.5,3,4,5,8,10,15,20,50,100];
 
 function rkFake(){return RK_N[RK_N.length*Math.random()|0]+(Math.random()*900+100|0);}
 function rkMask(n){return n.length<=4?n[0]+'***':n.slice(0,2)+'***'+n.slice(-1);}
 function rkRandBet(){
+  var CLEAN=[50,100,150,200,250,300,400,500,750,1000,1500,2000,2500,3000,4000,5000,7500,10000];
+  var WEIGHTS=[.18,.16,.10,.10,.08,.07,.07,.08,.05,.05,.03,.02,.02,.02,.01,.01,.005,.005];
   var r=Math.random(),cum=0;
-  for(var i=0;i<RK_BRANGE.length;i++){cum+=RK_BRANGE[i][2];if(r<=cum){var lo=RK_BRANGE[i][0],hi=RK_BRANGE[i][1];return parseFloat((lo+Math.random()*(hi-lo)).toFixed(2));}}
+  for(var i=0;i<CLEAN.length;i++){cum+=WEIGHTS[i];if(r<=cum)return CLEAN[i];}
   return 100;
 }
 function genRkBets(){
@@ -492,87 +500,87 @@ function genRkBets(){
 function startRocket(){
   if(_rkRunning)return;
   _rkRunning=true;
-  rocketWait();
+  _rkBets=genRkBets();
+  _rkLastState='';
+  startRocketPoll();
 }
-var _rkWaitInt=null;
-function rocketWait(){
-  _rkState='wait'; _rkMult=1; _rkBets=genRkBets();
-  setText('rocket-mult-disp','-');
-  var md=el('rocket-mult-disp'); if(md)md.style.color='var(--text3)';
-  var waitSecs=3+(Math.random()*4|0);
-  setText('rocket-status-txt','🕒 Next launch in '+waitSecs+'s...');
-  if(game==='rocket') renderRocket();
-  if(_rkWaitInt){clearInterval(_rkWaitInt);_rkWaitInt=null;}
-  var trickleTick=0, trickleMax=Math.floor(waitSecs*1000/600);
-  _rkWaitInt=setInterval(function(){
-    trickleTick++;
-    if(_rkState!=='wait'||trickleTick>=trickleMax){clearInterval(_rkWaitInt);_rkWaitInt=null;return;}
-    var add=1+(Math.random()*2|0);
-    for(var j=0;j<add;j++){
+function stopRocketPoll(){
+  _rkRunning=false;
+  if(_rkPollInt){clearInterval(_rkPollInt);_rkPollInt=null;}
+}
+function startRocketPoll(){
+  if(_rkPollInt){clearInterval(_rkPollInt);_rkPollInt=null;}
+  _rkPollInt=setInterval(rocketTick,80);
+}
+
+/*
+ * rocketTick — mirrors PH_ROCKET's 80ms write cadence.
+ * Reads real state/mult and resolves fake players against it live.
+ */
+function rocketTick(){
+  if(game!=='rocket')return;
+  var rs=getRocketState();
+  if(!rs)return;
+
+  var realState=rs.state;
+  var realMult =rs.mult||1;
+  var realHist =rs.hist||[];
+
+  // ── State transition: new wait = new round ──
+  if(realState==='wait' && _rkLastState!=='wait'){
+    _rkBets=genRkBets();
+    // Trickle a few more fake bets in during the 5s countdown
+    var added=0, maxAdd=4+(Math.random()*6|0);
+    var trickleInt=setInterval(function(){
+      if(added>=maxAdd||_rkLastState!=='wait'){clearInterval(trickleInt);return;}
       var nm=rkFake(), bet=rkRandBet(), target=RK_T[RK_T.length*Math.random()|0];
       _rkBets.push({nm:nm,masked:rkMask(nm),bet:bet,cashedAt:null,won:0,target:target,color:RK_C[_rkBets.length%RK_C.length]});
-    }
+      added++;
+      if(game==='rocket'&&tab==='all') renderRocket();
+    },700);
     if(game==='rocket'&&tab==='all') renderRocket();
-  },600);
-  setTimeout(rocketFly, waitSecs*1000);
-}
-function rocketFly(){
-  _rkState='fly';
-  var r=Math.random(), crash;
-  if(r<.45)      crash=1+Math.random()*.6;
-  else if(r<.70) crash=1.6+Math.random()*1.8;
-  else if(r<.85) crash=3.4+Math.random()*5;
-  else if(r<.93) crash=8+Math.random()*17;
-  else if(r<.97) crash=25+Math.random()*35;
-  else           crash=60+Math.random()*140;
-  crash=parseFloat(crash.toFixed(2));
+  }
 
-  _rkMult=1;
-  var md=el('rocket-mult-disp');
-  if(md){md.textContent='1.00x';md.style.color='var(--green)';}
-  setText('rocket-status-txt','🚀 Rocket in flight...');
-
-  var cashed=new Set(), t0=performance.now(), dur=Math.log(crash)*3800+800;
-  clearInterval(_rkMultInt);
-  _rkMultInt=setInterval(function(){
-    var prog=Math.min((performance.now()-t0)/dur,1);
-    _rkMult=parseFloat(Math.pow(crash,prog).toFixed(2));
-    if(md){
-      md.textContent=_rkMult.toFixed(2)+'x';
-      md.style.color=_rkMult<3?'var(--green)':_rkMult<10?'var(--gold)':'var(--red)';
-    }
-    _rkBets.forEach(function(b,i){
-      if(!cashed.has(i)&&b.cashedAt===null&&_rkMult>=b.target){
-        cashed.add(i); b.cashedAt=b.target; b.won=parseFloat((b.bet*b.target).toFixed(2));
-        if(game==='rocket'&&tab==='all') updateRkRow(b,i);
+  // ── Flying: resolve cashouts against the REAL live multiplier ──
+  if(realState==='fly'){
+    var anyNew=false;
+    _rkBets.forEach(function(b){
+      if(b.cashedAt===null && realMult>=b.target){
+        b.cashedAt=b.target;
+        b.won=parseFloat((b.bet*b.target).toFixed(2));
+        anyNew=true;
       }
     });
-    if(prog>=1){ clearInterval(_rkMultInt); rocketCrash(crash,cashed); }
-  },80);
+    if(anyNew&&game==='rocket'&&tab==='all') updateRkRows();
+  }
+
+  // ── Bust: crash everyone who didn't cash out, sync real history ──
+  if(realState==='bust' && _rkLastState!=='bust'){
+    _rkBets.forEach(function(b){ if(b.cashedAt===null){b.cashedAt=0;b.won=0;} });
+    if(realHist.length){
+      _rkHist=realHist.slice(0,30);
+      try{localStorage.setItem('ph_hist_rocket_real',JSON.stringify(_rkHist));}catch(e){}
+    }
+    if(game==='rocket'){renderRocket();renderHistBar();}
+  }
+
+  _rkLastState=realState;
+  upHeader();
 }
-function rocketCrash(at,cashed){
-  _rkState='crash';
-  if(_rkWaitInt){clearInterval(_rkWaitInt);_rkWaitInt=null;}
-  _rkHist.unshift(at); if(_rkHist.length>30)_rkHist.pop();
-  var md=el('rocket-mult-disp');
-  if(md){md.textContent=at.toFixed(2)+'x';md.style.color='var(--red)';}
-  setText('rocket-status-txt','💥 Crashed at '+at.toFixed(2)+'x');
-  _rkBets.forEach(function(b,i){if(!cashed.has(i)&&b.cashedAt===null){b.cashedAt=0;b.won=0;}});
-  if(game==='rocket'){renderRocket();renderHistBar();}
-  setTimeout(function(){ _rkRunning=false; rocketWait(); }, 4500);
-}
+
 function renderRocket(){
   var rows=el('rows'); if(!rows||game!=='rocket')return;
   if(isDemo()){rows.innerHTML='<div class="empty">🎮 Real-money rocket feed only.<br><span style="font-size:.74rem">Switch to Real Play.</span></div>';return;}
   if(!_rkBets.length){rows.innerHTML='<div class="empty">🚀 Waiting for next launch...</div>';return;}
   var sorted=[].concat(_rkBets).sort(function(a,b){return b.bet-a.bet;});
-  rows.innerHTML=sorted.map(function(b,i){
+  rows.innerHTML=sorted.map(function(b){
+    var origIdx=_rkBets.indexOf(b);
     var cashed=b.cashedAt!==null&&b.cashedAt>0;
     var crashed=b.cashedAt===0;
     var nCol=cashed?'var(--green)':crashed?'var(--red)':'var(--text)';
     var mCell=cashed?chip(b.cashedAt):crashed?'<span style="color:var(--red)">x</span>':'<span style="color:var(--text3)">-</span>';
     var wCell=cashed?'<span style="color:var(--green);font-weight:700">+'+kes(b.won)+'</span>':crashed?'<span style="color:var(--red);font-size:.72rem">Crashed</span>':'<span style="color:var(--text3)">-</span>';
-    return '<div class="bet-row'+(cashed?' cashed':crashed?' crashed':'')+'" id="rk-'+i+'">'
+    return '<div class="bet-row'+(cashed?' cashed':crashed?' crashed':'')+'" id="rk-'+origIdx+'">'
       +'<div class="bc"><div class="u-av" style="background:linear-gradient(135deg,'+b.color+','+b.color+'99)">'+b.masked[0].toUpperCase()+'</div>'
       +'<div><div style="font-size:.77rem;color:'+nCol+'">'+b.masked+'</div>'
       +'<div style="font-size:.6rem;color:var(--text3);margin-top:1px">Auto: '+b.target.toFixed(2)+'x</div></div></div>'
@@ -582,14 +590,20 @@ function renderRocket(){
       +'</div>';
   }).join('');
 }
-function updateRkRow(b,i){
-  var row=document.getElementById('rk-'+i); if(!row)return;
-  row.classList.add('cashed');
-  var cells=row.querySelectorAll('.bc');
-  if(cells[0]){var nm=cells[0].querySelector('div>div:first-child');if(nm)nm.style.color='var(--green)';}
-  if(cells[1])cells[1].style.color='var(--green)';
-  if(cells[2])cells[2].innerHTML=chip(b.cashedAt);
-  if(cells[3])cells[3].innerHTML='<span style="color:var(--green);font-weight:700">+'+kes(b.won)+'</span>';
+
+/* Surgical row updates — only touches rows that newly cashed out */
+function updateRkRows(){
+  _rkBets.forEach(function(b,i){
+    if(!b.cashedAt||b.cashedAt===0)return;
+    var row=document.getElementById('rk-'+i);
+    if(!row||row.classList.contains('cashed'))return;
+    row.classList.add('cashed');
+    var cells=row.querySelectorAll('.bc');
+    if(cells[0]){var nm=cells[0].querySelector('div>div:first-child');if(nm)nm.style.color='var(--green)';}
+    if(cells[1])cells[1].style.color='var(--green)';
+    if(cells[2])cells[2].innerHTML=chip(b.cashedAt);
+    if(cells[3])cells[3].innerHTML='<span style="color:var(--green);font-weight:700">+'+kes(b.won)+'</span>';
+  });
 }
 
 /* ── FEEDS (Dice / Fortune / Mines) ── */
@@ -598,7 +612,7 @@ var FCFG={
   fortunespin:{colors:['#f5c542','#a259ff','#4c9fff','#29d980','#f24e4e'],mults:[0,.5,1,1.5,2,3,5,10,25,100],wts:[.36,.10,.12,.10,.10,.08,.06,.04,.02,.02],label:'🎡 Fortune Spin'},
   mines:    {colors:['#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4'],mults:[1.1,1.2,1.5,1.8,2.1,2.8,3.5,5.2,8.4,12.5,20],wts:[.18,.16,.14,.12,.10,.09,.07,.05,.04,.03,.02],label:'💣 Mines'}
 };
-var FB=[20,50,100,200,500,1000,2000];
+var FB=[50,100,200,500,1000,2000, 5000,10000,];
 var MC=[1,2,3,5,10,15,20,24];
 function wRand(m,w){var r=Math.random(),s=0;for(var i=0;i<m.length;i++){s+=w[i];if(r<=s)return m[i];}return m[m.length-1];}
 function genItem(g){
@@ -687,8 +701,20 @@ function renderMine(){
   }).join('')||'<div class="empty">No bets yet.</div>';
 }
 
-/* ── callbacks from parent ── */
-window.onTabVisible =function(){ sync(); render(); };
+/* ── Aviator callbacks from parent ── */
+window.onTabVisible=function(){
+  sync();
+  // Force a full re-render and also immediately pull current state
+  try{
+    var G=parent.window.G;
+    if(G){
+      bets=G.roundBets||[];
+      state=G.state||'idle';
+      mult=G.mult||1;
+    }
+  }catch(e){}
+  render();
+};
 window.onAuthChange =function(){ render(); };
 window.onGameWait   =function(b){ if(b)bets=b; state='wait'; mult=1; _stableOrder=[]; if(game==='aviator')render(); };
 window.onGameFly    =function(b,m){ if(b)bets=b; if(m)mult=m; state='fly'; if(game==='aviator')render(); };
@@ -701,18 +727,27 @@ window.onBetsChange =function(reason,b,m){
   else renderMine();
 };
 
-/* ── polling ── */
-setInterval(function(){ sync(); if(game==='aviator'){ upHeader(); if(tab==='all')renderAviator(); else renderMine(); } },700);
+/* ── Aviator polling ── */
+setInterval(function(){
+  sync();
+  if(game==='aviator'){
+    upHeader();
+    if(tab==='all'){
+      if(state==='fly'&&bets.length) updateCashedRows();
+      else renderAviator();
+    } else renderMine();
+  }
+},300);
 
 /* ── boot ── */
+// Pre-load rocket history from localStorage immediately on startup
+try{
+  var _savedHist=JSON.parse(localStorage.getItem('ph_hist_rocket_real')||'[]');
+  if(_savedHist.length) _rkHist=_savedHist;
+}catch(e){}
 sync();
-// ✅ Show the correct CTA on initial load (aviator is default)
 showCTA('aviator');
 render();
-// Auto-start rocket simulation
-startRocket();
-
-// ✅ Expose setGame globally so parent window can pre-select a game pill
 window.setGame=setGame;
 
 })();
