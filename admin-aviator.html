@@ -46,7 +46,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 .hc-mid{background:rgba(240,180,41,.1);color:var(--gold);border:1px solid rgba(240,180,41,.18)}
 .hc-high{background:rgba(139,92,246,.1);color:var(--purple);border:1px solid rgba(139,92,246,.18)}
 
-/* LAYOUT — center is 3/4, side panels share 1/4 each */
+/* LAYOUT */
 .main{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,3fr) minmax(0,1fr);flex:1;overflow:hidden}
 @media(max-width:900px){.main{grid-template-columns:minmax(0,1fr) minmax(0,2fr)}}
 @media(max-width:700px){.main{grid-template-columns:1fr;overflow-y:auto}}
@@ -113,7 +113,6 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 .c-screen.on{opacity:1;pointer-events:auto}
 
 /* FLY */
-.fly-tag{font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:12px}
 .fly-mult{
   font-family:'JetBrains Mono',monospace;
   font-size:clamp(3rem,8vw,6rem);font-weight:700;line-height:1;letter-spacing:-.03em;
@@ -126,7 +125,6 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 .fly-mult.m-mega{color:#f03a3a;text-shadow:0 0 65px rgba(240,58,58,.85),0 0 140px rgba(240,58,58,.35)}
 .fly-mult.m-bust{color:#f03a3a;text-shadow:0 0 100px rgba(240,58,58,1),0 0 200px rgba(240,58,58,.5);animation:bustShake .4s ease}
 @keyframes bustShake{0%,100%{transform:scale(1)}25%{transform:scale(1.1) rotate(-1.5deg)}75%{transform:scale(.93) rotate(1deg)}}
-.fly-rnd{font-size:.7rem;color:rgba(255,255,255,.22);margin-top:14px;letter-spacing:.06em}
 .fly-ring{position:absolute;border-radius:50%;border:1px solid rgba(79,110,247,.1);pointer-events:none;animation:rPulse 2.2s ease-in-out infinite}
 .fly-ring-1{width:300px;height:300px}
 .fly-ring-2{width:420px;height:420px;animation-delay:.7s;border-color:rgba(79,110,247,.05)}
@@ -138,12 +136,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 .wait-bar-wrap{width:160px;margin-top:22px}
 .wait-bar-bg{height:3px;background:rgba(255,255,255,.07);border-radius:2px;overflow:hidden}
 .wait-bar-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--purple));border-radius:2px;transition:width .12s linear}
-.wait-sub{font-size:.66rem;color:rgba(255,255,255,.22);margin-top:10px;letter-spacing:.06em}
 
 /* CRASH */
 .crash-val{font-family:'JetBrains Mono',monospace;font-size:clamp(4rem,10vw,7rem);font-weight:700;color:#f03a3a;text-shadow:0 0 80px rgba(240,58,58,.9),0 0 160px rgba(240,58,58,.4);animation:crashPop .3s ease}
 @keyframes crashPop{0%{transform:scale(.88)}60%{transform:scale(1.09)}100%{transform:scale(1)}}
-.crash-sub{font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgba(240,58,58,.6);margin-top:10px}
 
 /* OFFLINE */
 .offline-ctr{display:flex;flex-direction:column;align-items:center;gap:8px}
@@ -188,10 +184,6 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
 .qi-status{font-size:.56rem;color:var(--text3);margin-top:1px}
 .rp-footer{padding:7px 14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:.57rem;color:var(--text3);flex-shrink:0}
 .vc-safe{color:var(--green)}.vc-mid{color:var(--gold)}.vc-high{color:var(--blue)}.vc-mega{color:var(--red)}.vc-idle{color:var(--text3)}
-
-/* WS status log */
-.ws-log{position:fixed;bottom:40px;right:14px;z-index:999;background:rgba(11,13,24,.95);border:1px solid var(--border2);border-radius:8px;padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--text3);max-width:280px;display:none}
-.ws-log.show{display:block}
 </style>
 </head>
 <body>
@@ -248,10 +240,12 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
     <div class="fly-ring fly-ring-1" id="flyRing1" style="display:none"></div>
     <div class="fly-ring fly-ring-2" id="flyRing2" style="display:none"></div>
 
+    <!-- FLY screen — just the multiplier number -->
     <div class="c-screen" id="screenFly">
-      <div class="fly-mult" id="flyMult">1.00×</div>
+      <div class="fly-mult" id="flyMult">1.00</div>
     </div>
 
+    <!-- WAIT screen — countdown only -->
     <div class="c-screen" id="screenWait">
       <div class="wait-tag">NEXT ROUND IN</div>
       <div class="wait-num" id="waitNum">8</div>
@@ -260,10 +254,12 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
       </div>
     </div>
 
+    <!-- CRASH screen — just the crash value -->
     <div class="c-screen" id="screenCrash">
       <div class="crash-val" id="crashValDisp">—</div>
     </div>
 
+    <!-- OFFLINE screen -->
     <div class="c-screen on" id="screenOffline">
       <div class="offline-ctr">
         <div class="offline-ico">✈</div>
@@ -302,53 +298,44 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
   </div>
 </div>
 
-<div class="ws-log" id="wsLog"></div>
-
 <script>
 'use strict';
 
-// ── Config — must match your server ──────────────────────────────────
-const GAME_SERVER_WS  = 'wss://pepetahigh-server.onrender.com';
-const ADMIN_SECRET    = '21c82f76db46a5a7ab6f97053014bc73b459032d0da38e4c9bc73886f9735777';
-const WAIT_DUR        = 8000;
+const GAME_SERVER_WS = 'wss://pepetahigh-server.onrender.com';
+const ADMIN_SECRET   = '21c82f76db46a5a7ab6f97053014bc73b459032d0da38e4c9bc73886f9735777';
 
 // ── State ─────────────────────────────────────────────────────────────
 let _ws          = null;
 let _connected   = false;
 let _reconnectMs = 1000;
 let _reconnTimer = null;
-
-// Game state from server
-let _state    = 'offline'; // waiting | flying | crashed | offline
-let _crashAt  = 0;         // THE prediction (from admin ws)
-let _mult     = 1;
-let _waitMs   = 0;
-let _waitEnd  = 0;
-let _roundNum = 0;
-let _history  = [];        // last 30 crash points
-
-// Smoothed multiplier for display
-let _smoothMult = 1;
-let _flyTs      = 0;
-let _flyActive  = false;
-
-// Session stats
+let _state       = 'offline';
+let _crashAt     = 0;
+let _mult        = 1;
+let _waitMs      = 0;
+let _waitEnd     = 0;
+let _roundNum    = 0;
+let _history     = [];
+let _flyActive   = false;
+let _anchorMult  = 1;
+let _anchorTs    = 0;
+let _rafId       = null;
 let _sessionHigh = 0;
+let _lastState   = '';
+
 try { _history = JSON.parse(localStorage.getItem('ph_adm_av_hist') || '[]'); } catch(e) {}
 _sessionHigh = _history.length ? Math.max(..._history) : 0;
 
-// ── WebSocket — direct admin connection ───────────────────────────────
+// ── WebSocket ─────────────────────────────────────────────────────────
 function connect() {
   const url = `${GAME_SERVER_WS}?game=aviator&admin=1&secret=${encodeURIComponent(ADMIN_SECRET)}`;
-  wsLog('Connecting to ' + url);
-
   _ws = new WebSocket(url);
 
   _ws.onopen = () => {
     _connected   = true;
     _reconnectMs = 1000;
     clearTimeout(_reconnTimer);
-    wsLog('✓ Admin WS connected');
+    console.log('[AdminWS] Connected');
   };
 
   _ws.onmessage = (evt) => {
@@ -357,12 +344,11 @@ function connect() {
     handleServerMsg(msg);
   };
 
-  _ws.onerror = () => wsLog('WS error');
+  _ws.onerror = () => console.log('[AdminWS] Error');
 
   _ws.onclose = () => {
     _connected = false;
     _ws = null;
-    wsLog('Disconnected — retry in ' + (_reconnectMs/1000) + 's');
     _reconnTimer = setTimeout(() => {
       _reconnectMs = Math.min(_reconnectMs * 2, 30000);
       connect();
@@ -370,31 +356,18 @@ function connect() {
   };
 }
 
-function wsLog(msg) {
-  console.log('[AdminWS]', msg);
-}
-
-// ── Handle server messages ────────────────────────────────────────────
-// Server sends admin state via getAdminState() which matches bridge-aviator.js shape:
-// { game, ts, mode, state, mult, crashAt, waitTimer, fillPct, roundNum, roundHist }
-//
-// Also handle standard round lifecycle events:
-// round_waiting, round_start, tick, round_crash, state
-
+// ── Message handler ───────────────────────────────────────────────────
 function handleServerMsg(msg) {
-  // Admin state payload (shape from games/aviator.js getAdminState)
   if (msg.game === 'aviator' && msg.state !== undefined) {
     const prevState = _state;
-    _state    = msg.state;      // 'waiting'|'flying'|'crashed'
-    _mult     = msg.mult   || 1;
-    _crashAt  = msg.crashAt|| 0;
+    _state    = msg.state;
+    _mult     = msg.mult    || 1;
+    _crashAt  = msg.crashAt || 0;
     _waitMs   = msg.waitTimer || 0;
     _roundNum = msg.roundNum  || _roundNum;
     if (msg.roundHist && msg.roundHist.length) _history = msg.roundHist;
-    // Keep multiplier anchored when flying
     if (msg.state === 'flying' || msg.state === 'fly') {
-      if (!_flyActive) startFly(_mult);
-      else onServerTick(_mult);
+      if (!_flyActive) startFly(_mult); else onServerTick(_mult);
     } else if (msg.state === 'waiting' || msg.state === 'wait') {
       stopFly();
       if (_waitMs > 0 && prevState !== 'waiting') _waitEnd = Date.now() + _waitMs;
@@ -410,58 +383,43 @@ function handleServerMsg(msg) {
     return;
   }
 
-  // Raw lifecycle events (some servers send these instead)
   switch (msg.type) {
     case 'state':
       if (msg.phase === 'waiting') {
-        _state   = 'waiting';
-        _mult    = 1;
-        _waitMs  = msg.waitRemaining || 8000;
+        _state = 'waiting'; _mult = 1;
+        _waitMs = msg.waitRemaining || 8000;
         _waitEnd = Date.now() + _waitMs;
         _crashAt = msg.crashAt || 0;
         _roundNum = msg.roundNum || _roundNum;
         if (msg.history) _history = msg.history;
       } else if (msg.phase === 'flying') {
-        _state = 'flying';
-        _mult  = msg.multiplier || 1;
+        _state = 'flying'; _mult = msg.multiplier || 1;
         _crashAt = msg.crashAt || _crashAt;
-        if (!_flyActive) startFly(_mult);
-        else onServerTick(_mult);
+        if (!_flyActive) startFly(_mult); else onServerTick(_mult);
       } else if (msg.phase === 'crashed') {
-        _state = 'crashed';
-        _mult  = msg.multiplier || _mult;
+        _state = 'crashed'; _mult = msg.multiplier || _mult;
       }
       break;
-
     case 'round_waiting':
-      _state   = 'waiting';
-      _mult    = 1;
-      _crashAt = msg.crashAt || 0;   // server sends crashAt to admin
-      _waitMs  = msg.waitMs  || 8000;
+      _state = 'waiting'; _mult = 1;
+      _crashAt = msg.crashAt || 0;
+      _waitMs = msg.waitMs || 8000;
       _waitEnd = Date.now() + _waitMs;
       _roundNum = msg.roundNum || (_roundNum + 1);
       if (msg.history) _history = msg.history;
       break;
-
     case 'round_start':
-      _state    = 'flying';
-      _mult     = 1;
+      _state = 'flying'; _mult = 1;
       _roundNum = msg.roundNum || _roundNum;
       startFly(1);
       break;
-
     case 'tick':
-      _state = 'flying';
-      _mult  = msg.mult || 1;
-      if (!_flyActive) startFly(_mult);
-      else onServerTick(_mult);
+      _state = 'flying'; _mult = msg.mult || 1;
+      if (!_flyActive) startFly(_mult); else onServerTick(_mult);
       break;
-
     case 'round_crash': {
       const cp = msg.crashPoint || _mult;
-      _state   = 'crashed';
-      _mult    = cp;
-      _crashAt = cp;
+      _state = 'crashed'; _mult = cp; _crashAt = cp;
       _history.unshift(parseFloat(cp.toFixed(2)));
       if (_history.length > 30) _history.pop();
       _sessionHigh = Math.max(_sessionHigh, cp);
@@ -470,24 +428,12 @@ function handleServerMsg(msg) {
       break;
     }
     case 'connected':
-      wsLog('Auth ok: ' + msg.authenticated);
+      console.log('[AdminWS] Auth ok:', msg.authenticated);
       break;
   }
 }
 
 // ── Smooth multiplier ─────────────────────────────────────────────────
-// The server sends tick events every ~50ms with the real multiplier.
-// We anchor on each tick and project forward using the same curve:
-//   mult = e^(elapsed_ms / 5800)
-// Inverse: elapsed_at_anchor = ln(mult_anchor) * 5800
-// Then:    elapsed_now = elapsed_at_anchor + (now - anchor_ts)
-//          mult_now    = e^(elapsed_now / 5800)
-// This guarantees the display never resets and always tracks the server.
-
-let _anchorMult = 1;     // server mult at last tick
-let _anchorTs   = 0;     // performance.now() at last tick
-let _rafId      = null;
-
 function startFly(initialMult) {
   _anchorMult = Math.max(1.001, initialMult || 1);
   _anchorTs   = performance.now();
@@ -497,12 +443,9 @@ function startFly(initialMult) {
 }
 
 function onServerTick(serverMult) {
-  // Re-anchor every time server sends a tick
   _anchorMult = Math.max(1.001, serverMult || 1);
   _anchorTs   = performance.now();
-  if (_flyActive && !_rafId) {
-    _rafId = requestAnimationFrame(flyTick);
-  }
+  if (_flyActive && !_rafId) _rafId = requestAnimationFrame(flyTick);
 }
 
 function stopFly() {
@@ -553,7 +496,6 @@ function getConf(v) {
   if (v <= 99.9) return { pct:22, label:'Low — rare' };
   return { pct:8, label:'Very Low — exceptional' };
 }
-
 function valCls(v) {
   if (!v || v <= 0) return 'bv-idle';
   if (v < 2)  return 'bv-safe';
@@ -577,7 +519,8 @@ function hcCls(v) {
 function fmt(v) { return parseFloat(v).toFixed(2) + '×'; }
 
 function buildQueue(crashAt, hist) {
-  const el = document.getElementById('queuedList'); if (!el) return;
+  const el = document.getElementById('queuedList');
+  if (!el) return;
   const items = [];
   if (crashAt > 0) {
     const conf = getConf(crashAt);
@@ -601,28 +544,27 @@ function buildQueue(crashAt, hist) {
 }
 
 // ── Main render loop ──────────────────────────────────────────────────
-let _lastState = '';
-
 function render() {
   const now = Date.now();
 
-  // Pill
+  // Connection pill
   const pill  = document.getElementById('connPill');
   const label = document.getElementById('connLabel');
   if (_connected) {
-    pill.className  = 'conn-pill live';
+    pill.className = 'conn-pill live';
     label.textContent = 'Connected';
   } else if (_state === 'offline') {
-    pill.className  = 'conn-pill searching';
+    pill.className = 'conn-pill searching';
     label.textContent = 'Connecting…';
   } else {
-    pill.className  = 'conn-pill dead';
+    pill.className = 'conn-pill dead';
     label.textContent = 'Reconnecting…';
   }
 
   document.getElementById('syncTime').textContent =
     new Date().toLocaleTimeString('en-KE', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
 
+  // Offline state
   if (!_connected && _state === 'offline') {
     document.getElementById('phaseBadge').className = 'phase-badge pb-offline';
     document.getElementById('phaseText').textContent = 'Offline';
@@ -636,14 +578,11 @@ function render() {
 
   document.getElementById('offlineNotice').classList.remove('show');
 
-  // Map server phase names
-  const phase = _state; // 'waiting'|'flying'|'crashed'|'offline'
+  const phase = _state;
   const state = phase === 'flying' ? 'fly' : phase === 'crashed' ? 'crash' : phase === 'waiting' ? 'wait' : 'offline';
-
-  document.getElementById('rpRound').textContent  = 'Round #' + _roundNum;
-  document.getElementById('flyRnd').textContent   = 'Round #' + _roundNum;
-
   const crashAt = _crashAt || 0;
+
+  document.getElementById('rpRound').textContent = 'Round #' + _roundNum;
 
   // ── Wait ──────────────────────────────────────────────────────────
   if (state === 'wait') {
@@ -652,7 +591,6 @@ function render() {
     document.getElementById('ringWrap').style.display = 'flex';
     document.getElementById('targetPill').classList.remove('show');
 
-    // Countdown from _waitEnd
     const remaining = _waitEnd > 0 ? Math.max(0, _waitEnd - now) : _waitMs;
     const secs = Math.max(0, Math.ceil(remaining / 1000));
     document.getElementById('ringNum').textContent = secs;
@@ -660,14 +598,13 @@ function render() {
     document.getElementById('ringFill').setAttribute('stroke-dashoffset', (188.5 * (1 - progress)).toFixed(1));
     document.getElementById('waitNum').textContent = secs > 0 ? secs : '✈';
     document.getElementById('waitFill').style.width = (progress * 100) + '%';
-    document.getElementById('waitSub').textContent = secs > 0 ? '' : 'Starting…';
 
     if (crashAt > 0) {
       const conf = getConf(crashAt);
       document.getElementById('bigLabel').textContent = '⚡ NEXT ROUND PREDICTION';
       document.getElementById('bigVal').textContent   = fmt(crashAt);
       document.getElementById('bigVal').className     = 'big-val ' + valCls(crashAt);
-      document.getElementById('bigSub').textContent   = 'Next round in ' + secs + 's — get ready';
+      document.getElementById('bigSub').textContent   = 'Next round in ' + secs + 's';
       document.getElementById('pcLbl').textContent    = 'NEXT ROUND';
       document.getElementById('pcVal').textContent    = fmt(crashAt);
       document.getElementById('pcVal').className      = 'pc-val ' + vcCls(crashAt);
@@ -688,18 +625,18 @@ function render() {
     document.getElementById('ringWrap').style.display = 'none';
     if (crashAt > 0) {
       document.getElementById('targetPill').classList.add('show');
-      document.getElementById('targetVal').textContent  = fmt(crashAt);
-      document.getElementById('targetVal').className    = 'tp-val ' + vcCls(crashAt);
+      document.getElementById('targetVal').textContent = fmt(crashAt);
+      document.getElementById('targetVal').className   = 'tp-val ' + vcCls(crashAt);
     }
+    const conf = getConf(crashAt);
     document.getElementById('bigLabel').textContent = 'TARGET CRASH';
     document.getElementById('bigVal').textContent   = fmt(crashAt);
     document.getElementById('bigVal').className     = 'big-val ' + valCls(crashAt);
-    document.getElementById('bigSub').textContent   = 'Cash out before ' + fmt(crashAt);
-    const conf = getConf(crashAt);
+    document.getElementById('bigSub').textContent   = 'Crash target: ' + fmt(crashAt);
     document.getElementById('pcLbl').textContent    = 'TARGET CRASH';
     document.getElementById('pcVal').textContent    = fmt(crashAt);
     document.getElementById('pcVal').className      = 'pc-val ' + vcCls(crashAt);
-    document.getElementById('pcSub').textContent    = 'Cash out before ' + fmt(crashAt);
+    document.getElementById('pcSub').textContent    = conf.pct + '% confidence · ' + conf.label;
     document.getElementById('confFill').style.width = conf.pct + '%';
     document.getElementById('confPct').textContent  = conf.pct + '%';
   }
@@ -707,7 +644,7 @@ function render() {
   // ── Crash ─────────────────────────────────────────────────────────
   else if (state === 'crash') {
     document.getElementById('phaseBadge').className = 'phase-badge pb-crash';
-    document.getElementById('phaseText').textContent = '💥 Flew Away!';
+    document.getElementById('phaseText').textContent = '💥 Crashed';
     document.getElementById('ringWrap').style.display = 'none';
     document.getElementById('targetPill').classList.remove('show');
     document.getElementById('bigLabel').textContent  = 'CRASHED AT';
@@ -730,15 +667,12 @@ function render() {
     } else if (state === 'wait') {
       stopFly();
       showScreen('wait');
-      // Reset wait timer if we just got a new waiting phase
-      if (_lastState !== 'wait' && _waitMs > 0) {
-        _waitEnd = Date.now() + _waitMs;
-      }
+      if (_lastState !== 'wait' && _waitMs > 0) _waitEnd = Date.now() + _waitMs;
     } else if (state === 'crash') {
       stopFly();
       document.getElementById('crashValDisp').textContent = fmt(crashAt);
       document.getElementById('flyMult').textContent = crashAt.toFixed(2);
-      document.getElementById('flyMult').className        = 'fly-mult m-bust';
+      document.getElementById('flyMult').className   = 'fly-mult m-bust';
       showScreen('crash');
     }
     _lastState = state;
