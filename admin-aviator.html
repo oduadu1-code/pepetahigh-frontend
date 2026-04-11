@@ -335,7 +335,6 @@ let _history  = [];        // last 30 crash points
 let _smoothMult = 1;
 let _flyTs      = 0;
 let _flyActive  = false;
-let _rafId      = null;
 
 // Session stats
 let _sessionHigh = 0;
@@ -491,7 +490,6 @@ function handleServerMsg(msg) {
 
 let _anchorMult = 1;     // server mult at last tick
 let _anchorTs   = 0;     // performance.now() at last tick
-let _flyActive  = false;
 let _rafId      = null;
 
 function startFly(initialMult) {
