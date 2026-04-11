@@ -258,12 +258,10 @@ body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear
       <div class="wait-bar-wrap">
         <div class="wait-bar-bg"><div class="wait-bar-fill" id="waitFill" style="width:0%"></div></div>
       </div>
-      <div class="wait-sub" id="waitSub">Place your bet</div>
     </div>
 
     <div class="c-screen" id="screenCrash">
       <div class="crash-val" id="crashValDisp">—</div>
-      <div class="crash-sub">💥 FLEW AWAY!</div>
     </div>
 
     <div class="c-screen on" id="screenOffline">
@@ -662,7 +660,7 @@ function render() {
     document.getElementById('ringFill').setAttribute('stroke-dashoffset', (188.5 * (1 - progress)).toFixed(1));
     document.getElementById('waitNum').textContent = secs > 0 ? secs : '✈';
     document.getElementById('waitFill').style.width = (progress * 100) + '%';
-    document.getElementById('waitSub').textContent = secs > 0 ? 'Place your bet now' : 'Starting…';
+    document.getElementById('waitSub').textContent = secs > 0 ? '' : 'Starting…';
 
     if (crashAt > 0) {
       const conf = getConf(crashAt);
