@@ -672,9 +672,50 @@ function selPay(el,type,m){
 let _depAmt=0, _depCountdownInt=null, _depCheckoutId=null;
 
 async function initiateDeposit(){
-  showToast('Deposits temporarily unavailable. Check back soon.','error',4000);
-  cancelDeposit();
-  return;
+  const ph=document.getElementById('dep-ph').value.trim();
+  const amt=parseFloat(document.getElementById('dep-amt').value);
+  if(!ph||ph.length<10){showToast('Enter a valid 10-digit phone number','error');return;}
+  if(!amt||amt<200){showToast('Minimum deposit is KSh 200','error');return;}
+  _depAmt=amt;
+  document.getElementById('dep-step1').style.display='none';
+  document.getElementById('dep-step2').style.display='flex';
+  const digits = ph.replace(/^0+/, '');
+  const fullPhone = '254' + digits;
+  const label=_dm==='airtel'?'Airtel Money':'M-Pesa';
+  document.getElementById('dep-stk-msg').innerHTML=
+    `A ${label} prompt has been sent to<br><strong style="color:var(--primary)">+254 ${ph}</strong><br><br>Enter your <strong>${label} PIN</strong> to complete.`;
+  document.getElementById('dep-countdown').textContent='Sending prompt…';
+  document.getElementById('dep-progress-bar').style.width='5%';
+  try {
+    const jwt=sessionStorage.getItem('ph_jwt');
+    const res = await fetch(`${BACKEND_URL}/api/deposit/stk`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(jwt ? {'Authorization':'Bearer '+jwt} : {})
+      },
+      body: JSON.stringify({phone:fullPhone,amount:Math.round(amt),userId:PH.getUser()?.username||'guest',method:_dm})
+    });
+    const data = await res.json();
+    if(!res.ok || !data.CheckoutRequestID) throw new Error(data.error || 'STK push failed');
+    _depCheckoutId = data.CheckoutRequestID;
+    let secs=60;
+    const bar=document.getElementById('dep-progress-bar');
+    const cd=document.getElementById('dep-countdown');
+    bar.style.width='10%';
+    if(_depCountdownInt) clearInterval(_depCountdownInt);
+    _depCountdownInt=setInterval(()=>{
+      secs--;
+      const pct=10+Math.round((60-secs)/60*85);
+      bar.style.width=Math.min(95,pct)+'%';
+      cd.textContent=secs>0?'Waiting for PIN… '+secs+'s':'Confirming…';
+      if(secs<=0){ clearInterval(_depCountdownInt); _depCountdownInt=null; }
+    },1000);
+    _pollDeposit(_depCheckoutId, amt, 0);
+  } catch(err){
+    showToast('Payment failed: '+err.message,'error',5000);
+    cancelDeposit();
+  }
 }
 
 async function _pollDeposit(checkoutId, amt, attempts){
